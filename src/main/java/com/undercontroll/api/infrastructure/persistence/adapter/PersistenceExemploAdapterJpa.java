@@ -1,8 +1,5 @@
 package com.undercontroll.api.infrastructure.persistence.adapter;
 
-import com.undercontroll.api.infrastructure.persistence.mapper.MapperExemplo;
-import com.undercontroll.api.infrastructure.persistence.repository.RepositoryExemplo;
-
 public class PersistenceExemploAdapterJpa {
 
     private final MapperExemplo  mapper;
