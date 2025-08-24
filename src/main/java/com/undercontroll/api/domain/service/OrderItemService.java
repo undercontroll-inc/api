@@ -1,0 +1,169 @@
+package com.undercontroll.api.domain.service;
+
+import com.undercontroll.api.application.dto.CreateOrderItemRequest;
+import com.undercontroll.api.application.dto.OrderItemDto;
+import com.undercontroll.api.application.port.OrderItemPort;
+import com.undercontroll.api.domain.exceptions.InvalidOrderItemException;
+import com.undercontroll.api.domain.exceptions.OrderNotFoundException;
+import com.undercontroll.api.domain.model.Order;
+import com.undercontroll.api.domain.model.OrderItem;
+import com.undercontroll.api.infrastructure.persistence.adapter.OrderItemPersistenceAdapter;
+import com.undercontroll.api.infrastructure.persistence.adapter.OrderPersistenceAdapter;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class OrderItemService implements OrderItemPort {
+
+    private final OrderItemPersistenceAdapter orderItemAdapter;
+    private final OrderPersistenceAdapter orderAdapter;
+
+    public OrderItemService(OrderItemPersistenceAdapter orderItemAdapter, OrderPersistenceAdapter orderAdapter) {
+        this.orderItemAdapter = orderItemAdapter;
+        this.orderAdapter = orderAdapter;
+    }
+
+    @Override
+    public OrderItem createOrderItem(CreateOrderItemRequest request) {
+        validateCreateOrderItemRequest(request);
+
+        Optional<Order> orderOpt = orderAdapter.getOrders()
+                .stream()
+                .filter(order -> order.getId().equals(request.orderId()))
+                .findFirst();
+
+        if (orderOpt.isEmpty()) {
+            throw new OrderNotFoundException("Order not found with ID: " + request.orderId());
+        }
+
+        Order order = orderOpt.get();
+
+        OrderItem orderItem = new OrderItem(
+                request.name(),
+                request.imageUrl(),
+                order,
+                request.price(),
+                request.discount() != null ? request.discount() : 0.0,
+                request.quantity(),
+                request.status(),
+                null,
+                LocalDateTime.now(),
+                null,
+                null,
+                null,
+                null
+        );
+
+        return orderItemAdapter.saveOrderItem(orderItem);
+    }
+
+    @Override
+    public void updateOrderItem(OrderItem orderItem) {
+        validateUpdateOrderItem(orderItem);
+
+        orderItemAdapter.getOrderItemById(orderItem.getId());
+
+        orderItemAdapter.updateOrderItem(orderItem);
+    }
+
+    @Override
+    public List<OrderItemDto> getOrderItems() {
+        return orderItemAdapter
+                .getOrderItems()
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public List<OrderItemDto> getOrderItemsByOrderId(Integer orderId) {
+        if (orderId == null) {
+            throw new InvalidOrderItemException("Order ID cannot be null");
+        }
+
+        return orderItemAdapter
+                .getOrderItemsByOrderId(orderId)
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public void deleteOrderItem(Integer orderItemId) {
+        if (orderItemId == null) {
+            throw new InvalidOrderItemException("Order item ID cannot be null");
+        }
+
+        orderItemAdapter.deleteOrderItem(orderItemId);
+    }
+
+    @Override
+    public OrderItemDto getOrderItemById(Integer orderItemId) {
+        if (orderItemId == null) {
+            throw new InvalidOrderItemException("Order item ID cannot be null");
+        }
+
+        OrderItem orderItem = orderItemAdapter.getOrderItemById(orderItemId);
+        return mapToDto(orderItem);
+    }
+
+    private void validateCreateOrderItemRequest(CreateOrderItemRequest request) {
+        if (request.name() == null || request.name().trim().isEmpty()) {
+            throw new InvalidOrderItemException("Order item name cannot be empty");
+        }
+
+        if (request.price() == null || request.price() <= 0) {
+            throw new InvalidOrderItemException("Order item price must be positive");
+        }
+
+        if (request.quantity() == null || request.quantity() <= 0) {
+            throw new InvalidOrderItemException("Order item quantity must be positive");
+        }
+
+        if (request.orderId() == null) {
+            throw new InvalidOrderItemException("Order ID cannot be null");
+        }
+    }
+
+    private void validateUpdateOrderItem(OrderItem orderItem) {
+        if (orderItem.getId() == null) {
+            throw new InvalidOrderItemException("Order item ID cannot be null for update");
+        }
+
+        if (orderItem.getName() == null || orderItem.getName().trim().isEmpty()) {
+            throw new InvalidOrderItemException("Order item name cannot be empty");
+        }
+
+        if (orderItem.getPrice() == null || orderItem.getPrice() <= 0) {
+            throw new InvalidOrderItemException("Order item price must be positive");
+        }
+
+        if (orderItem.getQuantity() == null || orderItem.getQuantity() <= 0) {
+            throw new InvalidOrderItemException("Order item quantity must be positive");
+        }
+
+        if (orderItem.getOrder() == null) {
+            throw new InvalidOrderItemException("Order cannot be null");
+        }
+    }
+
+    private OrderItemDto mapToDto(OrderItem orderItem) {
+        return new OrderItemDto(
+                orderItem.getName(),
+                orderItem.getImageUrl(),
+                orderItem.getPrice(),
+                orderItem.getDiscount(),
+                orderItem.getQuantity(),
+                orderItem.getStatus(),
+                orderItem.getSentAt(),
+                orderItem.getRequestedAt(),
+                orderItem.getLastReview(),
+                orderItem.getAnalyzedAt(),
+                orderItem.getCompletedAt(),
+                orderItem.getPayedAt()
+        );
+    }
+}
