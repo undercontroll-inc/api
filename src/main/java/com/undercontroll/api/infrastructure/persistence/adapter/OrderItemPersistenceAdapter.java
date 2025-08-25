@@ -42,6 +42,8 @@ public class OrderItemPersistenceAdapter {
             throw new OrderItemNotFoundException("Order item not found for deletion");
         }
 
+        orderItemFound.get().getOrder().removeOrderItem(orderItemFound.get());
+
         repository.delete(orderItemFound.get());
     }
 

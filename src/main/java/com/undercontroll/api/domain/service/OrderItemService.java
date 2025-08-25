@@ -2,6 +2,7 @@ package com.undercontroll.api.domain.service;
 
 import com.undercontroll.api.application.dto.CreateOrderItemRequest;
 import com.undercontroll.api.application.dto.OrderItemDto;
+import com.undercontroll.api.application.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.application.port.OrderItemPort;
 import com.undercontroll.api.domain.exceptions.InvalidOrderItemException;
 import com.undercontroll.api.domain.exceptions.OrderNotFoundException;
@@ -57,14 +58,55 @@ public class OrderItemService implements OrderItemPort {
                 null
         );
 
-        return orderItemAdapter.saveOrderItem(orderItem);
+        OrderItem orderItemSaved = orderItemAdapter.saveOrderItem(orderItem);
+
+        order.addOrderItem(orderItemSaved);
+
+        return orderItemSaved;
     }
 
     @Override
-    public void updateOrderItem(OrderItem orderItem) {
-        validateUpdateOrderItem(orderItem);
+    public void updateOrderItem(UpdateOrderItemRequest data) {
+        validateUpdateOrderItem(data);
 
-        orderItemAdapter.getOrderItemById(orderItem.getId());
+        OrderItem orderItem = orderItemAdapter.getOrderItemById(data.id());
+
+        if (data.name() != null) {
+            orderItem.setName(data.name());
+        }
+        if (data.imageUrl() != null) {
+            orderItem.setImageUrl(data.imageUrl());
+        }
+        if (data.price() != null) {
+            orderItem.setPrice(data.price());
+        }
+        if (data.discount() != null) {
+            orderItem.setDiscount(data.discount());
+        }
+        if (data.quantity() != null) {
+            orderItem.setQuantity(data.quantity());
+        }
+        if (data.status() != null) {
+            orderItem.setStatus(data.status());
+        }
+        if (data.sentAt() != null) {
+            orderItem.setSentAt(data.sentAt());
+        }
+        if (data.requestedAt() != null) {
+            orderItem.setRequestedAt(data.requestedAt());
+        }
+        if (data.lastReview() != null) {
+            orderItem.setLastReview(data.lastReview());
+        }
+        if (data.analyzedAt() != null) {
+            orderItem.setAnalyzedAt(data.analyzedAt());
+        }
+        if (data.completedAt() != null) {
+            orderItem.setCompletedAt(data.completedAt());
+        }
+        if (data.payedAt() != null) {
+            orderItem.setPayedAt(data.payedAt());
+        }
 
         orderItemAdapter.updateOrderItem(orderItem);
     }
@@ -123,30 +165,31 @@ public class OrderItemService implements OrderItemPort {
             throw new InvalidOrderItemException("Order item quantity must be positive");
         }
 
-        if (request.orderId() == null) {
-            throw new InvalidOrderItemException("Order ID cannot be null");
-        }
-    }
-
-    private void validateUpdateOrderItem(OrderItem orderItem) {
-        if (orderItem.getId() == null) {
-            throw new InvalidOrderItemException("Order item ID cannot be null for update");
-        }
-
-        if (orderItem.getName() == null || orderItem.getName().trim().isEmpty()) {
-            throw new InvalidOrderItemException("Order item name cannot be empty");
-        }
-
-        if (orderItem.getPrice() == null || orderItem.getPrice() <= 0) {
-            throw new InvalidOrderItemException("Order item price must be positive");
-        }
-
-        if (orderItem.getQuantity() == null || orderItem.getQuantity() <= 0) {
+        if (request.discount() == null || request.discount() <= 0) {
             throw new InvalidOrderItemException("Order item quantity must be positive");
         }
 
-        if (orderItem.getOrder() == null) {
-            throw new InvalidOrderItemException("Order cannot be null");
+        if (request.orderId() == null || request.orderId() <= 0) {
+            throw new InvalidOrderItemException("Order id must be valid");
+        }
+
+    }
+
+    private void validateUpdateOrderItem(UpdateOrderItemRequest orderItem) {
+        if (orderItem.id() == null) {
+            throw new InvalidOrderItemException("Order item ID cannot be null for update");
+        }
+
+        if (orderItem.name().trim().isEmpty()) {
+            throw new InvalidOrderItemException("Order item name cannot be empty");
+        }
+
+        if (orderItem.price() != null && orderItem.price() <= 0) {
+            throw new InvalidOrderItemException("Order item price must be positive");
+        }
+
+        if (orderItem.quantity() != null && orderItem.quantity() <= 0) {
+            throw new InvalidOrderItemException("Order item quantity must be positive");
         }
     }
 

@@ -2,6 +2,7 @@ package com.undercontroll.api.application.controller;
 
 import com.undercontroll.api.application.dto.CreateOrderItemRequest;
 import com.undercontroll.api.application.dto.OrderItemDto;
+import com.undercontroll.api.application.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.application.port.OrderItemPort;
 import com.undercontroll.api.domain.model.OrderItem;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class OrderItemController {
 
     @PutMapping
     public ResponseEntity<Void> updateOrderItem(
-            @RequestBody OrderItem request
+            @RequestBody UpdateOrderItemRequest request
     ) {
         orderItemPort.updateOrderItem(request);
         return ResponseEntity.ok().build();

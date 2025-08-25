@@ -1,6 +1,5 @@
 package com.undercontroll.api.application.controller;
 
-import com.undercontroll.api.application.dto.CreateOrderRequest;
 import com.undercontroll.api.application.dto.OrderDto;
 import com.undercontroll.api.application.port.OrderPort;
 import com.undercontroll.api.domain.model.Order;
@@ -21,9 +20,8 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> createOrder(
-            @RequestBody CreateOrderRequest request
     ) {
-        Order order = orderPort.createOrder(request);
+        Order order = orderPort.createOrder();
 
         return ResponseEntity.status(201).body(order);
     }

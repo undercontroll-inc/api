@@ -1,36 +1,37 @@
 package com.undercontroll.api.domain.service;
 
-import com.undercontroll.api.application.dto.CreateOrderRequest;
 import com.undercontroll.api.application.dto.OrderDto;
 import com.undercontroll.api.application.dto.OrderItemDto;
 import com.undercontroll.api.application.port.OrderPort;
 import com.undercontroll.api.domain.model.Order;
+import com.undercontroll.api.infrastructure.persistence.adapter.OrderItemPersistenceAdapter;
 import com.undercontroll.api.infrastructure.persistence.adapter.OrderPersistenceAdapter;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class OrderService implements OrderPort {
 
     private final OrderPersistenceAdapter adapter;
+    private final OrderItemPersistenceAdapter orderItemAdapter;
 
-    public OrderService(OrderPersistenceAdapter adapter) {
+    public OrderService(OrderPersistenceAdapter adapter, OrderItemPersistenceAdapter orderItemAdapter) {
         this.adapter = adapter;
+        this.orderItemAdapter = orderItemAdapter;
     }
 
-
     @Override
-    public Order createOrder(CreateOrderRequest createOrderRequest) {
-        // validacao
+    public Order createOrder() {
+        // Validacao aqui
 
-        Order order = new Order(
-                LocalDateTime.now(),
-                createOrderRequest.items()
-        );
+        Order order = new Order();
 
-        return adapter.saveOrder(order);
+        Order orderSaved = adapter.saveOrder(order);
+
+        adapter.saveOrder(orderSaved);
+
+        return orderSaved;
     }
 
     @Override

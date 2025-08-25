@@ -2,6 +2,7 @@ package com.undercontroll.api.domain.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,11 +21,18 @@ public class Order {
     private LocalDateTime createdAt;
 
     public Order() {
+        this.createdAt = LocalDateTime.now();
+        this.orderItems = new ArrayList<>();
     }
 
-    public Order(LocalDateTime createdAt, List<OrderItem> orderItems) {
-        this.createdAt = createdAt;
-        this.orderItems = orderItems;
+    public void addOrderItem(OrderItem orderItem) {
+        orderItem.setOrder(this);
+        this.orderItems.add(orderItem);
+    }
+
+    public void removeOrderItem(OrderItem orderItem) {
+        orderItem.setOrder(null);
+        this.orderItems.remove(orderItem);
     }
 
     public Integer getId() {
