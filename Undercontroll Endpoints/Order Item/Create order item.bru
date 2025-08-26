@@ -1,0 +1,33 @@
+meta {
+  name: Create order item
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/v1/api/order-items
+  body: json
+  auth: inherit
+}
+
+body:json {
+    {
+      "name": "Saco de batata",
+      "imageUrl": "https://example.com/images/cafe-expresso.jpg",
+      "price": 12.5,
+      "discount": 1.5,
+      "quantity": 2,
+      "orderId": 1,
+      "status": "SENT",
+      "sentAt": null,
+      "requestedAt": "2025-08-25T18:31:26.666481",
+      "lastReview": null,
+      "analyzedAt": null,
+      "completedAt": null,
+      "payedAt": null
+    }
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Undercontroll Endpoints",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
