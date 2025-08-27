@@ -1,0 +1,61 @@
+package com.undercontroll.api.application.controller;
+
+import com.undercontroll.api.application.dto.*;
+import com.undercontroll.api.application.port.UserPort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/v1/api/user")
+public class UserController {
+
+    private final UserPort userPort;
+
+    public UserController(UserPort userPort) {
+        this.userPort = userPort;
+    }
+
+    @PostMapping
+    public ResponseEntity<CreateUserResponse> createUser(
+            @RequestBody CreateUserRequest request
+    ) {
+        CreateUserResponse user = userPort.createUser(request);
+
+        return ResponseEntity.status(201).body(user);
+    }
+
+    @PutMapping
+    public ResponseEntity<Void> updateOrder(
+            @RequestBody UpdateUserRequest request
+    ) {
+        userPort.updateUser(request);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserDto>> getUsers() {
+        List<UserDto> users = userPort.getUsers();
+
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDto> getUsersById(
+            @PathVariable Integer userId
+    ) {
+        UserDto user = userPort.getUserById(userId);
+        return ResponseEntity.ok(user);
+    }
+
+    @DeleteMapping("{userId}")
+    public ResponseEntity<Void> deleteOrder(
+            @PathVariable Integer userId
+    ) {
+        userPort.deleteUser(userId);
+
+        return ResponseEntity.ok().build();
+    }
+
+}
