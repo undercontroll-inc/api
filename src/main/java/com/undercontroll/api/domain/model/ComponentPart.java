@@ -1,19 +1,26 @@
 package com.undercontroll.api.domain.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "components")
 public class ComponentPart {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     private String name;
+
     private String description;
+
     private String brand;
+
     private Double price;
+
     private String supplier;
+
     private String category;
 
     public ComponentPart(String name, String description, String brand, Double price, String supplier, String category) {

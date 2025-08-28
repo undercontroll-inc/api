@@ -40,4 +40,8 @@ public class ComponentPersistenceAdapter {
         return this.repository.findByName(name);
     }
 
+    public void delete(ComponentPart component) {
+        repository.delete(component);
+    }
+
 }

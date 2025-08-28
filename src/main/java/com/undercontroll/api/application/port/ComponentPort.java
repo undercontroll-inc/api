@@ -14,5 +14,6 @@ public interface ComponentPort {
     List<ComponentDto> getComponents();
     List<ComponentDto> getComponentsByCategory(String category);
     List<ComponentDto> getComponentsByName(String name);
+    void deleteComponent(Integer componentId);
 
 }

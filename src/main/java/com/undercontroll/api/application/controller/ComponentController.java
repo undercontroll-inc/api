@@ -3,6 +3,7 @@ package com.undercontroll.api.application.controller;
 import com.undercontroll.api.application.dto.ComponentDto;
 import com.undercontroll.api.application.dto.RegisterComponentRequest;
 import com.undercontroll.api.application.dto.RegisterComponentResponse;
+import com.undercontroll.api.application.dto.UpdateComponentRequest;
 import com.undercontroll.api.application.port.ComponentPort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,13 +45,31 @@ public class ComponentController {
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
 
-    @GetMapping("/category/{name}")
+    @GetMapping("/name/{name}")
     public ResponseEntity<List<ComponentDto>> findByName(
             @PathVariable String name
     ) {
         var response = componentPort.getComponentsByCategory(name);
 
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
+    }
+
+    @PutMapping
+    public ResponseEntity<Void> updateComponent(
+            @RequestBody UpdateComponentRequest request
+    ) {
+        componentPort.updateComponent(request);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{componentId}")
+    public ResponseEntity<Void> deleteComponent(
+            @PathVariable Integer componentId
+    ) {
+        componentPort.deleteComponent(componentId);
+
+        return ResponseEntity.ok().build();
     }
 
 

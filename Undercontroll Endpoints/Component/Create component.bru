@@ -1,0 +1,26 @@
+meta {
+  name: Create component
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/v1/api/components
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Peça",
+    "brand": "Marca",
+    "description": "Peça que ajuda em tal coisa",
+    "price": 10,
+    "category": "Peças de ferro",
+    "supplier": "Fornecedor"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

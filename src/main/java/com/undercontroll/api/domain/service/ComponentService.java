@@ -2,8 +2,7 @@ package com.undercontroll.api.domain.service;
 
 import com.undercontroll.api.application.dto.*;
 import com.undercontroll.api.application.port.ComponentPort;
-import com.undercontroll.api.domain.exceptions.InvalidComponentCreationException;
-import com.undercontroll.api.domain.exceptions.InvalidGetComponentsByCategoryExcepiton;
+import com.undercontroll.api.domain.exceptions.*;
 import com.undercontroll.api.domain.model.ComponentPart;
 import com.undercontroll.api.infrastructure.persistence.adapter.ComponentPersistenceAdapter;
 import org.springframework.stereotype.Service;
@@ -46,7 +45,36 @@ public class ComponentService implements ComponentPort {
 
     @Override
     public void updateComponent(UpdateComponentRequest request) {
-        // TODO
+        validateUpdate(request);
+
+        ComponentPart component = adapter.findById(request.id())
+                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + request.id()));
+
+        if(request.name() != null && !request.name().isEmpty()) {
+            component.setName(request.name());
+        }
+
+        if(request.description() != null && !request.description().isEmpty()) {
+            component.setDescription(request.description());
+        }
+
+        if(request.brand() != null && !request.brand().isEmpty()) {
+            component.setBrand(request.brand());
+        }
+
+        if(request.category() != null && !request.category().isEmpty()) {
+            component.setCategory(request.category());
+        }
+
+        if(request.price() != null) {
+            component.setPrice(request.price());
+        }
+
+        if(request.supplier() != null && !request.supplier().isEmpty()) {
+            component.setSupplier(request.supplier());
+        }
+
+        adapter.update(component);
     }
 
     @Override
@@ -103,6 +131,17 @@ public class ComponentService implements ComponentPort {
                 .toList();
     }
 
+    @Override
+    public void deleteComponent(Integer componentId) {
+        validateDelete(componentId);
+
+        ComponentPart component = adapter.findById(componentId)
+                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + componentId));
+
+
+        adapter.delete(component);
+    }
+
     private void validateCreate(RegisterComponentRequest request) {
         if(
                 request.name() == null || request.name().isEmpty() || request.description() == null || request.description().isEmpty() ||
@@ -110,6 +149,18 @@ public class ComponentService implements ComponentPort {
                 request.supplier() == null || request.supplier().isEmpty() || request.category() == null || request.category().isEmpty()
         ) {
             throw new InvalidComponentCreationException("Invalid data for the component creation");
+        }
+    }
+
+    private void validateUpdate(UpdateComponentRequest request) {
+        if(request.id() == null || request.id() <= 0) {
+            throw new InvalidUpdateComponentException("Component id cannot be null or invalid");
+        }
+    }
+
+    private void validateDelete(Integer componentId) {
+        if(componentId == null || componentId <= 0) {
+            throw new InvalidDeleteComponentException("Invalid id for deletion");
         }
     }
 

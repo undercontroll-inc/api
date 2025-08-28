@@ -14,7 +14,7 @@ public interface ComponentJpaRepository extends JpaRepository<ComponentPart, Int
     @Query("SELECT c FROM ComponentPart c WHERE c.name = :name")
     List<ComponentPart> findByName(@Param("name") String name);
 
-    @Query("SELECT c FROM ComponentPart c WHERE c.category :category")
+    @Query("SELECT c FROM ComponentPart c WHERE c.category = :category")
     List<ComponentPart> findByCategory(@Param("category") String category);
 
 }
