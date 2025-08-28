@@ -1,6 +1,7 @@
 package com.undercontroll.api.application.controller;
 
 import com.undercontroll.api.application.dto.OrderDto;
+import com.undercontroll.api.application.dto.UpdateOrderRequest;
 import com.undercontroll.api.application.port.OrderPort;
 import com.undercontroll.api.domain.model.Order;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class OrderController {
 
     @PutMapping
     public ResponseEntity<Void> updateOrder(
-            @RequestBody Order request
+            @RequestBody UpdateOrderRequest request
     ) {
         orderPort.updateOrder(request);
 
@@ -39,7 +40,7 @@ public class OrderController {
     public ResponseEntity<List<OrderDto>> getOrders() {
         List<OrderDto> orders = orderPort.getOrders();
 
-        return ResponseEntity.ok(orders);
+        return orders.isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(orders);
     }
 
     @DeleteMapping("{orderId}")
@@ -48,7 +49,7 @@ public class OrderController {
     ) {
         orderPort.deleteOrder(orderId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
 

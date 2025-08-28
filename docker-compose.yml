@@ -1,0 +1,15 @@
+services:
+  mysql:
+      image: mysql:latest
+      container_name: undercontroll-mysql
+      restart: always
+      hostname: localhost
+      environment:
+        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      volumes:
+        - mysql_data:/var/lib/mysql
+      ports:
+        - "3306:3306"
+
+volumes:
+  mysql_data:

@@ -1,6 +1,5 @@
 package com.undercontroll.api.infrastructure.persistence.adapter;
 
-import com.undercontroll.api.domain.exceptions.OrderNotFoundException;
 import com.undercontroll.api.domain.model.Order;
 import com.undercontroll.api.infrastructure.persistence.repository.OrderJpaRepository;
 import jakarta.transaction.Transactional;
@@ -26,14 +25,12 @@ public class OrderPersistenceAdapter {
         return this.repository.findAll();
     }
 
-    public void deleteOrder(Integer orderId) {
-        Optional<Order> orderFound = repository.findById(orderId);
+    public void deleteOrder(Order order) {
+        repository.delete(order);
+    }
 
-        if(orderFound.isEmpty()) {
-            throw new OrderNotFoundException("Order not found for deletion");
-        };
-
-        repository.delete(orderFound.get());
+    public Optional<Order> findOrderById(Integer orderId) {
+        return this.repository.findById(orderId);
     }
 
     @Transactional
