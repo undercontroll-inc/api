@@ -11,5 +11,5 @@ public record UpdateUserRequest(
         String address,
         String cpf,
         Date birthDate,
-        UserType userType
+        UserType userType        
 ) {}

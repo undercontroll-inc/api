@@ -1,0 +1,27 @@
+meta {
+  name: Create User
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/v1/api/user
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Lucas Furquim",
+    "lastName": "Furquim",
+    "password": "ishow123",
+    "address": "Rua",
+    "cpf": "55739713870",
+    "birthDate": "2006-03-26",
+    "userType": "ADMINISTRATOR"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

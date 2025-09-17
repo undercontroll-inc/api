@@ -5,6 +5,8 @@ import com.undercontroll.api.application.dto.OrderItemDto;
 import com.undercontroll.api.application.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.application.port.OrderItemPort;
 import com.undercontroll.api.domain.model.OrderItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,7 @@ import java.util.List;
 @RequestMapping("/v1/api/order-items")
 public class OrderItemController {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderItemController.class);
     private final OrderItemPort orderItemPort;
 
     public OrderItemController(OrderItemPort orderItemPort) {
@@ -21,10 +24,13 @@ public class OrderItemController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderItem> createOrderItem(
+    public ResponseEntity<OrderItemDto> createOrderItem(
             @RequestBody CreateOrderItemRequest request
     ) {
-        OrderItem orderItem = orderItemPort.createOrderItem(request);
+        OrderItemDto orderItem = orderItemPort.createOrderItem(request);
+
+        log.info("Order item:  {}", orderItem);
+
         return ResponseEntity.status(201).body(orderItem);
     }
 

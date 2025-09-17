@@ -28,7 +28,7 @@ public class OrderItemService implements OrderItemPort {
     }
 
     @Override
-    public OrderItem createOrderItem(CreateOrderItemRequest request) {
+    public OrderItemDto createOrderItem(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
 
         Optional<Order> orderOpt = orderAdapter.getOrders()
@@ -62,7 +62,20 @@ public class OrderItemService implements OrderItemPort {
 
         order.addOrderItem(orderItemSaved);
 
-        return orderItemSaved;
+        return new OrderItemDto(
+                orderItemSaved.getName(),
+                orderItemSaved.getImageUrl(),
+                orderItemSaved.getPrice(),
+                orderItemSaved.getDiscount(),
+                orderItemSaved.getQuantity(),
+                orderItemSaved.getStatus(),
+                orderItemSaved.getSentAt(),
+                orderItemSaved.getRequestedAt(),
+                orderItemSaved.getLastReview(),
+                orderItemSaved.getAnalyzedAt(),
+                orderItemSaved.getCompletedAt(),
+                orderItemSaved.getPayedAt()
+        );
     }
 
     @Override

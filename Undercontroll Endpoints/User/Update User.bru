@@ -1,0 +1,28 @@
+meta {
+  name: Update User
+  type: http
+  seq: 3
+}
+
+put {
+  url: http://localhost:8080/v1/api/user
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": 1,
+    "name": "Lucas aa",
+    "lastName": "Furquim",
+    "password": "ishow123",
+    "address": "Rua",
+    "cpf": "55739713870",
+    "birthDate": "2006-03-26",
+    "userType": "ADMINISTRATOR"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

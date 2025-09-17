@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface OrderItemPort {
 
-    OrderItem createOrderItem(CreateOrderItemRequest createOrderItemRequest);
+    OrderItemDto createOrderItem(CreateOrderItemRequest createOrderItemRequest);
     void updateOrderItem(UpdateOrderItemRequest data);
     List<OrderItemDto> getOrderItems();
     List<OrderItemDto> getOrderItemsByOrderId(Integer orderId);
