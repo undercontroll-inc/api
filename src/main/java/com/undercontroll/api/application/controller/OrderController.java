@@ -4,6 +4,7 @@ import com.undercontroll.api.application.dto.OrderDto;
 import com.undercontroll.api.application.dto.UpdateOrderRequest;
 import com.undercontroll.api.application.port.OrderPort;
 import com.undercontroll.api.domain.model.Order;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,13 +12,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderPort orderPort;
-
-    public OrderController(OrderPort orderPort) {
-        this.orderPort = orderPort;
-    }
 
     @PostMapping
     public ResponseEntity<Order> createOrder(

@@ -2,19 +2,17 @@ package com.undercontroll.api.application.controller;
 
 import com.undercontroll.api.application.dto.*;
 import com.undercontroll.api.application.port.UserPort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/v1/api/user")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserPort userPort;
-
-    public UserController(UserPort userPort) {
-        this.userPort = userPort;
-    }
 
     @PostMapping
     public ResponseEntity<CreateUserResponse> createUser(

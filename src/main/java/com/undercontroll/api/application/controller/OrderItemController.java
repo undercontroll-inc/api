@@ -4,7 +4,7 @@ import com.undercontroll.api.application.dto.CreateOrderItemRequest;
 import com.undercontroll.api.application.dto.OrderItemDto;
 import com.undercontroll.api.application.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.application.port.OrderItemPort;
-import com.undercontroll.api.domain.model.OrderItem;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +14,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/api/order-items")
+@RequiredArgsConstructor
 public class OrderItemController {
 
     private static final Logger log = LoggerFactory.getLogger(OrderItemController.class);
     private final OrderItemPort orderItemPort;
-
-    public OrderItemController(OrderItemPort orderItemPort) {
-        this.orderItemPort = orderItemPort;
-    }
 
     @PostMapping
     public ResponseEntity<OrderItemDto> createOrderItem(

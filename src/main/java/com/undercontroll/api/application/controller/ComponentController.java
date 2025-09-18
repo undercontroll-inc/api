@@ -5,6 +5,7 @@ import com.undercontroll.api.application.dto.RegisterComponentRequest;
 import com.undercontroll.api.application.dto.RegisterComponentResponse;
 import com.undercontroll.api.application.dto.UpdateComponentRequest;
 import com.undercontroll.api.application.port.ComponentPort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,13 +13,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/api/components")
+@RequiredArgsConstructor
 public class ComponentController {
 
     private final ComponentPort componentPort;
-
-    public ComponentController(ComponentPort componentPort) {
-        this.componentPort = componentPort;
-    }
 
     @PostMapping
     public ResponseEntity<RegisterComponentResponse> register(
