@@ -2,23 +2,40 @@ package com.undercontroll.api.domain.model;
 
 import com.undercontroll.api.domain.enums.UserType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 
 @Entity
+@Getter
+@NoArgsConstructor
 @Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
 
+    @Setter
     private String name;
+
+    @Setter
     private String lastName;
+
+    @Setter
     private String password;
+
+    @Setter
     private String address;
+
+    @Setter
     private String cpf;
+
+    @Setter
     private Date birthDate;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     private UserType userType;
 
@@ -31,34 +48,4 @@ public class User {
         this.birthDate = birthDate;
         this.userType = userType;
     }
-
-    public User() {}
-
-    public String getName() {return name;}
-
-    public void setName(String name) {this.name = name;}
-
-    public String getLastName() {return lastName;}
-
-    public void setLastName(String lastName) {this.lastName = lastName;}
-
-    public String getPassword() {return password;}
-
-    public void setPassword(String password) {this.password = password;}
-
-    public String getAddress() {return address;}
-
-    public void setAddress(String address) {this.address = address;}
-
-    public String getCpf() {return cpf;}
-
-    public void setCpf(String cpf) {this.cpf = cpf;}
-
-    public Date getBirthDate() {return birthDate;}
-
-    public void setBirthDate(Date birthDate) {this.birthDate = birthDate;}
-
-    public UserType getUserType() {return userType;}
-
-    public void setUserType(UserType userType) {this.userType = userType;}
 }

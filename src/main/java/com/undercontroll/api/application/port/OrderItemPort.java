@@ -3,8 +3,6 @@ package com.undercontroll.api.application.port;
 import com.undercontroll.api.application.dto.CreateOrderItemRequest;
 import com.undercontroll.api.application.dto.OrderItemDto;
 import com.undercontroll.api.application.dto.UpdateOrderItemRequest;
-import com.undercontroll.api.domain.model.OrderItem;
-
 import java.util.List;
 
 public interface OrderItemPort {

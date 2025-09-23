@@ -2,19 +2,17 @@ package com.undercontroll.api.infrastructure.persistence.adapter;
 
 import com.undercontroll.api.domain.model.ComponentPart;
 import com.undercontroll.api.infrastructure.persistence.repository.ComponentJpaRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class ComponentPersistenceAdapter {
 
     private final ComponentJpaRepository repository;
-
-    public ComponentPersistenceAdapter(ComponentJpaRepository repository) {
-        this.repository = repository;
-    }
 
     public void save(ComponentPart componentPart) {
         this.repository.save(componentPart);
