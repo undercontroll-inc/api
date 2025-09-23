@@ -4,23 +4,19 @@ import com.undercontroll.api.domain.exceptions.UserNotFoundException;
 import com.undercontroll.api.domain.model.User;
 import com.undercontroll.api.infrastructure.persistence.repository.UserJpaRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class UserPersistenceAdapter {
 
     private final UserJpaRepository repository;
 
-    public UserPersistenceAdapter(UserJpaRepository repository) {
-        this.repository = repository;
-    }
-
-    public User saveUser(User user) {
-        return repository.save(user);
-    }
+    public User saveUser(User user) {return repository.save(user);}
 
     public List<User> getUsers() {
         return repository.findAll();

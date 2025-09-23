@@ -47,6 +47,14 @@ public class ServiceOrderController {
         return ResponseEntity.ok(serviceOrder);
     }
 
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<List<ServiceOrderDto>> getServiceOrdersByOrderId(
+            @PathVariable Integer orderId
+    ) {
+        List<ServiceOrderDto> serviceOrders = serviceOrderPort.getServiceOrdersByOrderId(orderId);
+        return ResponseEntity.ok(serviceOrders);
+    }
+
     @DeleteMapping("/{serviceOrderId}")
     public ResponseEntity<Void> deleteServiceOrder(
             @PathVariable Integer serviceOrderId

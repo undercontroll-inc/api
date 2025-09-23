@@ -4,19 +4,17 @@ import com.undercontroll.api.domain.exceptions.OrderItemNotFoundException;
 import com.undercontroll.api.domain.model.OrderItem;
 import com.undercontroll.api.infrastructure.persistence.repository.OrderItemJpaRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class OrderItemPersistenceAdapter {
 
     private final OrderItemJpaRepository repository;
-
-    public OrderItemPersistenceAdapter(OrderItemJpaRepository repository) {
-        this.repository = repository;
-    }
 
     public OrderItem saveOrderItem(OrderItem orderItem) {
         return repository.save(orderItem);

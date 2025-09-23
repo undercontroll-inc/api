@@ -3,19 +3,17 @@ package com.undercontroll.api.infrastructure.persistence.adapter;
 import com.undercontroll.api.domain.model.Order;
 import com.undercontroll.api.infrastructure.persistence.repository.OrderJpaRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class OrderPersistenceAdapter {
 
     private final OrderJpaRepository repository;
-
-    public OrderPersistenceAdapter(OrderJpaRepository repository) {
-        this.repository = repository;
-    }
 
     public Order saveOrder(Order order) {
         return repository.save(order);

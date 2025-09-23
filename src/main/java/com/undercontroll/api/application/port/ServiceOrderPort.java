@@ -11,5 +11,6 @@ public interface ServiceOrderPort {
     List<ServiceOrderDto> getServiceOrders();
     ServiceOrderDto getServiceOrderById(Integer serviceOrderId);
     void deleteServiceOrder(Integer serviceOrderId);
+    List<ServiceOrderDto> getServiceOrdersByOrderId(Integer orderId);
 
 }
