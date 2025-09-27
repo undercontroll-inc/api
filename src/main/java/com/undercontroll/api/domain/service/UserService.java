@@ -5,17 +5,17 @@ import com.undercontroll.api.application.port.UserPort;
 import com.undercontroll.api.domain.exceptions.InvalidUserException;
 import com.undercontroll.api.domain.model.User;
 import com.undercontroll.api.infrastructure.persistence.adapter.UserPersistenceAdapter;
+import com.undercontroll.api.infrastructure.security.TokenService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class UserService implements UserPort {
 
     private final UserPersistenceAdapter adapter;
-
-    public UserService(UserPersistenceAdapter adapter) {
-        this.adapter = adapter;
-    }
+    private final TokenService tokenService;
 
     @Override
     public CreateUserResponse createUser(CreateUserRequest request) {
@@ -42,6 +42,11 @@ public class UserService implements UserPort {
                 request.birthDate(),
                 request.userType()
         );
+    }
+
+    @Override
+    public AuthUserResponse authUser(AuthUserRequest request) {
+        return null;
     }
 
     @Override

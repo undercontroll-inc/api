@@ -23,6 +23,13 @@ public class UserController {
         return ResponseEntity.status(201).body(user);
     }
 
+    @PostMapping("/auth")
+    public ResponseEntity<AuthUserResponse> auth(
+            @RequestBody AuthUserRequest request
+    ) {
+
+    }
+
     @PutMapping
     public ResponseEntity<Void> updateOrder(
             @RequestBody UpdateUserRequest request
