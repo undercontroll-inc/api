@@ -2,13 +2,14 @@ package com.undercontroll.api.application.controller;
 
 import com.undercontroll.api.application.dto.*;
 import com.undercontroll.api.application.port.UserPort;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/api/user")
+@RequestMapping("/v1/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -25,9 +26,11 @@ public class UserController {
 
     @PostMapping("/auth")
     public ResponseEntity<AuthUserResponse> auth(
-            @RequestBody AuthUserRequest request
+            @RequestBody @Valid AuthUserRequest request
     ) {
+        AuthUserResponse response = userPort.authUser(request);
 
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping

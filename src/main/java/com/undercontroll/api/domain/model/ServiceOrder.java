@@ -1,23 +1,25 @@
 package com.undercontroll.api.domain.model;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.util.Date;
 import java.util.List;
 
+@Entity
 @Getter
 public class ServiceOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer serviceOrderId;
 
+    @ManyToOne
     private User user;
 
+    @OneToMany
     private List<ComponentPart> componentPartList;
 
+    @ManyToOne
     private Order order;
 
     private Integer fabricGuarantee;

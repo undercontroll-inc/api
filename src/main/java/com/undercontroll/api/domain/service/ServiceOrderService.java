@@ -5,9 +5,11 @@ import com.undercontroll.api.application.dto.CreateServiceOrderResponse;
 import com.undercontroll.api.application.dto.ServiceOrderDto;
 import com.undercontroll.api.application.dto.UpdateServiceOrderRequest;
 import com.undercontroll.api.application.port.ServiceOrderPort;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class ServiceOrderService implements ServiceOrderPort {
 
     @Override

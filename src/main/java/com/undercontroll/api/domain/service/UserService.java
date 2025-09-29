@@ -2,13 +2,16 @@ package com.undercontroll.api.domain.service;
 
 import com.undercontroll.api.application.dto.*;
 import com.undercontroll.api.application.port.UserPort;
+import com.undercontroll.api.domain.exceptions.InvalidAuthException;
 import com.undercontroll.api.domain.exceptions.InvalidUserException;
 import com.undercontroll.api.domain.model.User;
 import com.undercontroll.api.infrastructure.persistence.adapter.UserPersistenceAdapter;
 import com.undercontroll.api.infrastructure.security.TokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -16,27 +19,31 @@ public class UserService implements UserPort {
 
     private final UserPersistenceAdapter adapter;
     private final TokenService tokenService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public CreateUserResponse createUser(CreateUserRequest request) {
         validateCreateUserRequest(request);
 
-        User user = new User(
-                request.name(),
-                request.lastName(),
-                request.password(),
-                request.address(),
-                request.cpf(),
-                request.birthDate(),
-                request.userType()
-        );
+        String encryptedPassword = passwordEncoder.encode(request.password());
+
+        User user = User.builder()
+                .name(request.name())
+                .email(request.email())
+                .lastName(request.lastName())
+                .password(encryptedPassword)
+                .address(request.address())
+                .cpf(request.cpf())
+                .birthDate(request.birthDate())
+                .userType(request.userType())
+                .build();
 
         adapter.saveUser(user);
 
         return new CreateUserResponse(
                 request.name(),
+                request.email(),
                 request.lastName(),
-                request.password(),
                 request.address(),
                 request.cpf(),
                 request.birthDate(),
@@ -46,7 +53,25 @@ public class UserService implements UserPort {
 
     @Override
     public AuthUserResponse authUser(AuthUserRequest request) {
-        return null;
+        Optional<User> userFound = adapter.getUserByEmail(request.email());
+
+        if(userFound.isEmpty()){
+            throw new InvalidAuthException("Email or password is invalid");
+        }
+
+        boolean passwordMatch = passwordEncoder
+                .matches(request.password(), userFound.get().getPassword());
+
+        if(!passwordMatch){
+            throw new InvalidAuthException("Email or password is invalid");
+        }
+
+        String token = tokenService.generateToken(userFound.get().getEmail());
+
+        return new AuthUserResponse(
+                token,
+                mapToDto(userFound.get())
+        );
     }
 
     @Override
@@ -163,8 +188,8 @@ public class UserService implements UserPort {
     private UserDto mapToDto(User user) {
         return new UserDto(
                 user.getName(),
+                user.getEmail(),
                 user.getLastName(),
-                user.getPassword(),
                 user.getAddress(),
                 user.getCpf(),
                 user.getBirthDate(),

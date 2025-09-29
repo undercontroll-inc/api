@@ -2,17 +2,18 @@ package com.undercontroll.api.domain.model;
 
 import com.undercontroll.api.domain.enums.UserType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Date;
 
 @Entity
 @Getter
+@AllArgsConstructor
+@Builder
 @NoArgsConstructor
 @Table(name = "users")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
@@ -22,6 +23,9 @@ public class User {
 
     @Setter
     private String lastName;
+
+    @Setter
+    private String email;
 
     @Setter
     private String password;
@@ -39,13 +43,4 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserType userType;
 
-    public User(String name, String lastName, String password, String address, String cpf, Date birthDate, UserType userType) {
-        this.name = name;
-        this.lastName = lastName;
-        this.password = password;
-        this.address = address;
-        this.cpf = cpf;
-        this.birthDate = birthDate;
-        this.userType = userType;
-    }
 }
