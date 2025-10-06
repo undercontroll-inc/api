@@ -26,7 +26,6 @@ public class OrderService implements OrderPort {
 
     @Override
     public Order createOrder() {
-        // Validacao aqui
 
         Order order = new Order();
 
