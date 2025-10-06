@@ -5,8 +5,8 @@ import java.util.Date;
 
 public record CreateUserResponse(
         String name,
+        String email,
         String lastName,
-        String password,
         String address,
         String cpf,
         Date birthDate,

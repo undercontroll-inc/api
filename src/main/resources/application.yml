@@ -1,5 +1,11 @@
 spring:
-  application:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Alterar essa chave em prod, exemplo apenas para desenvolvimento
+          secret-key: "Tj1E-AbULqQy-YJioSkDefRonxhKz0x3MqlUoRObwe8="
+          public-key-location:application:
       name: api
   h2:
     console:

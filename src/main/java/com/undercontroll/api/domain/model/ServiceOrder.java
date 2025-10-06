@@ -18,6 +18,7 @@ public class ServiceOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer serviceOrderId;
 
+
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "user_user_id")
     private User user;
@@ -32,6 +33,13 @@ public class ServiceOrder {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
+    @ManyToOne
+    private User user;
+
+    @OneToMany
+    private List<ComponentPart> componentPartList;
+
+    @ManyToOne
     private Order order;
 
     private Integer fabricGuarantee;

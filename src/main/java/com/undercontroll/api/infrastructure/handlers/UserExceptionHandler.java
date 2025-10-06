@@ -1,5 +1,6 @@
 package com.undercontroll.api.infrastructure.handlers;
 
+import com.undercontroll.api.domain.exceptions.InvalidAuthException;
 import com.undercontroll.api.domain.exceptions.InvalidUserException;
 import com.undercontroll.api.domain.exceptions.UserNotFoundException;
 import com.undercontroll.api.infrastructure.handlers.dto.ExceptionHandlerResponse;
@@ -24,5 +25,12 @@ public class UserExceptionHandler  extends GenericExceptionHandler{
             UserNotFoundException ex, HttpServletRequest request
     ) {
         return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidAuthException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidAuth(
+            InvalidAuthException ex, HttpServletRequest request
+    ) {
+        return this.buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
     }
 }

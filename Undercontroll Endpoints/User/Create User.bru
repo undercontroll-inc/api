@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/v1/api/user
+  url: http://localhost:8080/v1/api/users
   body: json
   auth: inherit
 }
@@ -13,8 +13,9 @@ post {
 body:json {
   {
     "name": "Lucas Furquim",
+    "email": "lucas@gmail.com",
     "lastName": "Furquim",
-    "password": "ishow123",
+    "password": "123",
     "address": "Rua",
     "cpf": "55739713870",
     "birthDate": "2006-03-26",

@@ -6,6 +6,7 @@ import java.util.List;
 public interface UserPort {
 
     CreateUserResponse createUser(CreateUserRequest request);
+    AuthUserResponse authUser(AuthUserRequest request);
     void updateUser(UpdateUserRequest request);
     List<UserDto> getUsers();
     UserDto getUserById(Integer userId);

@@ -37,6 +37,10 @@ public class UserPersistenceAdapter {
         repository.delete(userFound.get());
     }
 
+    public Optional<User> getUserByEmail(String email) {
+        return repository.findUserByEmail(email);
+    }
+
     @Transactional
     public void updateUser(User user) {
         repository.save(user);
