@@ -3,6 +3,8 @@ package com.undercontroll.api.infrastructure.persistence.adapter;
 import com.undercontroll.api.domain.model.ServiceOrder;
 import com.undercontroll.api.infrastructure.persistence.repository.ServiceOrderJpaRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +23,7 @@ public class ServiceOrderPersistenceAdapter {
         return this.repository.findAll();
     }
 
-    public void deleteOrder(ServiceOrder serviceOrder) {repository.delete(serviceOrder);}
+    public void deleteServiceOrder(ServiceOrder serviceOrder) {repository.delete(serviceOrder);}
 
     public Optional<ServiceOrder> findServiceOrderById(Integer orderId) {
         return this.repository.findById(orderId);
@@ -32,4 +34,5 @@ public class ServiceOrderPersistenceAdapter {
         repository.save(serviceOrder);
     }
 
+    public List<ServiceOrder> findServiceOrdersByOrderId(@NotNull @Positive Integer orderId) {return repository.findByOrderId(orderId);}
 }
