@@ -3,12 +3,20 @@ package com.undercontroll.api.application.dto;
 import com.undercontroll.api.domain.model.ComponentPart;
 import com.undercontroll.api.domain.model.Order;
 import com.undercontroll.api.domain.model.User;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Date;
 import java.util.List;
 
 public record UpdateServiceOrderRequest(
+
+        @Id
+        @NotNull
+        @Positive
         Integer serviceOrderId,
+
         User user,
         List<ComponentPart> componentPartList,
         Order order,
