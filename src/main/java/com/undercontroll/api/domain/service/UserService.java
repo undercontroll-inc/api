@@ -138,12 +138,12 @@ public class UserService implements UserPort {
             throw new InvalidUserException("User name cannot be empty");
         }
 
-        if (request.address() == null || request.address().trim().isEmpty()) {
-            throw new InvalidUserException("User address cannot be empty");
+        if(request.phone() == null || request.phone().isEmpty()){
+            throw new InvalidUserException("Phone number cannot be empty");
         }
 
-        if (request.cpf() == null || request.cpf().trim().isEmpty()) {
-            throw new InvalidUserException("User cpf cannot be empty");
+        if (request.address() == null || request.address().trim().isEmpty()) {
+            throw new InvalidUserException("User address cannot be empty");
         }
 
         if (request.birthDate() == null) {

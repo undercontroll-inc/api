@@ -7,6 +7,7 @@ import java.util.Date;
 public record CreateUserRequest(
         String name,
         String email,
+        String phone,
         String lastName,
         String password,
         String address,

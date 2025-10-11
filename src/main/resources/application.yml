@@ -21,3 +21,8 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+server:
+  error:
+    include-binding-errors: always
+    include-message: always

@@ -1,16 +1,19 @@
 package com.undercontroll.api.infrastructure.handlers;
 
+import com.undercontroll.api.application.controller.UserController;
 import com.undercontroll.api.domain.exceptions.InvalidAuthException;
 import com.undercontroll.api.domain.exceptions.InvalidUserException;
 import com.undercontroll.api.domain.exceptions.UserNotFoundException;
 import com.undercontroll.api.infrastructure.handlers.dto.ExceptionHandlerResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+@Slf4j
+@RestControllerAdvice(basePackageClasses = { UserController.class })
 public class UserExceptionHandler  extends GenericExceptionHandler{
 
     @ExceptionHandler(InvalidUserException.class)
@@ -31,6 +34,8 @@ public class UserExceptionHandler  extends GenericExceptionHandler{
     public ResponseEntity<ExceptionHandlerResponse> handleInvalidAuth(
             InvalidAuthException ex, HttpServletRequest request
     ) {
+        log.error("Erro de autenticação: {}", ex.getMessage());
+
         return this.buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
     }
 }
