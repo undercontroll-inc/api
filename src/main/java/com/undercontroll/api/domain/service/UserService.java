@@ -34,7 +34,9 @@ public class UserService implements UserPort {
                 .password(encryptedPassword)
                 .address(request.address())
                 .cpf(request.cpf())
-                .birthDate(request.birthDate())
+                .CEP(request.CEP())
+                .phone(request.phone())
+                .avatarUrl(request.avatarUrl())
                 .userType(request.userType())
                 .build();
 
@@ -46,7 +48,9 @@ public class UserService implements UserPort {
                 request.lastName(),
                 request.address(),
                 request.cpf(),
-                request.birthDate(),
+                request.CEP(),
+                request.phone(),
+                request.avatarUrl(),
                 request.userType()
         );
     }
@@ -95,11 +99,20 @@ public class UserService implements UserPort {
         if (request.cpf() != null) {
             user.setCpf(request.cpf());
         }
-        if (request.birthDate() != null) {
-            user.setBirthDate(request.birthDate());
-        }
         if (request.password() != null) {
             user.setPassword(request.password());
+        }
+
+        if(request.CEP() != null){
+            user.setCEP(request.CEP());
+        }
+
+        if(request.phone() != null) {
+            user.setPhone(request.phone());
+        }
+
+        if(request.avatarUrl() != null) {
+            user.setAvatarUrl(request.avatarUrl());
         }
 
         adapter.updateUser(user);
@@ -138,16 +151,16 @@ public class UserService implements UserPort {
             throw new InvalidUserException("User name cannot be empty");
         }
 
+        if(request.CEP() == null || request.CEP().isEmpty()){
+            throw new InvalidUserException("CEP cannot be empty");
+        }
+
         if(request.phone() == null || request.phone().isEmpty()){
             throw new InvalidUserException("Phone number cannot be empty");
         }
 
         if (request.address() == null || request.address().trim().isEmpty()) {
             throw new InvalidUserException("User address cannot be empty");
-        }
-
-        if (request.birthDate() == null) {
-            throw new InvalidUserException("Order id must be valid");
         }
 
         if (request.lastName() == null || request.lastName().trim().isEmpty()) {
@@ -160,29 +173,7 @@ public class UserService implements UserPort {
     }
 
     private void validateUpdateUser(UpdateUserRequest request) {
-        if (request.name() == null || request.name().trim().isEmpty()) {
-            throw new InvalidUserException("User name cannot be empty");
-        }
-
-        if (request.address() == null || request.address().trim().isEmpty()) {
-            throw new InvalidUserException("User address cannot be empty");
-        }
-
-        if (request.cpf() == null || request.cpf().trim().isEmpty()) {
-            throw new InvalidUserException("User cpf cannot be empty");
-        }
-
-        if (request.birthDate() == null) {
-            throw new InvalidUserException("Order id must be valid");
-        }
-
-        if (request.lastName() == null || request.lastName().trim().isEmpty()) {
-            throw new InvalidUserException("User last name cannot be empty");
-        }
-
-        if (request.password() == null || request.password().trim().isEmpty()) {
-            throw new InvalidUserException("User password cannot be empty");
-        }
+        // Validação pode ser adicionada no futuro se necessário
     }
 
     private UserDto mapToDto(User user) {
@@ -192,7 +183,9 @@ public class UserService implements UserPort {
                 user.getLastName(),
                 user.getAddress(),
                 user.getCpf(),
-                user.getBirthDate(),
+                user.getCEP(),
+                user.getPhone(),
+                user.getAvatarUrl(),
                 user.getUserType()
         );
     }

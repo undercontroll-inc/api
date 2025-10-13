@@ -10,7 +10,7 @@ public interface OrderItemPort {
     OrderItemDto createOrderItem(CreateOrderItemRequest createOrderItemRequest);
     void updateOrderItem(UpdateOrderItemRequest data);
     List<OrderItemDto> getOrderItems();
-    List<OrderItemDto> getOrderItemsByOrderId(Integer orderId);
+//    List<OrderItemDto> getOrderItemsByOrderId(Integer orderId);
     void deleteOrderItem(Integer orderItemId);
     OrderItemDto getOrderItemById(Integer orderItemId);
 

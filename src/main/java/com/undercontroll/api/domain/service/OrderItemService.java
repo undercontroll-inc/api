@@ -5,77 +5,38 @@ import com.undercontroll.api.application.dto.OrderItemDto;
 import com.undercontroll.api.application.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.application.port.OrderItemPort;
 import com.undercontroll.api.domain.exceptions.InvalidOrderItemException;
-import com.undercontroll.api.domain.exceptions.OrderNotFoundException;
-import com.undercontroll.api.domain.model.Order;
 import com.undercontroll.api.domain.model.OrderItem;
 import com.undercontroll.api.infrastructure.persistence.adapter.OrderItemPersistenceAdapter;
-import com.undercontroll.api.infrastructure.persistence.adapter.OrderPersistenceAdapter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderItemService implements OrderItemPort {
 
     private final OrderItemPersistenceAdapter orderItemAdapter;
-    private final OrderPersistenceAdapter orderAdapter;
-
-    public OrderItemService(OrderItemPersistenceAdapter orderItemAdapter, OrderPersistenceAdapter orderAdapter) {
-        this.orderItemAdapter = orderItemAdapter;
-        this.orderAdapter = orderAdapter;
-    }
 
     @Override
     public OrderItemDto createOrderItem(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
 
-        Optional<Order> orderOpt = orderAdapter.getOrders()
-                .stream()
-                .filter(order -> order.getId().equals(request.orderId()))
-                .findFirst();
-
-        if (orderOpt.isEmpty()) {
-            throw new OrderNotFoundException("Order not found with ID: " + request.orderId());
-        }
-
-        Order order = orderOpt.get();
-
-        OrderItem orderItem = new OrderItem(
-                request.name(),
-                request.imageUrl(),
-                order,
-                request.price(),
-                request.discount() != null ? request.discount() : 0.0,
-                request.quantity(),
-                request.status(),
-                null,
-                LocalDateTime.now(),
-                null,
-                null,
-                null,
-                null
-        );
+        OrderItem orderItem = OrderItem.builder()
+                .name(request.name())
+                .imageUrl(request.imageUrl())
+                .status(request.status())
+                .observation(request.observation())
+                .labor(request.labor())
+                .volt(request.volt())
+                .series(request.series())
+                .demands(new ArrayList<>())
+                .build();
 
         OrderItem orderItemSaved = orderItemAdapter.saveOrderItem(orderItem);
 
-        order.addOrderItem(orderItemSaved);
-
-        return new OrderItemDto(
-                orderItemSaved.getName(),
-                orderItemSaved.getImageUrl(),
-                orderItemSaved.getPrice(),
-                orderItemSaved.getDiscount(),
-                orderItemSaved.getQuantity(),
-                orderItemSaved.getStatus(),
-                orderItemSaved.getSentAt(),
-                orderItemSaved.getRequestedAt(),
-                orderItemSaved.getLastReview(),
-                orderItemSaved.getAnalyzedAt(),
-                orderItemSaved.getCompletedAt(),
-                orderItemSaved.getPayedAt()
-        );
+        return mapToDto(orderItemSaved);
     }
 
     @Override
@@ -90,23 +51,20 @@ public class OrderItemService implements OrderItemPort {
         if (data.imageUrl() != null) {
             orderItem.setImageUrl(data.imageUrl());
         }
-        if (data.price() != null) {
-            orderItem.setPrice(data.price());
+        if (data.labor() != null) {
+            orderItem.setLabor(data.labor());
         }
-        if (data.discount() != null) {
-            orderItem.setDiscount(data.discount());
+        if (data.observation() != null) {
+            orderItem.setObservation(data.observation());
         }
-        if (data.quantity() != null) {
-            orderItem.setQuantity(data.quantity());
+        if (data.volt() != null) {
+            orderItem.setVolt(data.volt());
+        }
+        if (data.series() != null) {
+            orderItem.setSeries(data.series());
         }
         if (data.status() != null) {
             orderItem.setStatus(data.status());
-        }
-        if (data.sentAt() != null) {
-            orderItem.setSentAt(data.sentAt());
-        }
-        if (data.requestedAt() != null) {
-            orderItem.setRequestedAt(data.requestedAt());
         }
         if (data.lastReview() != null) {
             orderItem.setLastReview(data.lastReview());
@@ -116,9 +74,6 @@ public class OrderItemService implements OrderItemPort {
         }
         if (data.completedAt() != null) {
             orderItem.setCompletedAt(data.completedAt());
-        }
-        if (data.payedAt() != null) {
-            orderItem.setPayedAt(data.payedAt());
         }
 
         orderItemAdapter.updateOrderItem(orderItem);
@@ -132,19 +87,19 @@ public class OrderItemService implements OrderItemPort {
                 .map(this::mapToDto)
                 .toList();
     }
-
-    @Override
-    public List<OrderItemDto> getOrderItemsByOrderId(Integer orderId) {
-        if (orderId == null) {
-            throw new InvalidOrderItemException("Order ID cannot be null");
-        }
-
-        return orderItemAdapter
-                .getOrderItemsByOrderId(orderId)
-                .stream()
-                .map(this::mapToDto)
-                .toList();
-    }
+//
+//    @Override
+//    public List<OrderItemDto> getOrderItemsByOrderId(Integer orderId) {
+//        if (orderId == null) {
+//            throw new InvalidOrderItemException("Order ID cannot be null");
+//        }
+//
+//        return orderItemAdapter
+//                .getOrderItemsByOrderId(orderId)
+//                .stream()
+//                .map(this::mapToDto)
+//                .toList();
+//    }
 
     @Override
     public void deleteOrderItem(Integer orderItemId) {
@@ -170,22 +125,9 @@ public class OrderItemService implements OrderItemPort {
             throw new InvalidOrderItemException("Order item name cannot be empty");
         }
 
-        if (request.price() == null || request.price() <= 0) {
-            throw new InvalidOrderItemException("Order item price must be positive");
+        if (request.labor() != null && request.labor() < 0) {
+            throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
-
-        if (request.quantity() == null || request.quantity() <= 0) {
-            throw new InvalidOrderItemException("Order item quantity must be positive");
-        }
-
-        if (request.discount() == null || request.discount() <= 0) {
-            throw new InvalidOrderItemException("Order item quantity must be positive");
-        }
-
-        if (request.orderId() == null || request.orderId() <= 0) {
-            throw new InvalidOrderItemException("Order id must be valid");
-        }
-
     }
 
     private void validateUpdateOrderItem(UpdateOrderItemRequest orderItem) {
@@ -193,16 +135,12 @@ public class OrderItemService implements OrderItemPort {
             throw new InvalidOrderItemException("Order item ID cannot be null for update");
         }
 
-        if (orderItem.name().trim().isEmpty()) {
+        if (orderItem.name() != null && orderItem.name().trim().isEmpty()) {
             throw new InvalidOrderItemException("Order item name cannot be empty");
         }
 
-        if (orderItem.price() != null && orderItem.price() <= 0) {
-            throw new InvalidOrderItemException("Order item price must be positive");
-        }
-
-        if (orderItem.quantity() != null && orderItem.quantity() <= 0) {
-            throw new InvalidOrderItemException("Order item quantity must be positive");
+        if (orderItem.labor() != null && orderItem.labor() < 0) {
+            throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
     }
 
@@ -210,16 +148,14 @@ public class OrderItemService implements OrderItemPort {
         return new OrderItemDto(
                 orderItem.getName(),
                 orderItem.getImageUrl(),
-                orderItem.getPrice(),
-                orderItem.getDiscount(),
-                orderItem.getQuantity(),
+                orderItem.getLabor(),
+                orderItem.getObservation(),
+                orderItem.getVolt(),
+                orderItem.getSeries(),
                 orderItem.getStatus(),
-                orderItem.getSentAt(),
-                orderItem.getRequestedAt(),
                 orderItem.getLastReview(),
                 orderItem.getAnalyzedAt(),
-                orderItem.getCompletedAt(),
-                orderItem.getPayedAt()
+                orderItem.getCompletedAt()
         );
     }
 }

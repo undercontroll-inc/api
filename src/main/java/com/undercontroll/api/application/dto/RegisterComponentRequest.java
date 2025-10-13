@@ -6,6 +6,7 @@ public record RegisterComponentRequest(
         String brand,
         Double price,
         String supplier,
-        String category
+        String category,
+        Long quantity
 ) {
 }

@@ -22,14 +22,15 @@ public class ComponentService implements ComponentPort {
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);
 
-        ComponentPart component = new ComponentPart(
-                request.name(),
-                request.description(),
-                request.brand(),
-                request.price(),
-                request.supplier(),
-                request.category()
-        );
+        ComponentPart component = ComponentPart.builder()
+                .name(request.name())
+                .description(request.description())
+                .brand(request.brand())
+                .price(request.price())
+                .supplier(request.supplier())
+                .category(request.category())
+                .quantity(request.quantity() != null ? request.quantity() : 0)
+                .build();
 
         adapter.save(component);
 

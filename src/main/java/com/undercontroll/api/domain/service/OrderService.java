@@ -1,5 +1,6 @@
 package com.undercontroll.api.domain.service;
 
+import com.undercontroll.api.application.dto.CreateOrderRequest;
 import com.undercontroll.api.application.dto.OrderDto;
 import com.undercontroll.api.application.dto.OrderItemDto;
 import com.undercontroll.api.application.dto.UpdateOrderRequest;
@@ -8,26 +9,38 @@ import com.undercontroll.api.domain.exceptions.InvalidDeleteOrderException;
 import com.undercontroll.api.domain.exceptions.InvalidUpdateOrderException;
 import com.undercontroll.api.domain.exceptions.OrderNotFoundException;
 import com.undercontroll.api.domain.model.Order;
+import com.undercontroll.api.domain.model.OrderItem;
+import com.undercontroll.api.infrastructure.persistence.adapter.OrderItemPersistenceAdapter;
 import com.undercontroll.api.infrastructure.persistence.adapter.OrderPersistenceAdapter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService implements OrderPort {
 
     private final OrderPersistenceAdapter adapter;
-
-
-    public OrderService(OrderPersistenceAdapter adapter) {
-        this.adapter = adapter;
-    }
+    private final OrderItemPersistenceAdapter orderItemAdapter;
 
     @Override
-    public Order createOrder() {
+    public Order createOrder(
+            CreateOrderRequest request
+    ) {
+        List<OrderItem> orderItems = new ArrayList<>();
 
-        Order order = new Order();
+        if(request.orderItemIds() != null && !request.orderItemIds().isEmpty()) {
+            orderItems = orderItemAdapter.findAllById(request.orderItemIds());
+        }
+
+        Order order = Order.builder()
+                .total(0.0)
+                .discount(0.0)
+                .orderItems(orderItems)
+                .build();
 
         Order orderSaved = adapter.saveOrder(order);
 
@@ -65,22 +78,18 @@ public class OrderService implements OrderPort {
                 .map(o -> new OrderDto(
                         o.getOrderItems()
                                 .stream()
-                                .map(i -> {
-                                    return new OrderItemDto(
-                                            i.getName(),
-                                            i.getImageUrl(),
-                                            i.getPrice(),
-                                            i.getDiscount(),
-                                            i.getQuantity(),
-                                            i.getStatus(),
-                                            i.getSentAt(),
-                                            i.getRequestedAt(),
-                                            i.getLastReview(),
-                                            i.getAnalyzedAt(),
-                                            i.getCompletedAt(),
-                                            i.getPayedAt()
-                                    );
-                                })
+                                .map(i -> new OrderItemDto(
+                                        i.getName(),
+                                        i.getImageUrl(),
+                                        i.getLabor(),
+                                        i.getObservation(),
+                                        i.getVolt(),
+                                        i.getSeries(),
+                                        i.getStatus(),
+                                        i.getLastReview(),
+                                        i.getAnalyzedAt(),
+                                        i.getCompletedAt()
+                                ))
                                 .toList(),
                         o.getCreatedAt(),
                         o.getStartedAt(),

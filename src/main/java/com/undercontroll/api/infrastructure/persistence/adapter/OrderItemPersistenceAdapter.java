@@ -24,9 +24,9 @@ public class OrderItemPersistenceAdapter {
         return repository.findAll();
     }
 
-    public List<OrderItem> getOrderItemsByOrderId(Integer orderId) {
-        return repository.findByOrderId(orderId);
-    }
+//    public List<OrderItem> getOrderItemsByOrderId(Integer orderId) {
+//        return repository.findByOrderId(orderId);
+//    }
 
     public OrderItem getOrderItemById(Integer orderItemId) {
         return repository.findById(orderItemId)
@@ -40,9 +40,11 @@ public class OrderItemPersistenceAdapter {
             throw new OrderItemNotFoundException("Order item not found for deletion");
         }
 
-        orderItemFound.get().getOrder().removeOrderItem(orderItemFound.get());
-
         repository.delete(orderItemFound.get());
+    }
+
+    public List<OrderItem> findAllById(List<Integer> orderItemIds) {
+        return this.repository.findAllById(orderItemIds);
     }
 
     @Transactional

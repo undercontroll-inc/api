@@ -8,15 +8,13 @@ public record UpdateOrderItemRequest(
         Integer id,
         String name,
         String imageUrl,
-        Double price,
-        Double discount,
-        Integer quantity,
+        Double labor,
+        String observation,
+        String volt,
+        String series,
         OrderItemStatus status,
-        LocalDateTime sentAt,
-        LocalDateTime requestedAt,
         LocalDateTime lastReview,
         LocalDateTime analyzedAt,
-        LocalDateTime completedAt,
-        LocalDateTime payedAt
+        LocalDateTime completedAt
 ) {
 }

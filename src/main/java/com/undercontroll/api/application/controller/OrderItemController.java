@@ -45,14 +45,6 @@ public class OrderItemController {
         return ResponseEntity.ok(orderItems);
     }
 
-    @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<OrderItemDto>> getOrderItemsByOrderId(
-            @PathVariable Integer orderId
-    ) {
-        List<OrderItemDto> orderItems = orderItemPort.getOrderItemsByOrderId(orderId);
-        return ResponseEntity.ok(orderItems);
-    }
-
     @GetMapping("/{orderItemId}")
     public ResponseEntity<OrderItemDto> getOrderItemById(
             @PathVariable Integer orderItemId

@@ -12,7 +12,8 @@ public record CreateUserRequest(
         String password,
         String address,
         String cpf,
-        Date birthDate,
-        UserType userType
+        String avatarUrl,
+        UserType userType,
+        String CEP
 ){
 }

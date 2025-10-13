@@ -7,7 +7,11 @@ meta {
 post {
   url: http://localhost:8080/v1/api/orders
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6Imx1Y2FzQGdtYWlsLmNvbSIsImV4cCI6MTc2MDIwOTI0OCwiaWF0IjoxNzYwMjA1NjQ4fQ.y3SHD1_ww5sTfAGsk-cXRLGrys09EzEHEv7cDBImZAaZMm1wV64VEX5ifG8T2XrRD7A4ybaYU5z-nW0xPib5lf2VRjsX1flKXRUiEPZGEbHLlDup3nhEVX5UDWiAjCiJMcreWpuM-qTDka4ooO3KajuGVZ45jUkuIFXKRQ_YNxME52z2KaYMDtTdIMJk_xVluGdC1LvdaCj9Ta0unprnv337OYUMb65RzLPqfXc5rlyWc07Vk1VaL7i9jhasfrbNBfM1PCQTj6fx5rzupO0TpN8ZR4qoouI3Oi2XIK6Pe99ZpzgRGmsGmOe-b_4Qh8ONNPF33bF2LlSx7XzRqZZ_8g
 }
 
 settings {

@@ -10,6 +10,8 @@ public record UpdateUserRequest(
         String password,
         String address,
         String cpf,
-        Date birthDate,
-        UserType userType        
+        String phone,
+        String avatarUrl,
+        String CEP,
+        UserType userType
 ) {}

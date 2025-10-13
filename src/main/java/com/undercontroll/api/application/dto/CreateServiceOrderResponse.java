@@ -9,29 +9,18 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 @Builder
 public record CreateServiceOrderResponse(
         @NotNull
-        User user,
-
-        @NotNull
-        @NotEmpty
-        List<ComponentPart> componentPartList,
-
-        @NotNull
         Order order,
 
         @NotNull
         @PositiveOrZero
         Integer fabricGuarantee,
-
-
-        @NotNull
-        @PositiveOrZero
-        Integer budget,
 
 
         @NotNull
@@ -51,7 +40,10 @@ public record CreateServiceOrderResponse(
         String store,
 
         @NotBlank
-        String issue
+        String issue,
+
+        LocalDateTime withdrawAt,
+        LocalDateTime receivedAt
 
 ) {
 }

@@ -5,22 +5,21 @@ import com.undercontroll.api.domain.model.Order;
 import com.undercontroll.api.domain.model.User;
 import lombok.Builder;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 @Builder
 public record ServiceOrderDto (
-        User user,
-        List<ComponentPart> componentPartList,
-        Order order,
+
         Integer fabricGuarantee,
-        Integer budget,
         Integer returnGuarantee,
         String description,
         String nf,
         Date date,
         String store,
-        String issue
-
+        String issue,
+        LocalDateTime withDrawAt,
+        LocalDateTime receivedAt
 ){
 }

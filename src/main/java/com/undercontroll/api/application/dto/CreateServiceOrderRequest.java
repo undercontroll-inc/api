@@ -1,16 +1,11 @@
 package com.undercontroll.api.application.dto;
 
-import com.undercontroll.api.domain.model.ComponentPart;
-import com.undercontroll.api.domain.model.Order;
-import com.undercontroll.api.domain.model.User;
-
+import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.List;
 
 public record CreateServiceOrderRequest(
-        User user,
-        List<ComponentPart> componentPartList,
-        Order order,
+
+        Integer orderId,
         Integer fabricGuarantee,
         Integer budget,
         Integer returnGuarantee,
@@ -18,7 +13,9 @@ public record CreateServiceOrderRequest(
         String nf,
         Date date,
         String store,
-        String issue
+        String issue,
+        LocalDateTime withdrawalAt,
+        LocalDateTime received_at
 
 ) {
 }

@@ -34,5 +34,5 @@ public class ServiceOrderPersistenceAdapter {
         repository.save(serviceOrder);
     }
 
-    public List<ServiceOrder> findServiceOrdersByOrderId(@NotNull @Positive Integer orderId) {return repository.findByOrderId(orderId);}
+    public List<ServiceOrder> findServiceOrdersByOrderId(@NotNull @Positive Integer orderId) {return repository.findByOrder_Id(orderId);}
 }

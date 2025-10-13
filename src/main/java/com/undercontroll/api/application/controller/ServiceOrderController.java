@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/api/service-order")
+@RequestMapping("/v1/api/service-orders")
 @RequiredArgsConstructor
 public class ServiceOrderController {
 
@@ -64,4 +64,14 @@ public class ServiceOrderController {
 
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/export/{id}")
+    public ResponseEntity<Void> exportServiceOrder(
+            @PathVariable Integer id
+    ) {
+        serviceOrderPort.exportServiceOrder(id);
+
+        return ResponseEntity.ok().build();
+    }
+
 }

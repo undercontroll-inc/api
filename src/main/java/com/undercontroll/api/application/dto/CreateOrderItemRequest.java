@@ -5,9 +5,9 @@ import com.undercontroll.api.domain.enums.OrderItemStatus;
 public record CreateOrderItemRequest(
         String name,
         String imageUrl,
-        Integer orderId,
-        Double price,
-        Double discount,
-        Integer quantity,
+        String observation,
+        String volt,
+        String series,
+        Double labor,
         OrderItemStatus status
 ) {}

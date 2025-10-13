@@ -1,6 +1,5 @@
 package com.undercontroll.api.domain.model;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,25 +9,16 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "component")
-public class ComponentPart {
+@Table(name = "demand")
+public class Demand {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String name;
-
-    private String description;
-
-    private String brand;
-
-    private Double price;
-
-    private String supplier;
-
-    private String category;
-
     private Long quantity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ComponentPart component;
 
 }
