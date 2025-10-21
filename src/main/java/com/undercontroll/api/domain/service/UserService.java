@@ -2,11 +2,13 @@ package com.undercontroll.api.domain.service;
 
 import com.undercontroll.api.application.dto.*;
 import com.undercontroll.api.application.port.UserPort;
+import com.undercontroll.api.domain.exceptions.GoogleAccountNotFoundException;
 import com.undercontroll.api.domain.exceptions.InvalidAuthException;
 import com.undercontroll.api.domain.exceptions.InvalidUserException;
 import com.undercontroll.api.domain.model.User;
 import com.undercontroll.api.infrastructure.persistence.adapter.UserPersistenceAdapter;
 import com.undercontroll.api.infrastructure.security.TokenService;
+import com.undercontroll.api.infrastructure.security.GoogleTokenVerifier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,10 +22,29 @@ public class UserService implements UserPort {
     private final UserPersistenceAdapter adapter;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     @Override
     public CreateUserResponse createUser(CreateUserRequest request) {
         validateCreateUserRequest(request);
+
+        Optional<User> existingUserByEmail = adapter.getUserByEmail(request.email());
+
+        if(existingUserByEmail.isPresent()) {
+            throw new InvalidUserException("Email is already in use");
+        }
+
+        Optional<User> existingUserByPhone = adapter.getUserByPhone(request.phone());
+
+        if (existingUserByPhone.isPresent()) {
+            throw new InvalidUserException("Phone is already in use");
+        }
+
+        Optional<User> existingUserByCpf = adapter.getUserByCpf(request.cpf());
+
+        if(existingUserByCpf.isPresent()) {
+            throw new InvalidUserException("CPF is already in use");
+        }
 
         String encryptedPassword = passwordEncoder.encode(request.password());
 
@@ -134,6 +155,29 @@ public class UserService implements UserPort {
         }
 
         adapter.deleteUser(userId);
+    }
+
+    @Override
+    public AuthUserResponse authUserByGoogle(AuthGoogleRequest request) {
+        Optional<User> userFound = adapter.getUserByEmail(request.email());
+
+        if(userFound.isEmpty()){
+            throw new GoogleAccountNotFoundException();
+        }
+
+        // Verifica se o token recebido realmente pertence ao Google e corresponde ao email enviado
+        boolean valid = googleTokenVerifier.verify(request.token(), request.email());
+
+        if(!valid){
+            throw new InvalidAuthException("Google token is invalid");
+        }
+
+        String token = tokenService.generateToken(userFound.get().getEmail());
+
+        return new AuthUserResponse(
+                token,
+                mapToDto(userFound.get())
+        );
     }
 
     @Override

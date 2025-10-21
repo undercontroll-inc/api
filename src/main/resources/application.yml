@@ -25,6 +25,10 @@ spring:
       hibernate:
         globally_quoted_identifiers: true
 
+firebase:
+  config:
+    path: firebase-service-account.json
+
 server:
   error:
     include-binding-errors: always

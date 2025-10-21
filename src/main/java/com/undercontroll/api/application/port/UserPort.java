@@ -11,5 +11,6 @@ public interface UserPort {
     List<UserDto> getUsers();
     UserDto getUserById(Integer userId);
     void deleteUser(Integer userId);
+    AuthUserResponse authUserByGoogle(AuthGoogleRequest request);
 
 }

@@ -41,6 +41,14 @@ public class UserPersistenceAdapter {
         return repository.findUserByEmail(email);
     }
 
+    public Optional<User> getUserByPhone(String phone) {
+        return repository.findUserByPhone(phone);
+    }
+
+    public Optional<User> getUserByCpf(String cpf) {
+        return repository.findUserByCpf(cpf);
+    }
+
     @Transactional
     public void updateUser(User user) {
         repository.save(user);

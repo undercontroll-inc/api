@@ -33,6 +33,15 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/auth/google")
+    public ResponseEntity<AuthUserResponse> authGoogle(
+            @RequestBody @Valid AuthGoogleRequest request
+    ) {
+        AuthUserResponse response = userPort.authUserByGoogle(request);
+
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping
     public ResponseEntity<Void> updateOrder(
             @RequestBody UpdateUserRequest request
