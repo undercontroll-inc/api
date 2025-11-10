@@ -67,7 +67,7 @@ public class UserController {
     }
 
     @DeleteMapping("{userId}")
-    public ResponseEntity<Void> deleteOrder(
+    public ResponseEntity<Void> deleteUser(
             @PathVariable Integer userId
     ) {
         userPort.deleteUser(userId);

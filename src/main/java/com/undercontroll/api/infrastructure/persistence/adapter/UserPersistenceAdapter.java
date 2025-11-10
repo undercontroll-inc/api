@@ -31,7 +31,7 @@ public class UserPersistenceAdapter {
         Optional<User> userFound = repository.findById(userId);
 
         if (userFound.isEmpty()) {
-            throw new UserNotFoundException("Order item not found for deletion");
+            throw new UserNotFoundException("User not found for deletion");
         }
 
         repository.delete(userFound.get());
