@@ -4,7 +4,7 @@ import com.undercontroll.api.dto.ComponentDto;
 import com.undercontroll.api.dto.RegisterComponentRequest;
 import com.undercontroll.api.dto.RegisterComponentResponse;
 import com.undercontroll.api.dto.UpdateComponentRequest;
-import com.undercontroll.api.model.ComponentPort;
+import com.undercontroll.api.service.ComponentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,20 +16,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ComponentController {
 
-    private final ComponentPort componentPort;
+    private final ComponentService service;
 
     @PostMapping
     public ResponseEntity<RegisterComponentResponse> register(
             @RequestBody RegisterComponentRequest request
     )  {
-        var response = componentPort.register(request);
+        var response = service.register(request);
 
         return ResponseEntity.status(201).body(response);
     }
 
     @GetMapping
     public ResponseEntity<List<ComponentDto>> findAll() {
-        var response = componentPort.getComponents();
+        var response = service.getComponents();
 
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
@@ -38,7 +38,7 @@ public class ComponentController {
     public ResponseEntity<List<ComponentDto>> findByCategory(
             @PathVariable String category
     ) {
-        var response = componentPort.getComponentsByCategory(category);
+        var response = service.getComponentsByCategory(category);
 
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
@@ -47,7 +47,7 @@ public class ComponentController {
     public ResponseEntity<List<ComponentDto>> findByName(
             @PathVariable String name
     ) {
-        var response = componentPort.getComponentsByCategory(name);
+        var response = service.getComponentsByCategory(name);
 
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
@@ -56,7 +56,7 @@ public class ComponentController {
     public ResponseEntity<Void> updateComponent(
             @RequestBody UpdateComponentRequest request
     ) {
-        componentPort.updateComponent(request);
+        service.updateComponent(request);
 
         return ResponseEntity.ok().build();
     }
@@ -65,7 +65,7 @@ public class ComponentController {
     public ResponseEntity<Void> deleteComponent(
             @PathVariable Integer componentId
     ) {
-        componentPort.deleteComponent(componentId);
+        service.deleteComponent(componentId);
 
         return ResponseEntity.ok().build();
     }

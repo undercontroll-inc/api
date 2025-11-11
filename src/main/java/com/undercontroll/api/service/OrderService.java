@@ -4,14 +4,13 @@ import com.undercontroll.api.dto.CreateOrderRequest;
 import com.undercontroll.api.dto.OrderDto;
 import com.undercontroll.api.dto.OrderItemDto;
 import com.undercontroll.api.dto.UpdateOrderRequest;
-import com.undercontroll.api.model.OrderPort;
 import com.undercontroll.api.exception.InvalidDeleteOrderException;
 import com.undercontroll.api.exception.InvalidUpdateOrderException;
 import com.undercontroll.api.exception.OrderNotFoundException;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.model.OrderItem;
-import com.undercontroll.api.model.OrderItemPersistenceAdapter;
-import com.undercontroll.api.model.OrderPersistenceAdapter;
+import com.undercontroll.api.repository.OrderItemJpaRepository;
+import com.undercontroll.api.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,19 +20,18 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class OrderService implements OrderPort {
+public class OrderService {
 
-    private final OrderPersistenceAdapter adapter;
-    private final OrderItemPersistenceAdapter orderItemAdapter;
+    private final OrderJpaRepository repository;
+    private final OrderItemJpaRepository orderItemJpaRepository;
 
-    @Override
     public Order createOrder(
             CreateOrderRequest request
     ) {
         List<OrderItem> orderItems = new ArrayList<>();
 
         if(request.orderItemIds() != null && !request.orderItemIds().isEmpty()) {
-            orderItems = orderItemAdapter.findAllById(request.orderItemIds());
+            orderItems = orderItemJpaRepository.findAllById(request.orderItemIds());
         }
 
         Order order = Order.builder()
@@ -42,18 +40,13 @@ public class OrderService implements OrderPort {
                 .orderItems(orderItems)
                 .build();
 
-        Order orderSaved = adapter.saveOrder(order);
-
-        adapter.saveOrder(orderSaved);
-
-        return orderSaved;
+        return repository.save(order);
     }
 
-    @Override
     public void updateOrder(UpdateOrderRequest request) {
         validateUpdateOrder(request);
 
-        Optional<Order> orderFound = adapter.findOrderById(request.id());
+        Optional<Order> orderFound = repository.findById(request.id());
 
         if(orderFound.isEmpty()) {
             throw new OrderNotFoundException("Could not found the order");
@@ -67,13 +60,12 @@ public class OrderService implements OrderPort {
             orderFound.get().setStartedAt(request.startedAt());
         }
 
-        adapter.updateOrder(orderFound.get());
+        repository.save(orderFound.get());
     }
 
-    @Override
     public List<OrderDto> getOrders() {
-        return adapter
-                .getOrders()
+        return repository
+                .findAll()
                 .stream()
                 .map(o -> new OrderDto(
                         o.getOrderItems()
@@ -98,17 +90,16 @@ public class OrderService implements OrderPort {
                 .toList();
     }
 
-    @Override
     public void deleteOrder(Integer orderId) {
         validateDeleteOrder(orderId);
 
-        Optional<Order> orderFound = adapter.findOrderById(orderId);
+        Optional<Order> orderFound = repository.findById(orderId);
 
         if(orderFound.isEmpty()) {
             throw new OrderNotFoundException("Could not found the order");
         }
 
-        adapter.deleteOrder(orderFound.get());
+        repository.delete(orderFound.get());
     }
 
     private void validateUpdateOrder(UpdateOrderRequest request) {

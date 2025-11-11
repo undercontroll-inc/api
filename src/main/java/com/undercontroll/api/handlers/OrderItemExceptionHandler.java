@@ -1,4 +1,4 @@
-package com.undercontroll.api.exception;
+package com.undercontroll.api.handlers;
 
 import com.undercontroll.api.exception.InvalidOrderItemException;
 import com.undercontroll.api.exception.OrderItemNotFoundException;

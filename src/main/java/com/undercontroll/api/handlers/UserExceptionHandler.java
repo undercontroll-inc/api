@@ -1,4 +1,4 @@
-package com.undercontroll.api.exception;
+package com.undercontroll.api.handlers;
 
 import com.undercontroll.api.controller.UserController;
 import com.undercontroll.api.exception.InvalidAuthException;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @RestControllerAdvice(basePackageClasses = { UserController.class })
-public class UserExceptionHandler  extends GenericExceptionHandler{
+public class UserExceptionHandler  extends GenericExceptionHandler {
 
     @ExceptionHandler(InvalidUserException.class)
     public ResponseEntity<ExceptionHandlerResponse> handleInvalidUser(

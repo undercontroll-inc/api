@@ -6,8 +6,8 @@ import com.undercontroll.api.exception.InvalidServiceOrderException;
 import com.undercontroll.api.exception.ServiceOrderNotFoundException;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.model.ServiceOrder;
-import com.undercontroll.api.model.OrderPersistenceAdapter;
-import com.undercontroll.api.model.ServiceOrderPersistenceAdapter;
+import com.undercontroll.api.repository.OrderJpaRepository;
+import com.undercontroll.api.repository.ServiceOrderJpaRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -19,18 +19,17 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceOrderService implements ServiceOrderPort {
+public class ServiceOrderService {
 
-    private final ServiceOrderPersistenceAdapter adapter;
+    private final ServiceOrderJpaRepository repository;
     private final PdfExportService pdfExportService;
-    private final OrderPersistenceAdapter orderAdapter;
+    private final OrderJpaRepository orderRepository;
 
-    @Override
     public CreateServiceOrderResponse createServiceOrder(
             @Valid CreateServiceOrderRequest request
     ) {
 
-        Optional<Order> order = orderAdapter.findOrderById(request.orderId());
+        Optional<Order> order = orderRepository.findById(request.orderId());
 
         if(order.isEmpty()) {
             throw new InvalidServiceOrderException("Could not found the order associated with id: %d while creating the service order".formatted(request.orderId()));
@@ -49,7 +48,7 @@ public class ServiceOrderService implements ServiceOrderPort {
                 .withdraw_at(request.withdrawalAt())
                 .build();
 
-        ServiceOrder serviceOrderSaved = adapter.saveServiceOrder(serviceOrder);
+        ServiceOrder serviceOrderSaved = repository.save(serviceOrder);
 
         return CreateServiceOrderResponse.builder()
                 .order(serviceOrderSaved.getOrder())
@@ -67,11 +66,10 @@ public class ServiceOrderService implements ServiceOrderPort {
 
     }
 
-    @Override
     public void updateServiceOrder(
             @Valid UpdateServiceOrderRequest request
     ) {
-        ServiceOrder serviceOrder = adapter.findServiceOrderById(request.serviceOrderId())
+        ServiceOrder serviceOrder = repository.findById(request.serviceOrderId())
                 .orElseThrow(() -> new ServiceOrderNotFoundException("Service order not found for ID: " + request.serviceOrderId()));
 
 
@@ -87,49 +85,45 @@ public class ServiceOrderService implements ServiceOrderPort {
         Optional.ofNullable(request.store()).ifPresent(serviceOrder::setStore);
         Optional.ofNullable(request.issue()).ifPresent(serviceOrder::setIssue);
 
-        adapter.updateServiceOrder(serviceOrder);
+        repository.save(serviceOrder);
 
     }
 
-    @Override
     public List<ServiceOrderDto> getServiceOrders(
     ) {
-        return adapter
-                .getServiceOrders()
+        return repository
+                .findAll()
                 .stream()
                 .map(this::mapToDto)
                 .toList();
     }
 
-    @Override
     public ServiceOrderDto getServiceOrderById(
             @NotNull @Positive Integer serviceOrderId
     ) {
-        ServiceOrder serviceOrder = adapter.findServiceOrderById(serviceOrderId)
+        ServiceOrder serviceOrder = repository.findById(serviceOrderId)
                 .orElseThrow(() -> new ServiceOrderNotFoundException("Service order not found for ID: " + serviceOrderId));
         return mapToDto(serviceOrder);
     }
 
-    @Override
     public void deleteServiceOrder(
             @NotNull @Positive Integer serviceOrderId
     ) {
         validateDeleteOrder(serviceOrderId);
 
-        Optional<ServiceOrder> orderFound = adapter.findServiceOrderById(serviceOrderId);
+        Optional<ServiceOrder> orderFound = repository.findById(serviceOrderId);
 
         if(orderFound.isEmpty()) {
             throw new ServiceOrderNotFoundException("Could not found the Service order");
         }
 
-        adapter.deleteServiceOrder(orderFound.get());
+        repository.delete(orderFound.get());
     }
 
-    @Override
     public List<ServiceOrderDto> getServiceOrdersByOrderId(
             @NotNull @Positive Integer orderId
     ) {
-        List<ServiceOrder> serviceOrders = adapter.findServiceOrdersByOrderId(orderId);
+        List<ServiceOrder> serviceOrders = repository.findByOrder_Id(orderId);
         if(serviceOrders.isEmpty()) {
             throw new ServiceOrderNotFoundException("No service orders found for the given order ID: " + orderId);
         }
@@ -138,9 +132,8 @@ public class ServiceOrderService implements ServiceOrderPort {
                 .toList();
     }
 
-    @Override
     public void exportServiceOrder(Integer id) {
-        Optional<ServiceOrder> orderFound = adapter.findServiceOrderById(id);
+        Optional<ServiceOrder> orderFound = repository.findById(id);
 
         if(orderFound.isEmpty()) {
             throw new ServiceOrderNotFoundException("Could not found the Service order");

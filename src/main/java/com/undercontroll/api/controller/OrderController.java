@@ -3,8 +3,8 @@ package com.undercontroll.api.controller;
 import com.undercontroll.api.dto.CreateOrderRequest;
 import com.undercontroll.api.dto.OrderDto;
 import com.undercontroll.api.dto.UpdateOrderRequest;
-import com.undercontroll.api.model.OrderPort;
 import com.undercontroll.api.model.Order;
+import com.undercontroll.api.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +16,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderPort orderPort;
+    private final OrderService orderService;
 
     @PostMapping
     public ResponseEntity<Order> createOrder(
             @RequestBody CreateOrderRequest createOrderRequest
     ) {
-        Order order = orderPort.createOrder(createOrderRequest);
+        Order order = orderService.createOrder(createOrderRequest);
 
         return ResponseEntity.status(201).body(order);
     }
@@ -31,14 +31,14 @@ public class OrderController {
     public ResponseEntity<Void> updateOrder(
             @RequestBody UpdateOrderRequest request
     ) {
-        orderPort.updateOrder(request);
+        orderService.updateOrder(request);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
     public ResponseEntity<List<OrderDto>> getOrders() {
-        List<OrderDto> orders = orderPort.getOrders();
+        List<OrderDto> orders = orderService.getOrders();
 
         return orders.isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(orders);
     }
@@ -47,7 +47,7 @@ public class OrderController {
     public ResponseEntity<Void> deleteOrder(
             @PathVariable Integer orderId
     ) {
-        orderPort.deleteOrder(orderId);
+        orderService.deleteOrder(orderId);
 
         return ResponseEntity.noContent().build();
     }

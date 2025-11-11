@@ -1,13 +1,13 @@
 package com.undercontroll.api.service;
 
 import com.undercontroll.api.dto.*;
-import com.undercontroll.api.model.UserPort;
 import com.undercontroll.api.exception.GoogleAccountNotFoundException;
 import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;
+import com.undercontroll.api.exception.UserNotFoundException;
 import com.undercontroll.api.model.User;
-import com.undercontroll.api.model.UserPersistenceAdapter;
 import com.undercontroll.api.model.GoogleTokenVerifier;
+import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,30 +16,29 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
-public class UserService implements UserPort {
+public class UserService {
 
-    private final UserPersistenceAdapter adapter;
+    private final UserJpaRepository repository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
     private final GoogleTokenVerifier googleTokenVerifier;
 
-    @Override
     public CreateUserResponse createUser(CreateUserRequest request) {
         validateCreateUserRequest(request);
 
-        Optional<User> existingUserByEmail = adapter.getUserByEmail(request.email());
+        Optional<User> existingUserByEmail = repository.findUserByEmail(request.email());
 
         if(existingUserByEmail.isPresent()) {
             throw new InvalidUserException("Email is already in use");
         }
 
-        Optional<User> existingUserByPhone = adapter.getUserByPhone(request.phone());
+        Optional<User> existingUserByPhone = repository.findUserByPhone(request.phone());
 
         if (existingUserByPhone.isPresent()) {
             throw new InvalidUserException("Phone is already in use");
         }
 
-        Optional<User> existingUserByCpf = adapter.getUserByCpf(request.cpf());
+        Optional<User> existingUserByCpf = repository.findUserByCpf(request.cpf());
 
         if(existingUserByCpf.isPresent()) {
             throw new InvalidUserException("CPF is already in use");
@@ -60,7 +59,7 @@ public class UserService implements UserPort {
                 .userType(request.userType())
                 .build();
 
-        adapter.saveUser(user);
+        repository.save(user);
 
         return new CreateUserResponse(
                 request.name(),
@@ -75,9 +74,8 @@ public class UserService implements UserPort {
         );
     }
 
-    @Override
     public AuthUserResponse authUser(AuthUserRequest request) {
-        Optional<User> userFound = adapter.getUserByEmail(request.email());
+        Optional<User> userFound = repository.findUserByEmail(request.email());
 
         if(userFound.isEmpty()){
             throw new InvalidAuthException("Email or password is invalid");
@@ -98,67 +96,73 @@ public class UserService implements UserPort {
         );
     }
 
-    @Override
     public void updateUser (UpdateUserRequest request) {
         validateUpdateUser(request);
 
-        User user = adapter.getUsersById(request.id());
+        Optional<User> user = repository.findById(request.id());
+
+        if(user.isEmpty()) {
+            throw new InvalidUserException("Could not found the user for update with id: %d".formatted(request.id()));
+        }
+
+        User userFound = user.get();
 
         if (request.name() != null) {
-            user.setName(request.name());
+            userFound.setName(request.name());
         }
         if (request.lastName() != null) {
-            user.setLastName(request.lastName());
+            userFound.setLastName(request.lastName());
         }
         if (request.address() != null) {
-            user.setAddress(request.address());
+            userFound.setAddress(request.address());
         }
         if (request.userType() != null) {
-            user.setUserType(request.userType());
+            userFound.setUserType(request.userType());
         }
         if (request.cpf() != null) {
-            user.setCpf(request.cpf());
+            userFound.setCpf(request.cpf());
         }
         if (request.password() != null) {
-            user.setPassword(request.password());
+            userFound.setPassword(request.password());
         }
 
         if(request.CEP() != null){
-            user.setCEP(request.CEP());
+            userFound.setCEP(request.CEP());
         }
 
         if(request.phone() != null) {
-            user.setPhone(request.phone());
+            userFound.setPhone(request.phone());
         }
 
         if(request.avatarUrl() != null) {
-            user.setAvatarUrl(request.avatarUrl());
+            userFound.setAvatarUrl(request.avatarUrl());
         }
 
-        adapter.updateUser(user);
+        repository.save(userFound);
     }
 
-    @Override
     public List<UserDto> getUsers() {
-        return adapter
-                .getUsers()
+        return repository
+                .findAll()
                 .stream()
                 .map(this::mapToDto)
                 .toList();
     }
 
-    @Override
     public void deleteUser(Integer userId) {
         if (userId == null) {
             throw new InvalidUserException("User ID cannot be null");
         }
 
-        adapter.deleteUser(userId);
+        Optional<User> user = repository.findById(userId);
+
+        if(user.isEmpty()) {
+            throw  new InvalidUserException("Could not found the user with id: %d".formatted(userId));
+        }
     }
 
-    @Override
     public AuthUserResponse authUserByGoogle(AuthGoogleRequest request) {
-        Optional<User> userFound = adapter.getUserByEmail(request.email());
+        Optional<User> userFound = repository.findUserByEmail(request.email());
 
         if(userFound.isEmpty()){
             throw new GoogleAccountNotFoundException();
@@ -179,14 +183,18 @@ public class UserService implements UserPort {
         );
     }
 
-    @Override
     public UserDto getUserById(Integer userId) {
         if (userId == null) {
             throw new InvalidUserException("User ID cannot be null");
         }
 
-        User user = adapter.getUsersById(userId);
-        return mapToDto(user);
+        Optional<User> user = repository.findById(userId);
+
+        if(user.isEmpty()) {
+            throw  new InvalidUserException("Could not found the user with id: %d".formatted(userId));
+        }
+
+        return mapToDto(user.get());
     }
 
     private void validateCreateUserRequest(CreateUserRequest request) {

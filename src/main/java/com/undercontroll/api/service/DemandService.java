@@ -1,18 +1,16 @@
 package com.undercontroll.api.service;
 
 import com.undercontroll.api.dto.CreateDemandRequest;
-import com.undercontroll.api.model.DemandPort;
-import com.undercontroll.api.model.DemandPersistenceAdapter;
+import com.undercontroll.api.repository.DemandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
-public class DemandService implements DemandPort {
+public class DemandService {
 
-    private final DemandPersistenceAdapter adapter;
+    private final DemandRepository repository;
 
-    @Override
     public void createDemand(CreateDemandRequest createDemandRequest) {
         
     }

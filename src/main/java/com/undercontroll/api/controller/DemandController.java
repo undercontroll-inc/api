@@ -1,7 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.CreateDemandRequest;
-import com.undercontroll.api.model.DemandPort;
+import com.undercontroll.api.service.DemandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/api/demands")
 public class DemandController {
 
-    private final DemandPort demandPort;
+    private final DemandService service;
 
     @PostMapping
     public ResponseEntity<Void> createDemand(
             @RequestBody CreateDemandRequest createDemandRequest
     ) {
-        demandPort.createDemand(
+        service.createDemand(
                 createDemandRequest
         );
 

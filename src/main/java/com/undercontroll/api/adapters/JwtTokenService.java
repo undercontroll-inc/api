@@ -1,5 +1,6 @@
-package com.undercontroll.api.service;
+package com.undercontroll.api.adapters;
 
+import com.undercontroll.api.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;

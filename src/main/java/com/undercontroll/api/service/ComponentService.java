@@ -1,24 +1,18 @@
 package com.undercontroll.api.service;
 
 import com.undercontroll.api.dto.*;
-import com.undercontroll.api.model.ComponentPort;
 import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.ComponentPart;
-import com.undercontroll.api.model.ComponentPersistenceAdapter;
+import com.undercontroll.api.repository.ComponentJpaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class ComponentService implements ComponentPort {
+public class ComponentService {
 
-    private final ComponentPersistenceAdapter adapter;
+    private ComponentJpaRepository repository;
 
-    public ComponentService(ComponentPersistenceAdapter adapter) {
-        this.adapter = adapter;
-    }
-
-    @Override
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);
 
@@ -32,7 +26,7 @@ public class ComponentService implements ComponentPort {
                 .quantity(request.quantity() != null ? request.quantity() : 0)
                 .build();
 
-        adapter.save(component);
+        repository.save(component);
 
         return new RegisterComponentResponse(
                 request.name(),
@@ -44,11 +38,10 @@ public class ComponentService implements ComponentPort {
         );
     }
 
-    @Override
     public void updateComponent(UpdateComponentRequest request) {
         validateUpdate(request);
 
-        ComponentPart component = adapter.findById(request.id())
+        ComponentPart component = repository.findById(request.id())
                 .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + request.id()));
 
         if(request.name() != null && !request.name().isEmpty()) {
@@ -75,12 +68,11 @@ public class ComponentService implements ComponentPort {
             component.setSupplier(request.supplier());
         }
 
-        adapter.update(component);
+        repository.save(component);
     }
 
-    @Override
     public List<ComponentDto> getComponents() {
-        return adapter
+        return  repository
                 .findAll()
                 .stream()
                 .map(c -> new ComponentDto(
@@ -94,13 +86,12 @@ public class ComponentService implements ComponentPort {
                 .toList();
     }
 
-    @Override
     public List<ComponentDto> getComponentsByCategory(String category) {
         if(category == null || category.isEmpty()){
             throw new InvalidGetComponentsByCategoryExcepiton("Category cannot be empty");
         }
 
-        return adapter.findByCategory(category)
+        return repository.findByCategory(category)
                 .stream()
                 .map(c -> new ComponentDto(
                         c.getName(),
@@ -113,13 +104,12 @@ public class ComponentService implements ComponentPort {
                 .toList();
     }
 
-    @Override
     public List<ComponentDto> getComponentsByName(String name) {
         if(name == null || name.isEmpty()){
             throw new InvalidGetComponentsByCategoryExcepiton("Name cannot be empty");
         }
 
-        return adapter.findByName(name)
+        return repository.findByName(name)
                 .stream()
                 .map(c -> new ComponentDto(
                         c.getName(),
@@ -132,15 +122,14 @@ public class ComponentService implements ComponentPort {
                 .toList();
     }
 
-    @Override
     public void deleteComponent(Integer componentId) {
         validateDelete(componentId);
 
-        ComponentPart component = adapter.findById(componentId)
+        ComponentPart component = repository.findById(componentId)
                 .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + componentId));
 
 
-        adapter.delete(component);
+        repository.delete(component);
     }
 
     private void validateCreate(RegisterComponentRequest request) {

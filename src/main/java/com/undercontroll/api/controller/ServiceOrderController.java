@@ -1,7 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.*;
-import com.undercontroll.api.service.ServiceOrderPort;
+import com.undercontroll.api.service.ServiceOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +13,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServiceOrderController {
 
-    private final ServiceOrderPort serviceOrderPort;
+    private final ServiceOrderService service;
 
     @PostMapping
     public ResponseEntity<CreateServiceOrderResponse> createServiceOrder(
             @RequestBody CreateServiceOrderRequest request
     ) {
-        CreateServiceOrderResponse serviceOrder = serviceOrderPort.createServiceOrder(request);
+        CreateServiceOrderResponse serviceOrder = service.createServiceOrder(request);
 
         return ResponseEntity.status(201).body(serviceOrder);
     }
@@ -28,14 +28,14 @@ public class ServiceOrderController {
     public ResponseEntity<Void> updateServiceOrder(
             @RequestBody UpdateServiceOrderRequest request
     ) {
-        serviceOrderPort.updateServiceOrder(request);
+        service.updateServiceOrder(request);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
     public ResponseEntity<List<ServiceOrderDto>> getServiceOrders() {
-        List<ServiceOrderDto> serviceOrders = serviceOrderPort.getServiceOrders();
+        List<ServiceOrderDto> serviceOrders = service.getServiceOrders();
 
         return ResponseEntity.ok(serviceOrders);
     }
@@ -44,7 +44,7 @@ public class ServiceOrderController {
     public ResponseEntity<ServiceOrderDto> getServiceOrdersById(
             @PathVariable Integer serviceOrderId
     ) {
-        ServiceOrderDto serviceOrder = serviceOrderPort.getServiceOrderById(serviceOrderId);
+        ServiceOrderDto serviceOrder = service.getServiceOrderById(serviceOrderId);
         return ResponseEntity.ok(serviceOrder);
     }
 
@@ -52,7 +52,7 @@ public class ServiceOrderController {
     public ResponseEntity<List<ServiceOrderDto>> getServiceOrdersByOrderId(
             @PathVariable Integer orderId
     ) {
-        List<ServiceOrderDto> serviceOrders = serviceOrderPort.getServiceOrdersByOrderId(orderId);
+        List<ServiceOrderDto> serviceOrders = service.getServiceOrdersByOrderId(orderId);
         return ResponseEntity.ok(serviceOrders);
     }
 
@@ -60,7 +60,7 @@ public class ServiceOrderController {
     public ResponseEntity<Void> deleteServiceOrder(
             @PathVariable Integer serviceOrderId
     ) {
-        serviceOrderPort.deleteServiceOrder(serviceOrderId);
+        service.deleteServiceOrder(serviceOrderId);
 
         return ResponseEntity.ok().build();
     }
@@ -69,7 +69,7 @@ public class ServiceOrderController {
     public ResponseEntity<Void> exportServiceOrder(
             @PathVariable Integer id
     ) {
-        serviceOrderPort.exportServiceOrder(id);
+        service.exportServiceOrder(id);
 
         return ResponseEntity.ok().build();
     }

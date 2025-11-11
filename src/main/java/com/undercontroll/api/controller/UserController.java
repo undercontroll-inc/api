@@ -1,7 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.*;
-import com.undercontroll.api.model.UserPort;
+import com.undercontroll.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,13 +13,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserPort userPort;
+    private final UserService service;
 
     @PostMapping
     public ResponseEntity<CreateUserResponse> createUser(
             @RequestBody CreateUserRequest request
     ) {
-        CreateUserResponse user = userPort.createUser(request);
+        CreateUserResponse user = service.createUser(request);
 
         return ResponseEntity.status(201).body(user);
     }
@@ -28,7 +28,7 @@ public class UserController {
     public ResponseEntity<AuthUserResponse> auth(
             @RequestBody @Valid AuthUserRequest request
     ) {
-        AuthUserResponse response = userPort.authUser(request);
+        AuthUserResponse response = service.authUser(request);
 
         return ResponseEntity.ok(response);
     }
@@ -37,7 +37,7 @@ public class UserController {
     public ResponseEntity<AuthUserResponse> authGoogle(
             @RequestBody @Valid AuthGoogleRequest request
     ) {
-        AuthUserResponse response = userPort.authUserByGoogle(request);
+        AuthUserResponse response = service.authUserByGoogle(request);
 
         return ResponseEntity.ok(response);
     }
@@ -46,14 +46,14 @@ public class UserController {
     public ResponseEntity<Void> updateOrder(
             @RequestBody UpdateUserRequest request
     ) {
-        userPort.updateUser(request);
+        service.updateUser(request);
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getUsers() {
-        List<UserDto> users = userPort.getUsers();
+        List<UserDto> users = service.getUsers();
 
         return ResponseEntity.ok(users);
     }
@@ -62,7 +62,7 @@ public class UserController {
     public ResponseEntity<UserDto> getUsersById(
             @PathVariable Integer userId
     ) {
-        UserDto user = userPort.getUserById(userId);
+        UserDto user = service.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
@@ -70,7 +70,7 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(
             @PathVariable Integer userId
     ) {
-        userPort.deleteUser(userId);
+        service.deleteUser(userId);
 
         return ResponseEntity.ok().build();
     }

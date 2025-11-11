@@ -3,23 +3,23 @@ package com.undercontroll.api.service;
 import com.undercontroll.api.dto.CreateOrderItemRequest;
 import com.undercontroll.api.dto.OrderItemDto;
 import com.undercontroll.api.dto.UpdateOrderItemRequest;
-import com.undercontroll.api.model.OrderItemPort;
 import com.undercontroll.api.exception.InvalidOrderItemException;
+import com.undercontroll.api.exception.OrderItemNotFoundException;
 import com.undercontroll.api.model.OrderItem;
-import com.undercontroll.api.model.OrderItemPersistenceAdapter;
+import com.undercontroll.api.repository.OrderItemJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class OrderItemService implements OrderItemPort {
+public class OrderItemService {
 
-    private final OrderItemPersistenceAdapter orderItemAdapter;
+    private final OrderItemJpaRepository repository;
 
-    @Override
     public OrderItemDto createOrderItem(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
 
@@ -34,90 +34,94 @@ public class OrderItemService implements OrderItemPort {
                 .demands(new ArrayList<>())
                 .build();
 
-        OrderItem orderItemSaved = orderItemAdapter.saveOrderItem(orderItem);
+        OrderItem orderItemSaved = repository.save(orderItem);
 
         return mapToDto(orderItemSaved);
     }
 
-    @Override
     public void updateOrderItem(UpdateOrderItemRequest data) {
         validateUpdateOrderItem(data);
 
-        OrderItem orderItem = orderItemAdapter.getOrderItemById(data.id());
+        Optional<OrderItem> orderItem = repository.findById(data.id());
+
+        if(orderItem.isEmpty()) {
+            throw new OrderItemNotFoundException("Could not found the order for update with id: %s".formatted(data.id()));
+        }
+
+        OrderItem orderFound = orderItem.get();
 
         if (data.name() != null) {
-            orderItem.setName(data.name());
+            orderFound.setName(data.name());
         }
         if (data.imageUrl() != null) {
-            orderItem.setImageUrl(data.imageUrl());
+            orderFound.setImageUrl(data.imageUrl());
         }
         if (data.labor() != null) {
-            orderItem.setLabor(data.labor());
+            orderFound.setLabor(data.labor());
         }
         if (data.observation() != null) {
-            orderItem.setObservation(data.observation());
+            orderFound.setObservation(data.observation());
         }
         if (data.volt() != null) {
-            orderItem.setVolt(data.volt());
+            orderFound.setVolt(data.volt());
         }
         if (data.series() != null) {
-            orderItem.setSeries(data.series());
+            orderFound.setSeries(data.series());
         }
         if (data.status() != null) {
-            orderItem.setStatus(data.status());
+            orderFound.setStatus(data.status());
         }
         if (data.lastReview() != null) {
-            orderItem.setLastReview(data.lastReview());
+            orderFound.setLastReview(data.lastReview());
         }
         if (data.analyzedAt() != null) {
-            orderItem.setAnalyzedAt(data.analyzedAt());
+            orderFound.setAnalyzedAt(data.analyzedAt());
         }
         if (data.completedAt() != null) {
-            orderItem.setCompletedAt(data.completedAt());
+            orderFound.setCompletedAt(data.completedAt());
         }
 
-        orderItemAdapter.updateOrderItem(orderItem);
-    }
-
-    @Override
-    public List<OrderItemDto> getOrderItems() {
-        return orderItemAdapter
-                .getOrderItems()
-                .stream()
-                .map(this::mapToDto)
-                .toList();
+        repository.save(orderFound);
     }
 //
-//    @Override
+//
 //    public List<OrderItemDto> getOrderItemsByOrderId(Integer orderId) {
 //        if (orderId == null) {
 //            throw new InvalidOrderItemException("Order ID cannot be null");
 //        }
 //
-//        return orderItemAdapter
+//        return repository
 //                .getOrderItemsByOrderId(orderId)
 //                .stream()
 //                .map(this::mapToDto)
 //                .toList();
 //    }
 
-    @Override
     public void deleteOrderItem(Integer orderItemId) {
         if (orderItemId == null) {
             throw new InvalidOrderItemException("Order item ID cannot be null");
         }
 
-        orderItemAdapter.deleteOrderItem(orderItemId);
+        repository.findById(orderItemId).ifPresent(repository::delete);
     }
 
-    @Override
     public OrderItemDto getOrderItemById(Integer orderItemId) {
         if (orderItemId == null) {
             throw new InvalidOrderItemException("Order item ID cannot be null");
         }
 
-        OrderItem orderItem = orderItemAdapter.getOrderItemById(orderItemId);
+        OrderItem orderItem = repository.findById(orderItemId).orElseThrow(
+                () -> new OrderItemNotFoundException("Could not found the order item with id: %s".formatted(orderItemId))
+        );
         return mapToDto(orderItem);
+    }
+
+    public List<OrderItemDto> getOrderItems() {
+        return repository
+                .findAll()
+                .stream()
+                .map(this::mapToDto)
+                .toList();
     }
 
     private void validateCreateOrderItemRequest(CreateOrderItemRequest request) {
