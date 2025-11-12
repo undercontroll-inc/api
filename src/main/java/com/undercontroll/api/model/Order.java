@@ -27,8 +27,13 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    // Pricing section
     private Double total;
     private Double discount;
+    private Double laborValue;
 
     private LocalDateTime startedAt;
     private LocalDateTime completedTime;

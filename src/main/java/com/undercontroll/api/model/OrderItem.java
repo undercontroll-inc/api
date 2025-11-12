@@ -1,6 +1,5 @@
 package com.undercontroll.api.model;
 
-import com.undercontroll.api.model.OrderItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,13 +22,11 @@ public class OrderItem {
     private String name;
     private String imageUrl;
 
-    private Double labor;
     private String observation;
     private String volt;
     private String series;
-
-    @Enumerated(EnumType.STRING)
-    private OrderItemStatus status;
+    private String type;
+    private String brand;
 
     private LocalDateTime lastReview;
     private LocalDateTime analyzedAt;

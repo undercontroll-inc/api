@@ -1,14 +1,13 @@
 package com.undercontroll.api.service;
 
-import com.undercontroll.api.dto.CreateOrderRequest;
-import com.undercontroll.api.dto.OrderDto;
-import com.undercontroll.api.dto.OrderItemDto;
-import com.undercontroll.api.dto.UpdateOrderRequest;
+import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.InvalidDeleteOrderException;
 import com.undercontroll.api.exception.InvalidUpdateOrderException;
 import com.undercontroll.api.exception.OrderNotFoundException;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.model.OrderItem;
+import com.undercontroll.api.model.OrderStatus;
+import com.undercontroll.api.repository.DemandRepository;
 import com.undercontroll.api.repository.OrderItemJpaRepository;
 import com.undercontroll.api.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +23,7 @@ public class OrderService {
 
     private final OrderJpaRepository repository;
     private final OrderItemJpaRepository orderItemJpaRepository;
+    private final DemandRepository demandRepository;
 
     public Order createOrder(
             CreateOrderRequest request
@@ -38,6 +38,7 @@ public class OrderService {
                 .total(0.0)
                 .discount(0.0)
                 .orderItems(orderItems)
+                .status(OrderStatus.PENDING)
                 .build();
 
         return repository.save(order);
@@ -73,11 +74,9 @@ public class OrderService {
                                 .map(i -> new OrderItemDto(
                                         i.getName(),
                                         i.getImageUrl(),
-                                        i.getLabor(),
                                         i.getObservation(),
                                         i.getVolt(),
                                         i.getSeries(),
-                                        i.getStatus(),
                                         i.getLastReview(),
                                         i.getAnalyzedAt(),
                                         i.getCompletedAt()
@@ -85,7 +84,9 @@ public class OrderService {
                                 .toList(),
                         o.getCreatedAt(),
                         o.getStartedAt(),
-                        o.getCompletedTime()
+                        o.getCompletedTime(),
+                        o.getStatus(),
+                        o.getLaborValue()
                 ))
                 .toList();
     }
@@ -100,6 +101,44 @@ public class OrderService {
         }
 
         repository.delete(orderFound.get());
+    }
+
+    public GetOrdersByUserIdResponse getOrdersByUserId(Integer userId) {
+        List<Order> orders = repository.findByUser_id(userId);
+
+        return new GetOrdersByUserIdResponse(
+                orders.stream().map(o -> {
+                    Double partsTotal = repository.calculatePartsTotalByUserId(userId);
+
+                    Double total = partsTotal + o.getLaborValue() - o.getDiscount();
+
+                    return new OrderEnrichedDto(
+                            o.getId(),
+                            userId,
+                            o.getOrderItems()
+                            .stream()
+                            .map(
+                                    i -> new OrderItemDto(
+                                    i.getName(),
+                                    i.getImageUrl(),
+                                    i.getObservation(),
+                                    i.getVolt(),
+                                    i.getSeries(),
+                                    i.getLastReview(),
+                                    i.getAnalyzedAt(),
+                                    i.getCompletedAt()
+                                    ))
+                            .toList(),
+                            partsTotal,
+                            o.getLaborValue(),
+                            o.getDiscount(),
+                            total,
+                            o.getCreatedAt(),
+                            o.getCompletedTime(),
+                            o.get
+                    )
+                })
+        )
     }
 
     private void validateUpdateOrder(UpdateOrderRequest request) {

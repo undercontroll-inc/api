@@ -5,6 +5,7 @@ import com.undercontroll.api.dto.OrderDto;
 import com.undercontroll.api.dto.UpdateOrderRequest;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.service.OrderService;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +51,15 @@ public class OrderController {
         orderService.deleteOrder(orderId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("{userId}")
+    public ResponseEntity<List<OrderDto>> getOrdersByUserId(
+            @PathParam("userId") Integer userId
+    ) {
+        List<OrderDto> orders = orderService.getOrdersByUserId(userId);
+
+        return orders.isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(orders);
     }
 
 

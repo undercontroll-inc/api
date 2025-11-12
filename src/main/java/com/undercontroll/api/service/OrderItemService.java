@@ -26,9 +26,7 @@ public class OrderItemService {
         OrderItem orderItem = OrderItem.builder()
                 .name(request.name())
                 .imageUrl(request.imageUrl())
-                .status(request.status())
                 .observation(request.observation())
-                .labor(request.labor())
                 .volt(request.volt())
                 .series(request.series())
                 .demands(new ArrayList<>())
@@ -56,9 +54,6 @@ public class OrderItemService {
         if (data.imageUrl() != null) {
             orderFound.setImageUrl(data.imageUrl());
         }
-        if (data.labor() != null) {
-            orderFound.setLabor(data.labor());
-        }
         if (data.observation() != null) {
             orderFound.setObservation(data.observation());
         }
@@ -67,9 +62,6 @@ public class OrderItemService {
         }
         if (data.series() != null) {
             orderFound.setSeries(data.series());
-        }
-        if (data.status() != null) {
-            orderFound.setStatus(data.status());
         }
         if (data.lastReview() != null) {
             orderFound.setLastReview(data.lastReview());
@@ -152,11 +144,9 @@ public class OrderItemService {
         return new OrderItemDto(
                 orderItem.getName(),
                 orderItem.getImageUrl(),
-                orderItem.getLabor(),
                 orderItem.getObservation(),
                 orderItem.getVolt(),
                 orderItem.getSeries(),
-                orderItem.getStatus(),
                 orderItem.getLastReview(),
                 orderItem.getAnalyzedAt(),
                 orderItem.getCompletedAt()

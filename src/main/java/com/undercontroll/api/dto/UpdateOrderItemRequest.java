@@ -1,6 +1,6 @@
 package com.undercontroll.api.dto;
 
-import com.undercontroll.api.model.OrderItemStatus;
+import com.undercontroll.api.model.OrderStatus;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +12,7 @@ public record UpdateOrderItemRequest(
         String observation,
         String volt,
         String series,
-        OrderItemStatus status,
+        OrderStatus status,
         LocalDateTime lastReview,
         LocalDateTime analyzedAt,
         LocalDateTime completedAt

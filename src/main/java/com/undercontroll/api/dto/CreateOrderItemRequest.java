@@ -1,6 +1,6 @@
 package com.undercontroll.api.dto;
 
-import com.undercontroll.api.model.OrderItemStatus;
+import com.undercontroll.api.model.OrderStatus;
 
 public record CreateOrderItemRequest(
         String name,
@@ -9,5 +9,5 @@ public record CreateOrderItemRequest(
         String volt,
         String series,
         Double labor,
-        OrderItemStatus status
+        OrderStatus status
 ) {}
