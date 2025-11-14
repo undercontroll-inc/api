@@ -10,7 +10,6 @@ import com.undercontroll.api.repository.OrderItemJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,21 +19,20 @@ public class OrderItemService {
 
     private final OrderItemJpaRepository repository;
 
-    public OrderItemDto createOrderItem(CreateOrderItemRequest request) {
+    public OrderItem createOrderItem(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
 
         OrderItem orderItem = OrderItem.builder()
-                .name(request.name())
+                .brand(request.brand())
+                .model(request.model())
+                .type(request.type())
                 .imageUrl(request.imageUrl())
                 .observation(request.observation())
                 .volt(request.volt())
                 .series(request.series())
-                .demands(new ArrayList<>())
                 .build();
 
-        OrderItem orderItemSaved = repository.save(orderItem);
-
-        return mapToDto(orderItemSaved);
+        return repository.save(orderItem);
     }
 
     public void updateOrderItem(UpdateOrderItemRequest data) {
@@ -48,9 +46,7 @@ public class OrderItemService {
 
         OrderItem orderFound = orderItem.get();
 
-        if (data.name() != null) {
-            orderFound.setName(data.name());
-        }
+        // Faltando aqui validar os campos model, brand e type
         if (data.imageUrl() != null) {
             orderFound.setImageUrl(data.imageUrl());
         }
@@ -117,11 +113,7 @@ public class OrderItemService {
     }
 
     private void validateCreateOrderItemRequest(CreateOrderItemRequest request) {
-        if (request.name() == null || request.name().trim().isEmpty()) {
-            throw new InvalidOrderItemException("Order item name cannot be empty");
-        }
-
-        if (request.labor() != null && request.labor() < 0) {
+        if (request.laborValue() != null && request.laborValue() < 0) {
             throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
     }
@@ -140,10 +132,12 @@ public class OrderItemService {
         }
     }
 
-    private OrderItemDto mapToDto(OrderItem orderItem) {
+    public OrderItemDto mapToDto(OrderItem orderItem) {
         return new OrderItemDto(
-                orderItem.getName(),
                 orderItem.getImageUrl(),
+                orderItem.getModel(),
+                orderItem.getType(),
+                orderItem.getBrand(),
                 orderItem.getObservation(),
                 orderItem.getVolt(),
                 orderItem.getSeries(),

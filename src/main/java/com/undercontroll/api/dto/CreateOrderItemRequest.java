@@ -1,13 +1,12 @@
 package com.undercontroll.api.dto;
 
-import com.undercontroll.api.model.OrderStatus;
-
 public record CreateOrderItemRequest(
-        String name,
+        String brand,
+        String model,
+        String type,
         String imageUrl,
         String observation,
         String volt,
         String series,
-        Double labor,
-        OrderStatus status
+        Double laborValue
 ) {}

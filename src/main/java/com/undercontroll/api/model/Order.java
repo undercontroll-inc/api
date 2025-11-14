@@ -2,8 +2,11 @@ package com.undercontroll.api.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 
@@ -33,10 +36,24 @@ public class Order {
     // Pricing section
     private Double total;
     private Double discount;
-    private Double laborValue;
+
+    private boolean fabricGuarantee;
+    private boolean returnGuarantee;
+    private String description;
+    private String nf;
+    private Date date;
+    private String store;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     private LocalDateTime startedAt;
+
+    private LocalDateTime received_at;
+
     private LocalDateTime completedTime;
+
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     public void addOrderItem(OrderItem orderItem) {

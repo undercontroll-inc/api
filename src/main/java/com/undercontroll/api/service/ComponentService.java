@@ -4,14 +4,16 @@ import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.ComponentPart;
 import com.undercontroll.api.repository.ComponentJpaRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ComponentService {
 
-    private ComponentJpaRepository repository;
+    private final ComponentJpaRepository repository;
 
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);

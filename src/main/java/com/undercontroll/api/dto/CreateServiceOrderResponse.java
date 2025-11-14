@@ -20,12 +20,12 @@ public record CreateServiceOrderResponse(
 
         @NotNull
         @PositiveOrZero
-        Integer fabricGuarantee,
+        boolean fabricGuarantee,
 
 
         @NotNull
         @PositiveOrZero
-        Integer returnGuarantee,
+        boolean returnGuarantee,
 
         @NotBlank
         String description,

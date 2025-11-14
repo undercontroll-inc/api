@@ -10,7 +10,6 @@ public record OrderDto(
         LocalDateTime createdAt,
         LocalDateTime startedAt,
         LocalDateTime completedTime,
-        OrderStatus status,
-        Double laborValue
+        OrderStatus status
 ) {
 }

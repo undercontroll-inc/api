@@ -1,7 +1,7 @@
 package com.undercontroll.api.dto;
 
-public record CreateDemandRequest(
-        Integer componentId,
+public record PartDto(
+        Integer id,
         Integer quantity
 ) {
 }

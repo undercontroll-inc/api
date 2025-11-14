@@ -3,8 +3,10 @@ package com.undercontroll.api.dto;
 import java.time.LocalDateTime;
 
 public record OrderItemDto(
-    String name,
     String imageUrl,
+    String model,
+    String type,
+    String brand,
     String observation,
     String volt,
     String series,

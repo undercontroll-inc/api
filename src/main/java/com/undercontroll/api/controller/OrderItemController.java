@@ -3,6 +3,7 @@ package com.undercontroll.api.controller;
 import com.undercontroll.api.dto.CreateOrderItemRequest;
 import com.undercontroll.api.dto.OrderItemDto;
 import com.undercontroll.api.dto.UpdateOrderItemRequest;
+import com.undercontroll.api.model.OrderItem;
 import com.undercontroll.api.service.OrderItemService;
 import lombok.RequiredArgsConstructor;
 
@@ -21,10 +22,10 @@ public class OrderItemController {
     private final OrderItemService service;
 
     @PostMapping
-    public ResponseEntity<OrderItemDto> createOrderItem(
+    public ResponseEntity<OrderItem> createOrderItem(
             @RequestBody CreateOrderItemRequest request
     ) {
-        OrderItemDto orderItem = service.createOrderItem(request);
+        OrderItem orderItem = service.createOrderItem(request);
 
         log.info("Order item:  {}", orderItem);
 

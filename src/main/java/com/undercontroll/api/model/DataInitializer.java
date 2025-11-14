@@ -1,38 +1,26 @@
 package com.undercontroll.api.model;
 
-import com.undercontroll.api.model.UserType;
-import com.undercontroll.api.model.Order;
-import com.undercontroll.api.model.ServiceOrder;
-import com.undercontroll.api.model.User;
 import com.undercontroll.api.repository.OrderJpaRepository;
-import com.undercontroll.api.repository.ServiceOrderJpaRepository;
 import com.undercontroll.api.repository.UserJpaRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.sql.Date;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-
 @Component
 public class DataInitializer {
 
-    @Autowired
-    private UserJpaRepository userRepository;
-
-    @Autowired
-    private OrderJpaRepository orderRepository;
-
-    @Autowired
-    private ServiceOrderJpaRepository serviceOrderRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder encoder;
-
-    @PostConstruct
-    public void init() {
+//    @Autowired
+//    private UserJpaRepository userRepository;
+//
+//    @Autowired
+//    private OrderJpaRepository orderRepository;
+//
+//    @Autowired
+//    private BCryptPasswordEncoder encoder;
+//
+//    @PostConstruct
+//    public void init() {
 
 //        User user = User.builder()
 //                .name("Lucas Furquim")
@@ -71,5 +59,5 @@ public class DataInitializer {
 //
 //        serviceOrderRepository.save(serviceOrder);
 
-    }
+    //}
 }

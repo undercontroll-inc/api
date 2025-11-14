@@ -1,13 +1,22 @@
 package com.undercontroll.api.dto;
 
-import jakarta.annotation.Nullable;
-
 import java.util.List;
 
 public record CreateOrderRequest(
 
-        @Nullable
-        List<Integer> orderItemIds
+    Integer userId,
+    List<OrderItemCreateOrderRequest> appliances,
+    List<PartDto> parts,
+    Double discount,
+    String receivedAt,
+    String deadline,
+    String serviceDescription,
+    String notes,
+    String status,
+    String updatedAt,
+    boolean returnGuarantee,
+    boolean fabricGuarantee,
+    String nf
 
 ) {
 }

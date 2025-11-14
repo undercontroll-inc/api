@@ -19,7 +19,6 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String name;
     private String imageUrl;
 
     private String observation;
@@ -27,12 +26,15 @@ public class OrderItem {
     private String series;
     private String type;
     private String brand;
+    private String model;
+
+    private Double laborValue;
 
     private LocalDateTime lastReview;
     private LocalDateTime analyzedAt;
     private LocalDateTime completedAt;
 
-    @OneToMany(fetch =  FetchType.LAZY)
-    private List<Demand> demands;
+//    @OneToMany(fetch =  FetchType.LAZY)
+//    private List<Demand> demands;
 
 }

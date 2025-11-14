@@ -12,8 +12,8 @@ import java.util.List;
 @Builder
 public record ServiceOrderDto (
 
-        Integer fabricGuarantee,
-        Integer returnGuarantee,
+        boolean fabricGuarantee,
+        boolean returnGuarantee,
         String description,
         String nf,
         Date date,

@@ -1,6 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.CreateOrderRequest;
+import com.undercontroll.api.dto.GetOrdersByUserIdResponse;
 import com.undercontroll.api.dto.OrderDto;
 import com.undercontroll.api.dto.UpdateOrderRequest;
 import com.undercontroll.api.model.Order;
@@ -54,13 +55,15 @@ public class OrderController {
     }
 
     @GetMapping("{userId}")
-    public ResponseEntity<List<OrderDto>> getOrdersByUserId(
-            @PathParam("userId") Integer userId
+    public ResponseEntity<GetOrdersByUserIdResponse> getOrdersByUserId(
+            @RequestParam(value = "userId", required = false) Integer userId
     ) {
-        List<OrderDto> orders = orderService.getOrdersByUserId(userId);
+        GetOrdersByUserIdResponse response = orderService.getOrdersByUserId(userId);
 
-        return orders.isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(orders);
+        return response.data().isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
+
+
 
 
 }

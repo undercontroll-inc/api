@@ -14,7 +14,7 @@ public record OrderEnrichedDto(
         Double totalValue,
         String receivedAt,
         String deadline,
-        String warranty,
+        boolean haveReturnGuarantee,
         String serviceDescription,
         String notes,
         OrderStatus status,

@@ -24,12 +24,6 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     """, nativeQuery = true)
     Double calculatePartsTotalByUserId(@Param("userId") Integer userId);
 
-    @Query("""
-            SELECT SUM(o.laborValue)
-            FROM Order o
-            WHERE o.user.id = :userId
-            """)
-    Double calculateTotalLaborByUserId(@Param("userId") Integer userId);
 
 
 

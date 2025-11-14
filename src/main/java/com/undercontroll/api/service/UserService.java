@@ -4,9 +4,7 @@ import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.GoogleAccountNotFoundException;
 import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;
-import com.undercontroll.api.exception.UserNotFoundException;
 import com.undercontroll.api.model.User;
-import com.undercontroll.api.model.GoogleTokenVerifier;
 import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -183,7 +181,7 @@ public class UserService {
         );
     }
 
-    public UserDto getUserById(Integer userId) {
+    public User getUserById(Integer userId) {
         if (userId == null) {
             throw new InvalidUserException("User ID cannot be null");
         }
@@ -194,7 +192,7 @@ public class UserService {
             throw  new InvalidUserException("Could not found the user with id: %d".formatted(userId));
         }
 
-        return mapToDto(user.get());
+        return user.get();
     }
 
     private void validateCreateUserRequest(CreateUserRequest request) {

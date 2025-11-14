@@ -1,6 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.*;
+import com.undercontroll.api.model.User;
 import com.undercontroll.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,10 +60,10 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUsersById(
+    public ResponseEntity<User> getUserById(
             @PathVariable Integer userId
     ) {
-        UserDto user = service.getUserById(userId);
+        User user = service.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 
