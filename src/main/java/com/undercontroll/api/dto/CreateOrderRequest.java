@@ -13,7 +13,6 @@ public record CreateOrderRequest(
     String serviceDescription,
     String notes,
     String status,
-    String updatedAt,
     boolean returnGuarantee,
     boolean fabricGuarantee,
     String nf

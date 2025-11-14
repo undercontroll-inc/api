@@ -16,13 +16,30 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     // Query responsavel por retornar o total de todos os componentes de todos os items relacionados a um pedido
     @Query(value = """
     SELECT COALESCE(SUM(c.price * d.quantity), 0.0)
-    FROM orders o
-    INNER JOIN order_items oi ON o.id = oi.order_id
-    INNER JOIN demands d ON oi.id = d.order_item_id
-    INNER JOIN components c ON d.component_id = c.id
-    WHERE o.user_id = :userId
+    FROM `order` o
+    INNER JOIN demand d ON o.id = d.order_id
+    INNER JOIN component c ON d.component_id = c.id
+    WHERE o.id = :orderId
     """, nativeQuery = true)
-    Double calculatePartsTotalByUserId(@Param("userId") Integer userId);
+    Double calculatePartsTotalByOrderId(@Param("orderId") Integer orderId);
+
+    // Query responsavel por retornar a lista de peças utilizadas em todos os items de um pedido específico
+    @Query(value = """
+    SELECT
+        c.id,
+        c.name,
+        c.description,
+        c.brand,
+        c.price,
+        c.supplier,
+        c.category,
+        d.quantity
+    FROM `order` o
+    INNER JOIN demand d ON o.id = d.order_id
+    INNER JOIN component c ON d.component_id = c.id
+    WHERE o.id = :orderId
+    """, nativeQuery = true)
+    List<Object[]> findAllPartsByOrderIdNative(@Param("orderId") Integer orderId);
 
 
 

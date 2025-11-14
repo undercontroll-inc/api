@@ -34,7 +34,5 @@ public class OrderItem {
     private LocalDateTime analyzedAt;
     private LocalDateTime completedAt;
 
-//    @OneToMany(fetch =  FetchType.LAZY)
-//    private List<Demand> demands;
 
 }

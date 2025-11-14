@@ -1,12 +1,12 @@
 package com.undercontroll.api.dto;
 
 public record RegisterComponentRequest(
-        String name,
+        String item,
         String description,
         String brand,
-        Double price,
-        String supplier,
         String category,
-        Long quantity
+        Long quantity,
+        Double price,
+        String supplier
 ) {
 }

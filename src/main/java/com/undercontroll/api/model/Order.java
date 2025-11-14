@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -27,6 +28,9 @@ public class Order {
     @JoinColumn(name = "order_id")
     private List<OrderItem> orderItems;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Demand> demands;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
@@ -47,11 +51,9 @@ public class Order {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    private LocalDateTime startedAt;
+    private LocalDate received_at;
 
-    private LocalDateTime received_at;
-
-    private LocalDateTime completedTime;
+    private LocalDate completedTime;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

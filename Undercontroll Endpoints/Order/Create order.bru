@@ -11,9 +11,42 @@ post {
 }
 
 auth:bearer {
-  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6Imx1Y2FzQGdtYWlsLmNvbSIsImV4cCI6MTc2MDIwOTI0OCwiaWF0IjoxNzYwMjA1NjQ4fQ.y3SHD1_ww5sTfAGsk-cXRLGrys09EzEHEv7cDBImZAaZMm1wV64VEX5ifG8T2XrRD7A4ybaYU5z-nW0xPib5lf2VRjsX1flKXRUiEPZGEbHLlDup3nhEVX5UDWiAjCiJMcreWpuM-qTDka4ooO3KajuGVZ45jUkuIFXKRQ_YNxME52z2KaYMDtTdIMJk_xVluGdC1LvdaCj9Ta0unprnv337OYUMb65RzLPqfXc5rlyWc07Vk1VaL7i9jhasfrbNBfM1PCQTj6fx5rzupO0TpN8ZR4qoouI3Oi2XIK6Pe99ZpzgRGmsGmOe-b_4Qh8ONNPF33bF2LlSx7XzRqZZ_8g
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6Imx1Y2FzQGdtYWlsLmNvbSIsImV4cCI6MTc2MzE0NDg5MSwiaWF0IjoxNzYzMTQxMjkxfQ.qP3WaxYN_XbaYbvcJk6ZhZQoui8475M3M-4FBFjeXV-sL2ECf1UXNlYK_WiIyIFEB4oQ8Z7PAugNW-NFeGV_gUD4aJIqONaNUC4j7SA0FA8EiDCorxcbzBJ4pcEGnkJhIwXEQ4Yl3w_1zRgHyUuDIkxrlS6sbMNeWBYjyYwMzHQczQvEKzG2YtlNBLE8RZ2ol6Y4JJOxpI7ijUQuG-N-ZSXrip1WfeCra80uO8r6BPe99lAxgPzDLwj9jz102erWEIoM2pamTgVpyNDBhrBJgspEl2jdSBBW31B_oNaaYGcRYjkjpRtHmQQ4QZ2Agz-dN4KTaCe1MZf2Hg4TQVRbBQ
+}
+
+body:json {
+  {
+    "userId": 1,
+    "appliances": [
+      {
+        "type": "string",
+        "brand": "string",
+        "model": "string",
+        "voltage": "string",
+        "serial": "string",
+        "customerNote": "string",
+        "laborValue": 20.0
+      }
+    ],
+    "parts": [
+      {
+        "id": 1,
+        "quantity": 2
+      }
+    ],
+    "nf": "string",
+    "returnGuarantee": true,
+    "fabricGuarantee": true,
+    "discount": 12.1,
+    "receivedAt": "2025-11-14T15:30:00",
+    "deadline": "2025-11-14T15:30:00",
+    "serviceDescription": "string",
+    "notes": "string",
+    "status": "string"
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

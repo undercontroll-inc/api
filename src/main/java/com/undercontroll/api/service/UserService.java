@@ -4,6 +4,7 @@ import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.GoogleAccountNotFoundException;
 import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;
+import com.undercontroll.api.exception.UserNotFoundException;
 import com.undercontroll.api.model.User;
 import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -195,6 +196,22 @@ public class UserService {
         return user.get();
     }
 
+    public List<UserDto> getCustomers() {
+        return this.repository
+                .findAllCustomers()
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    public UserDto getCustomersById(Integer id) {
+        return this.repository
+                .findCustomerById(id)
+                .map(this::mapToDto)
+                .orElseThrow(() -> new UserNotFoundException("Costumer not found with id: %d".formatted(id)));
+    }
+
+
     private void validateCreateUserRequest(CreateUserRequest request) {
         if (request.name() == null || request.name().trim().isEmpty()) {
             throw new InvalidUserException("User name cannot be empty");
@@ -227,6 +244,7 @@ public class UserService {
 
     private UserDto mapToDto(User user) {
         return new UserDto(
+                user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getLastName(),

@@ -30,6 +30,7 @@ public class OrderItemService {
                 .observation(request.observation())
                 .volt(request.volt())
                 .series(request.series())
+                .laborValue(request.laborValue())
                 .build();
 
         return repository.save(orderItem);

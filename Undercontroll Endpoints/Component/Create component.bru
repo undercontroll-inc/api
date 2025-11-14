@@ -7,20 +7,26 @@ meta {
 post {
   url: http://localhost:8080/v1/api/components
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6Imx1Y2FzQGdtYWlsLmNvbSIsImV4cCI6MTc2MzE0NDI3MCwiaWF0IjoxNzYzMTQwNjcwfQ.CpkaFu0Iws7kF1HGqK1FBXnUJ0toNEWZUbKlvEUJNEjPvdz3d8Kn55nfWV3BrrU37Y3FSdzEFziU5fUYA4XLzP34yhL8i6Jw-w4GnWZ4ZUEYwRntxJOaAJvtY9Ml02AMDwRx-yrhpCIWWu5jC31wg3TN9H5NyJxRuT0PxtZMxQ-OVDEWx59j-SPokY86FsqHlUPSkhHAtI8qnZg0D7gALAEUXlUqK9-xN9wFGujezajedGCkLi0CtjasvGFQzxh_TMOy7KNVouU5Z8Rb4_iCfJymJdPVT4huFhKnE46IFxNjNnDpVmk6Pk-mspad6MNitVH64Csy4W4sOQfhvM3gJA
 }
 
 body:json {
   {
-    "name": "Peça",
+    "item": "Peça",
     "brand": "Marca",
     "description": "Peça que ajuda em tal coisa",
-    "price": 10,
+    "price": 190,
     "category": "Peças de ferro",
-    "supplier": "Fornecedor"
+    "supplier": "Fornecedor",
+    "quantity": 12
   }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

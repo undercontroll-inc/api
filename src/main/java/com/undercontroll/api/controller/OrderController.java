@@ -1,9 +1,6 @@
 package com.undercontroll.api.controller;
 
-import com.undercontroll.api.dto.CreateOrderRequest;
-import com.undercontroll.api.dto.GetOrdersByUserIdResponse;
-import com.undercontroll.api.dto.OrderDto;
-import com.undercontroll.api.dto.UpdateOrderRequest;
+import com.undercontroll.api.dto.*;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.service.OrderService;
 import jakarta.websocket.server.PathParam;
@@ -39,10 +36,10 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderDto>> getOrders() {
-        List<OrderDto> orders = orderService.getOrders();
+    public ResponseEntity<GetAllOrdersResponse> getOrders() {
+        GetAllOrdersResponse orders = orderService.getOrders();
 
-        return orders.isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orders);
     }
 
     @DeleteMapping("{orderId}")
@@ -60,7 +57,7 @@ public class OrderController {
     ) {
         GetOrdersByUserIdResponse response = orderService.getOrdersByUserId(userId);
 
-        return response.data().isEmpty() ?  ResponseEntity.noContent().build() : ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
 

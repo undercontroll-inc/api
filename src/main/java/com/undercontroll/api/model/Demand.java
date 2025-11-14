@@ -21,4 +21,8 @@ public class Demand {
     @ManyToOne(fetch = FetchType.LAZY)
     private ComponentPart component;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
+
 }

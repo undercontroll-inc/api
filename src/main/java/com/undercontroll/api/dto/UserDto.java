@@ -3,6 +3,7 @@ package com.undercontroll.api.dto;
 import com.undercontroll.api.model.UserType;
 
 public record UserDto (
+     Integer id,
      String name,
      String email,
      String lastName,
