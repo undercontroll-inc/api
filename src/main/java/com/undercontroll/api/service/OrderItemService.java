@@ -5,19 +5,25 @@ import com.undercontroll.api.dto.OrderItemDto;
 import com.undercontroll.api.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.exception.InvalidOrderItemException;
 import com.undercontroll.api.exception.OrderItemNotFoundException;
+import com.undercontroll.api.model.Order;
 import com.undercontroll.api.model.OrderItem;
 import com.undercontroll.api.repository.OrderItemJpaRepository;
+import com.undercontroll.api.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderItemService {
 
     private final OrderItemJpaRepository repository;
+    private final OrderJpaRepository orderRepository;
 
     public OrderItem createOrderItem(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
@@ -60,12 +66,6 @@ public class OrderItemService {
         if (data.series() != null) {
             orderFound.setSeries(data.series());
         }
-        if (data.lastReview() != null) {
-            orderFound.setLastReview(data.lastReview());
-        }
-        if (data.analyzedAt() != null) {
-            orderFound.setAnalyzedAt(data.analyzedAt());
-        }
         if (data.completedAt() != null) {
             orderFound.setCompletedAt(data.completedAt());
         }
@@ -86,12 +86,39 @@ public class OrderItemService {
 //                .toList();
 //    }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteOrderItem(Integer orderItemId) {
         if (orderItemId == null) {
             throw new InvalidOrderItemException("Order item ID cannot be null");
         }
 
-        repository.findById(orderItemId).ifPresent(repository::delete);
+        log.info("Attempting to delete order item {}", orderItemId);
+
+        OrderItem orderItem = repository.findById(orderItemId)
+                .orElseThrow(() -> {
+                    log.error("Order item {} not found for deletion", orderItemId);
+                    return new OrderItemNotFoundException(
+                            "Could not find order item with id: " + orderItemId);
+                });
+
+
+        Order order = orderRepository.findOrderByOrderItemId(orderItemId)
+                .orElse(null);
+
+        if (order != null) {
+            // Remove o item da lista do Order
+            // O orphanRemoval=true fará a deleção automática
+            log.info("Removing order item {} from order {}", orderItemId, order.getId());
+            order.getOrderItems().remove(orderItem);
+            orderRepository.save(order);
+            log.info("Order item {} removed successfully from order {}", orderItemId, order.getId());
+        } else {
+            // OrderItem órfão (sem Order associado), pode deletar diretamente
+            log.info("Order item {} is orphan, deleting directly", orderItemId);
+            repository.delete(orderItem);
+        }
+
+        log.info("Order item {} deleted successfully", orderItemId);
     }
 
     public OrderItemDto getOrderItemById(Integer orderItemId) {
@@ -124,10 +151,6 @@ public class OrderItemService {
             throw new InvalidOrderItemException("Order item ID cannot be null for update");
         }
 
-        if (orderItem.name() != null && orderItem.name().trim().isEmpty()) {
-            throw new InvalidOrderItemException("Order item name cannot be empty");
-        }
-
         if (orderItem.labor() != null && orderItem.labor() < 0) {
             throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
@@ -135,6 +158,7 @@ public class OrderItemService {
 
     public OrderItemDto mapToDto(OrderItem orderItem) {
         return new OrderItemDto(
+                orderItem.getId(),
                 orderItem.getImageUrl(),
                 orderItem.getModel(),
                 orderItem.getType(),
@@ -142,8 +166,7 @@ public class OrderItemService {
                 orderItem.getObservation(),
                 orderItem.getVolt(),
                 orderItem.getSeries(),
-                orderItem.getLastReview(),
-                orderItem.getAnalyzedAt(),
+                orderItem.getLaborValue(),
                 orderItem.getCompletedAt()
         );
     }

@@ -3,6 +3,7 @@ package com.undercontroll.api.dto;
 import java.time.LocalDateTime;
 
 public record OrderItemDto(
+    Integer id,
     String imageUrl,
     String model,
     String type,
@@ -10,8 +11,7 @@ public record OrderItemDto(
     String observation,
     String volt,
     String series,
-    LocalDateTime lastReview,
-    LocalDateTime analyzedAt,
+    Double laborValue,
     LocalDateTime completedAt
 ) {
 }

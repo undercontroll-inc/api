@@ -242,7 +242,7 @@ public class UserService {
         // Validação pode ser adicionada no futuro se necessário
     }
 
-    private UserDto mapToDto(User user) {
+    public UserDto mapToDto(User user) {
         return new UserDto(
                 user.getId(),
                 user.getName(),

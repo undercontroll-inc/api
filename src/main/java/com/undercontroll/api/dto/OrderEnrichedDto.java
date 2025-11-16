@@ -6,7 +6,7 @@ import java.util.List;
 
 public record OrderEnrichedDto(
         Integer id,
-        Integer userId,
+        UserDto user,
         List<OrderItemDto> appliances,
         List<ComponentDto> parts,
         Double partsTotal,

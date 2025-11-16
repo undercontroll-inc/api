@@ -60,7 +60,22 @@ public class DataInitializer {
                 .phone("11988310059")
                 .userType(UserType.CUSTOMER)
                 .build();
+
+        User admin = User.builder()
+                .name("Alexandre")
+                .email("alexandre@gmail.com")
+                .lastName("Pelluci")
+                .password(encoder.encode("123"))
+                .address("Rua")
+                .cpf("55739713860")
+                .CEP("09571300")
+                .phone("11988310059")
+                .userType(UserType.ADMINISTRATOR)
+                .build();
+
         customer = userRepository.save(customer);
+        userRepository.save(admin);
+
 
         // Criar OrderItem (appliance)
         OrderItem orderItem = OrderItem.builder()

@@ -5,70 +5,66 @@ import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.*;
 import com.undercontroll.api.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
     private final OrderJpaRepository repository;
-
-    // O ideal seria mover isso para uma service futuramente
-    private final ComponentJpaRepository componentJpaRepository;
-
     private final OrderItemService orderItemService;
     private final DemandService demandService;
     private final UserService userService;
+    private final InventoryManagementService inventoryManagementService;
 
-    public Order createOrder(
-            CreateOrderRequest request
-    ) {
+    @Transactional(rollbackFor = Exception.class)
+    public Order createOrder(CreateOrderRequest request) {
+        log.info("Creating new order for user {}", request.userId());
+
         LocalDate completedFormatted = this.formatOrderDate(request.deadline());
         LocalDate receivedFormatted = this.formatOrderDate(request.receivedAt());
 
+        // Hash map utilizado para validar a presença da quantidade necessária de componentes no estoque
+        // e para calcular o valor total dos componentes.
+        Map<Integer, ComponentPart> validatedComponents = new HashMap<>();
         double partsTotal = 0.0;
-        List<PartDto> validatedParts = new ArrayList<>();
 
-        // Validar as peças e calcular o total
         for (PartDto part : request.parts()) {
-            Optional<ComponentPart> component = componentJpaRepository.findById(part.id());
+            ComponentPart component = inventoryManagementService.getComponentById(part.id());
+            inventoryManagementService.validateStockAvailability(component, part.quantity());
 
-            if (component.isEmpty()) {
-                throw new ComponentNotFoundException("Could not found the component with id %s while creating a new order".formatted(part.id()));
-            }
-
-            if (component.get().getQuantity() < part.quantity()) {
-                throw new InsuficientComponentException("Insufficient component quantity for this operation");
-            }
-
-            validatedParts.add(part);
-            partsTotal += part.quantity() * component.get().getPrice();
+            validatedComponents.put(part.id(), component);
+            partsTotal += part.quantity() * component.getPrice();
         }
 
         List<OrderItem> orderItems = new ArrayList<>();
         Double laborTotal = 0.0;
 
         for (OrderItemCreateOrderRequest appliance : request.appliances()) {
-            OrderItem orderItemCreated =
-                    orderItemService.createOrderItem(
-                            new CreateOrderItemRequest(
-                                    appliance.brand(),
-                                    appliance.model(),
-                                    appliance.type(),
-                                    "", // Futuramente viria a url da imagem uploadada,
-                                    appliance.customerNote(),
-                                    appliance.voltage(),
-                                    appliance.serial(),
-                                    appliance.laborValue()
-                            )
-                    );
+
+            // Pode ser que ele não defina um valor de mão de obra durante a criação da OS
+            Double labor = appliance.laborValue() == null ? 0.0 : appliance.laborValue();
+
+            OrderItem orderItemCreated = orderItemService.createOrderItem(
+                    new CreateOrderItemRequest(
+                            appliance.brand(),
+                            appliance.model(),
+                            appliance.type(),
+                            "", // Future: image URL
+                            appliance.customerNote(),
+                            appliance.voltage(),
+                            appliance.serial(),
+                            labor
+                    )
+            );
 
             orderItems.add(orderItemCreated);
             laborTotal += orderItemCreated.getLaborValue();
@@ -82,7 +78,7 @@ public class OrderService {
                 .status(OrderStatus.PENDING)
                 .user(user)
                 .discount(request.discount())
-                .date(null) // oque deveria ser posto aqui ?
+                .date(null)
                 .store("Loja")
                 .nf(request.nf())
                 .fabricGuarantee(request.fabricGuarantee())
@@ -93,49 +89,166 @@ public class OrderService {
                 .total(total)
                 .build();
 
-        // Salvar o order primeiro para gerar o ID
         Order savedOrder = repository.save(order);
 
-        // Agora criar as demands associadas ao order e atualizar o estoque
-        for (PartDto part : validatedParts) {
-            Optional<ComponentPart> component = componentJpaRepository.findById(part.id());
+        log.info("Order {} created successfully", savedOrder.getId());
 
-            if (component.isPresent()) {
-                demandService.createDemand(
-                        new CreateDemandRequest(
-                                component.get(),
-                                Long.valueOf(part.quantity()),
-                                savedOrder
-                        )
-                );
+        // Cria as demandas e diminui o estoque
+        // (precisa ser feito depois do pedido por precisar do id gerado do pedido)
+        for (PartDto part : request.parts()) {
+            ComponentPart component = validatedComponents.get(part.id());
 
-                // Atualiza a quantidade desse componente em estoque
-                component.get().setQuantity(
-                        component.get().getQuantity() - part.quantity()
-                );
-                componentJpaRepository.save(component.get());
-            }
+            demandService.createDemand(
+                    new CreateDemandRequest(
+                            component,
+                            Long.valueOf(part.quantity()),
+                            savedOrder
+                    )
+            );
+
+            inventoryManagementService.decreaseStock(component.getId(), part.quantity());
         }
 
+        log.info("Order {} created with {} demands", savedOrder.getId(), request.parts().size());
         return savedOrder;
     }
 
-    // Ver isso aqui pois mudou muita coisa.
-    public void updateOrder(UpdateOrderRequest request) {
-        validateUpdateOrder(request);
+    @Transactional(rollbackFor = Exception.class)
+    public void updateOrder(UpdateOrderRequest request, Integer id) {
+        log.info("Updating order {}", id);
 
-        Optional<Order> orderFound = repository.findById(request.id());
+        validateUpdateOrder(request, id);
 
-        if(orderFound.isEmpty()) {
-            throw new OrderNotFoundException("Could not found the order");
+        Order order = repository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
+
+//        if (order.getStatus() == OrderStatus.COMPLETED) {
+//            log.error("Attempted to update completed order {}", id);
+//            throw new ImmutableOrderException("Cannot update a completed order. Completed orders are immutable.");
+//        }
+
+        // Atualiza demandas primeiro para falhar cedo em caso de estoque insuficiente
+        updateDemands(request.parts(), order);
+
+        updateOrderItems(request, order);
+
+        if (request.status() != null) {
+            order.setStatus(request.status());
+            log.info("Order {} status updated to {}", id, request.status());
         }
 
-        repository.save(orderFound.get());
+        if (request.serviceDescription() != null) {
+            order.setDescription(request.serviceDescription());
+        }
+
+        repository.save(order);
+        log.info("Order {} updated successfully", id);
+    }
+
+    private void updateOrderItems(UpdateOrderRequest request, Order order) {
+        // Se não vierem itens para atualizar, não faz nada
+        if (request.appliances() == null || request.appliances().isEmpty()) {
+            log.info("No order items to update for order {}", order.getId());
+            return;
+        }
+
+        for (UpdateOrderItemDto appliance : request.appliances()) {
+            if (appliance.id() == null) {
+                OrderItem orderItemCreated = orderItemService.createOrderItem(
+                        new CreateOrderItemRequest(
+                                appliance.brand(),
+                                appliance.model(),
+                                appliance.type(),
+                                "", // Future: lidar com imagens
+                                appliance.costumerNote(),
+                                appliance.volt(),
+                                appliance.series(),
+                                appliance.laborValue()
+                        )
+                );
+
+                order.addOrderItem(orderItemCreated);
+                log.info("Added new order item to order {}", order.getId());
+            } else {
+                orderItemService.updateOrderItem(new UpdateOrderItemRequest(
+                        appliance.id(),
+                        "", // Future: lidar com imagens
+                        appliance.laborValue(),
+                        appliance.costumerNote(),
+                        appliance.volt(),
+                        appliance.series(),
+                        request.status() == OrderStatus.COMPLETED ? LocalDateTime.now() : null
+                ));
+                log.info("Updated order item {} in order {}", appliance.id(), order.getId());
+            }
+        }
+    }
+
+
+    private void updateDemands(List<PartDto> newParts, Order order) {
+        log.info("Updating demands for order {}", order.getId());
+
+        if (newParts == null || newParts.isEmpty()) {
+            log.info("No demand changes for order {}", order.getId());
+            return;
+        }
+
+        for (PartDto part : newParts) {
+            if (part.id() == null) {
+                throw new ComponentNotFoundException("Component ID cannot be null when updating demands");
+            }
+
+            ComponentPart component = inventoryManagementService.getComponentById(part.id());
+
+            Demand existingDemand = demandService.findDemandByOrderAndComponent(order, part.id())
+                    .orElseThrow(() -> new InvalidDemandException(
+                            String.format("No demand found for component %d in order %d", part.id(), order.getId())));
+
+            Long oldQuantity = existingDemand.getQuantity();
+            Integer newQuantity = part.quantity();
+
+            // Se a quantidade for zero, remove a demanda e restaura o estoque
+            if (newQuantity == 0) {
+                log.info("Removing demand for component {} from order {} (quantity set to 0)",
+                        part.id(), order.getId());
+
+                // Restaura o estoque completo da quantidade antiga
+                inventoryManagementService.increaseStock(part.id(), oldQuantity.intValue());
+
+                // Remove a demanda do pedido
+                demandService.deleteDemand(existingDemand);
+
+                log.info("Demand removed and stock restored for component {}", part.id());
+                continue;
+            }
+
+            if (!oldQuantity.equals(Long.valueOf(newQuantity))) {
+                log.info("Updating demand for component {} in order {}. Old quantity: {}, New quantity: {}",
+                        part.id(), order.getId(), oldQuantity, newQuantity);
+
+                int quantityDelta = newQuantity - oldQuantity.intValue();
+
+                if (quantityDelta > 0) {
+                    // Precisa de mais componentes - valida estoque e diminui
+                    inventoryManagementService.validateStockAvailability(component, quantityDelta);
+                    inventoryManagementService.decreaseStock(part.id(), quantityDelta);
+                } else {
+                    // Precisa de menos componentes - devolve ao estoque
+                    inventoryManagementService.increaseStock(part.id(), Math.abs(quantityDelta));
+                }
+
+                existingDemand.setQuantity(Long.valueOf(newQuantity));
+                demandService.updateDemand(existingDemand);
+            } else {
+                log.info("Quantity unchanged for component {} in order {}", part.id(), order.getId());
+            }
+        }
+
+        log.info("Demands updated successfully for order {}", order.getId());
     }
 
     public GetAllOrdersResponse getOrders() {
 
-        // Caso receba o id de um usuário realiza o filtro
         List<Order> orders = repository.findAll();
         List<OrderEnrichedDto> data = new ArrayList<>();
 
@@ -157,7 +270,7 @@ public class OrderService {
 
             data.add(new OrderEnrichedDto(
                     order.getId(),
-                    order.getUser().getId(),
+                    userService.mapToDto(order.getUser()),
                     items,
                     parts,
                     partsTotal,
@@ -221,7 +334,7 @@ public class OrderService {
 
             data.add(new OrderEnrichedDto(
                     order.getId(),
-                    userId,
+                    userService.mapToDto(order.getUser()),
                     items,
                     parts,
                     partsTotal,
@@ -261,8 +374,8 @@ public class OrderService {
                 .toList();
     }
 
-    private void validateUpdateOrder(UpdateOrderRequest request) {
-        if(request.id() == null || request.id() <= 0){
+    private void validateUpdateOrder(UpdateOrderRequest request, Integer id) {
+        if(id == null || id <= 0){
             throw new InvalidUpdateOrderException("Order id cannot be null for the update");
         }
     }

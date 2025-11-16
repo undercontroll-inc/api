@@ -58,6 +58,7 @@ public class OrderItemController {
     public ResponseEntity<Void> deleteOrderItem(
             @PathVariable Integer orderItemId
     ) {
+        log.info("Deleting order item with id: {}", orderItemId);
         service.deleteOrderItem(orderItemId);
         return ResponseEntity.ok().build();
     }

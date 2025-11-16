@@ -30,8 +30,6 @@ public class OrderItem {
 
     private Double laborValue;
 
-    private LocalDateTime lastReview;
-    private LocalDateTime analyzedAt;
     private LocalDateTime completedAt;
 
 

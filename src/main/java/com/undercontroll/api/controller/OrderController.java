@@ -26,11 +26,12 @@ public class OrderController {
         return ResponseEntity.status(201).body(order);
     }
 
-    @PutMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<Void> updateOrder(
+            @PathVariable Integer id,
             @RequestBody UpdateOrderRequest request
     ) {
-        orderService.updateOrder(request);
+        orderService.updateOrder(request, id);
 
         return ResponseEntity.ok().build();
     }

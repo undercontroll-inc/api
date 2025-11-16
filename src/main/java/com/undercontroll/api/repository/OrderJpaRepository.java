@@ -7,11 +7,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
 
     List<Order> findByUser_id(Integer userId);
+
+    /**
+     * Busca o Order que contém um OrderItem específico.
+     * Necessário para deletar OrderItem de forma segura através do relacionamento.
+     */
+    @Query("SELECT o FROM Order o JOIN o.orderItems oi WHERE oi.id = :orderItemId")
+    Optional<Order> findOrderByOrderItemId(@Param("orderItemId") Integer orderItemId);
 
     // Query responsavel por retornar o total de todos os componentes de todos os items relacionados a um pedido
     @Query(value = """

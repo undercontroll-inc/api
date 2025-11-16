@@ -3,10 +3,16 @@ package com.undercontroll.api.service;
 import com.undercontroll.api.dto.CreateDemandRequest;
 import com.undercontroll.api.exception.InvalidDemandException;
 import com.undercontroll.api.model.Demand;
+import com.undercontroll.api.model.Order;
 import com.undercontroll.api.repository.DemandRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class DemandService {
@@ -24,6 +30,41 @@ public class DemandService {
                 .order(createDemandRequest.order())
                 .build();
 
+        log.info("Creating demand for component {} in order {} with quantity {}",
+                createDemandRequest.componentPart().getId(),
+                createDemandRequest.order().getId(),
+                createDemandRequest.quantity());
+
         return repository.save(demand);
     }
+
+    public Demand updateDemand(Demand demand) {
+        log.info("Updating demand {} for component {} with new quantity {}",
+                demand.getId(),
+                demand.getComponent().getId(),
+                demand.getQuantity());
+        return repository.save(demand);
+    }
+
+    public List<Demand> findDemandsByOrder(Order order) {
+        return repository.findByOrder(order);
+    }
+
+    public Optional<Demand> findDemandByOrderAndComponent(Order order, Integer componentId) {
+        return repository.findByOrderAndComponent_Id(order, componentId);
+    }
+
+    public void deleteDemand(Demand demand) {
+        log.info("Deleting demand {} for component {} in order {}",
+                demand.getId(),
+                demand.getComponent().getId(),
+                demand.getOrder().getId());
+        repository.delete(demand);
+    }
+
+    public void deleteAllDemandsForOrder(Order order) {
+        log.info("Deleting all demands for order {}", order.getId());
+        repository.deleteByOrder(order);
+    }
+
 }

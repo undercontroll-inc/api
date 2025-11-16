@@ -1,10 +1,13 @@
 package com.undercontroll.api.dto;
 
-import java.time.LocalDateTime;
+import com.undercontroll.api.model.OrderStatus;
+
+import java.util.List;
 
 public record UpdateOrderRequest(
-        Integer id,
-        LocalDateTime startedAt,
-        LocalDateTime completedTime
+        OrderStatus status,
+        List<UpdateOrderItemDto> appliances,
+        List<PartDto> parts,
+        String serviceDescription
 ) {
 }
