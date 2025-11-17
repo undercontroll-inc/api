@@ -4,20 +4,23 @@ import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.ComponentPart;
 import com.undercontroll.api.repository.ComponentJpaRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ComponentService {
 
-    private ComponentJpaRepository repository;
+    private final ComponentJpaRepository repository;
+    private final DemandService demandService;
 
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);
 
         ComponentPart component = ComponentPart.builder()
-                .name(request.name())
+                .name(request.item())
                 .description(request.description())
                 .brand(request.brand())
                 .price(request.price())
@@ -29,7 +32,7 @@ public class ComponentService {
         repository.save(component);
 
         return new RegisterComponentResponse(
-                request.name(),
+                request.item(),
                 request.description(),
                 request.brand(),
                 request.price(),
@@ -76,10 +79,12 @@ public class ComponentService {
                 .findAll()
                 .stream()
                 .map(c -> new ComponentDto(
+                        c.getId(),
                         c.getName(),
                         c.getDescription(),
                         c.getBrand(),
                         c.getPrice(),
+                        c.getQuantity(),
                         c.getSupplier(),
                         c.getCategory()
                 ))
@@ -94,10 +99,12 @@ public class ComponentService {
         return repository.findByCategory(category)
                 .stream()
                 .map(c -> new ComponentDto(
+                        c.getId(),
                         c.getName(),
                         c.getDescription(),
                         c.getBrand(),
                         c.getPrice(),
+                        c.getQuantity(),
                         c.getSupplier(),
                         c.getCategory()
                 ))
@@ -112,10 +119,12 @@ public class ComponentService {
         return repository.findByName(name)
                 .stream()
                 .map(c -> new ComponentDto(
+                        c.getId(),
                         c.getName(),
                         c.getDescription(),
                         c.getBrand(),
                         c.getPrice(),
+                        c.getQuantity(),
                         c.getSupplier(),
                         c.getCategory()
                 ))
@@ -134,7 +143,7 @@ public class ComponentService {
 
     private void validateCreate(RegisterComponentRequest request) {
         if(
-                request.name() == null || request.name().isEmpty() || request.description() == null || request.description().isEmpty() ||
+                request.item() == null || request.item().isEmpty() || request.description() == null || request.description().isEmpty() ||
                 request.brand() == null || request.brand().isEmpty() || request.price() == null || request.price() <= 0 ||
                 request.supplier() == null || request.supplier().isEmpty() || request.category() == null || request.category().isEmpty()
         ) {

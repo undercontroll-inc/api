@@ -1,9 +1,9 @@
-package com.undercontroll.api.model;
+package com.undercontroll.api.model.enums;
 
 public enum UserType {
 
     ADMINISTRATOR,
     MANAGER,
-    COSTUMER
+    CUSTOMER
 
 }

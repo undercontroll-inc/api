@@ -6,7 +6,8 @@ import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;
 import com.undercontroll.api.exception.UserNotFoundException;
 import com.undercontroll.api.model.User;
-import com.undercontroll.api.model.GoogleTokenVerifier;
+import com.undercontroll.api.model.enums.PasswordEventType;
+import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,9 +22,12 @@ public class UserService {
     private final UserJpaRepository repository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordEventService passwordEventService;
     private final GoogleTokenVerifier googleTokenVerifier;
 
-    public CreateUserResponse createUser(CreateUserRequest request) {
+    public CreateUserResponse createUser(
+            CreateUserRequest request
+    ) {
         validateCreateUserRequest(request);
 
         Optional<User> existingUserByEmail = repository.findUserByEmail(request.email());
@@ -44,13 +48,20 @@ public class UserService {
             throw new InvalidUserException("CPF is already in use");
         }
 
-        String encryptedPassword = passwordEncoder.encode(request.password());
+        String password =
+                request.userType().equals(UserType.ADMINISTRATOR)
+                ? passwordEncoder.encode(request.password())
+                : passwordEncoder.encode(passwordEventService.create(new CreatePasswordEventRequest(
+                        PasswordEventType.CREATE,
+                        null, // Agent null pois é o alexandre que estara criando
+                        request.phone()
+                )).getValue());
 
         User user = User.builder()
                 .name(request.name())
                 .email(request.email())
                 .lastName(request.lastName())
-                .password(encryptedPassword)
+                .password(password)
                 .address(request.address())
                 .cpf(request.cpf())
                 .CEP(request.CEP())
@@ -183,7 +194,7 @@ public class UserService {
         );
     }
 
-    public UserDto getUserById(Integer userId) {
+    public User getUserById(Integer userId) {
         if (userId == null) {
             throw new InvalidUserException("User ID cannot be null");
         }
@@ -194,8 +205,24 @@ public class UserService {
             throw  new InvalidUserException("Could not found the user with id: %d".formatted(userId));
         }
 
-        return mapToDto(user.get());
+        return user.get();
     }
+
+    public List<UserDto> getCustomers() {
+        return this.repository
+                .findAllCustomers()
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    public UserDto getCustomersById(Integer id) {
+        return this.repository
+                .findCustomerById(id)
+                .map(this::mapToDto)
+                .orElseThrow(() -> new UserNotFoundException("Costumer not found with id: %d".formatted(id)));
+    }
+
 
     private void validateCreateUserRequest(CreateUserRequest request) {
         if (request.name() == null || request.name().trim().isEmpty()) {
@@ -227,8 +254,9 @@ public class UserService {
         // Validação pode ser adicionada no futuro se necessário
     }
 
-    private UserDto mapToDto(User user) {
+    public UserDto mapToDto(User user) {
         return new UserDto(
+                user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getLastName(),

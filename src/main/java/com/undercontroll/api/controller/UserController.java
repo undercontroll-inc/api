@@ -1,6 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.*;
+import com.undercontroll.api.model.User;
 import com.undercontroll.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,11 +59,28 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/customers")
+    public ResponseEntity<List<UserDto>> getCostumers(
+    ) {
+        var users = service.getCustomers();
+
+        return users.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/customers/{customerId}")
+    public ResponseEntity<UserDto> getCostumerById(
+            @PathVariable Integer customerId
+    ) {
+        var user = service.getCustomersById(customerId);
+
+        return ResponseEntity.ok(user);
+    }
+
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUsersById(
+    public ResponseEntity<User> getUserById(
             @PathVariable Integer userId
     ) {
-        UserDto user = service.getUserById(userId);
+        User user = service.getUserById(userId);
         return ResponseEntity.ok(user);
     }
 

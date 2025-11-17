@@ -1,10 +1,12 @@
 package com.undercontroll.api.dto;
 
 public record ComponentDto(
-        String name,
+        Integer id,
+        String item,
         String description,
         String brand,
         Double price,
+        Long quantity,
         String supplier,
         String category
 ) {

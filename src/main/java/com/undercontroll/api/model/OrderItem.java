@@ -1,6 +1,5 @@
 package com.undercontroll.api.model;
 
-import com.undercontroll.api.model.OrderItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,22 +19,18 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String name;
     private String imageUrl;
 
-    private Double labor;
     private String observation;
     private String volt;
     private String series;
+    private String type;
+    private String brand;
+    private String model;
 
-    @Enumerated(EnumType.STRING)
-    private OrderItemStatus status;
+    private Double laborValue;
 
-    private LocalDateTime lastReview;
-    private LocalDateTime analyzedAt;
     private LocalDateTime completedAt;
 
-    @OneToMany(fetch =  FetchType.LAZY)
-    private List<Demand> demands;
 
 }

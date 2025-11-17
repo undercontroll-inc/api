@@ -16,5 +16,4 @@ public interface ComponentJpaRepository extends JpaRepository<ComponentPart, Int
 
     @Query("SELECT c FROM ComponentPart c WHERE c.category = :category")
     List<ComponentPart> findByCategory(@Param("category") String category);
-
 }

@@ -1,4 +1,4 @@
-package com.undercontroll.api.model;
+package com.undercontroll.api.service;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;

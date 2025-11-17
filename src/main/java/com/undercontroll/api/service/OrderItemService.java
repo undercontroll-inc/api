@@ -5,38 +5,41 @@ import com.undercontroll.api.dto.OrderItemDto;
 import com.undercontroll.api.dto.UpdateOrderItemRequest;
 import com.undercontroll.api.exception.InvalidOrderItemException;
 import com.undercontroll.api.exception.OrderItemNotFoundException;
+import com.undercontroll.api.model.Order;
 import com.undercontroll.api.model.OrderItem;
 import com.undercontroll.api.repository.OrderItemJpaRepository;
+import com.undercontroll.api.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderItemService {
 
     private final OrderItemJpaRepository repository;
+    private final OrderJpaRepository orderRepository;
 
-    public OrderItemDto createOrderItem(CreateOrderItemRequest request) {
+    public OrderItem createOrderItem(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
 
         OrderItem orderItem = OrderItem.builder()
-                .name(request.name())
+                .brand(request.brand())
+                .model(request.model())
+                .type(request.type())
                 .imageUrl(request.imageUrl())
-                .status(request.status())
                 .observation(request.observation())
-                .labor(request.labor())
                 .volt(request.volt())
                 .series(request.series())
-                .demands(new ArrayList<>())
+                .laborValue(request.laborValue())
                 .build();
 
-        OrderItem orderItemSaved = repository.save(orderItem);
-
-        return mapToDto(orderItemSaved);
+        return repository.save(orderItem);
     }
 
     public void updateOrderItem(UpdateOrderItemRequest data) {
@@ -50,14 +53,9 @@ public class OrderItemService {
 
         OrderItem orderFound = orderItem.get();
 
-        if (data.name() != null) {
-            orderFound.setName(data.name());
-        }
+        // Faltando aqui validar os campos model, brand e type
         if (data.imageUrl() != null) {
             orderFound.setImageUrl(data.imageUrl());
-        }
-        if (data.labor() != null) {
-            orderFound.setLabor(data.labor());
         }
         if (data.observation() != null) {
             orderFound.setObservation(data.observation());
@@ -68,17 +66,20 @@ public class OrderItemService {
         if (data.series() != null) {
             orderFound.setSeries(data.series());
         }
-        if (data.status() != null) {
-            orderFound.setStatus(data.status());
-        }
-        if (data.lastReview() != null) {
-            orderFound.setLastReview(data.lastReview());
-        }
-        if (data.analyzedAt() != null) {
-            orderFound.setAnalyzedAt(data.analyzedAt());
-        }
         if (data.completedAt() != null) {
             orderFound.setCompletedAt(data.completedAt());
+        }
+        if(data.labor() != null) {
+            orderFound.setLaborValue(data.labor());
+        }
+        if(data.type() != null) {
+            orderFound.setType(data.type());
+        }
+        if(data.brand() != null) {
+            orderFound.setBrand(data.brand());
+        }
+        if(data.model() != null) {
+            orderFound.setModel(data.model());
         }
 
         repository.save(orderFound);
@@ -97,12 +98,39 @@ public class OrderItemService {
 //                .toList();
 //    }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteOrderItem(Integer orderItemId) {
         if (orderItemId == null) {
             throw new InvalidOrderItemException("Order item ID cannot be null");
         }
 
-        repository.findById(orderItemId).ifPresent(repository::delete);
+        log.info("Attempting to delete order item {}", orderItemId);
+
+        OrderItem orderItem = repository.findById(orderItemId)
+                .orElseThrow(() -> {
+                    log.error("Order item {} not found for deletion", orderItemId);
+                    return new OrderItemNotFoundException(
+                            "Could not find order item with id: " + orderItemId);
+                });
+
+
+        Order order = orderRepository.findOrderByOrderItemId(orderItemId)
+                .orElse(null);
+
+        if (order != null) {
+            // Remove o item da lista do Order
+            // O orphanRemoval=true fará a deleção automática
+            log.info("Removing order item {} from order {}", orderItemId, order.getId());
+            order.getOrderItems().remove(orderItem);
+            orderRepository.save(order);
+            log.info("Order item {} removed successfully from order {}", orderItemId, order.getId());
+        } else {
+            // OrderItem órfão (sem Order associado), pode deletar diretamente
+            log.info("Order item {} is orphan, deleting directly", orderItemId);
+            repository.delete(orderItem);
+        }
+
+        log.info("Order item {} deleted successfully", orderItemId);
     }
 
     public OrderItemDto getOrderItemById(Integer orderItemId) {
@@ -125,11 +153,7 @@ public class OrderItemService {
     }
 
     private void validateCreateOrderItemRequest(CreateOrderItemRequest request) {
-        if (request.name() == null || request.name().trim().isEmpty()) {
-            throw new InvalidOrderItemException("Order item name cannot be empty");
-        }
-
-        if (request.labor() != null && request.labor() < 0) {
+        if (request.laborValue() != null && request.laborValue() < 0) {
             throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
     }
@@ -139,26 +163,22 @@ public class OrderItemService {
             throw new InvalidOrderItemException("Order item ID cannot be null for update");
         }
 
-        if (orderItem.name() != null && orderItem.name().trim().isEmpty()) {
-            throw new InvalidOrderItemException("Order item name cannot be empty");
-        }
-
         if (orderItem.labor() != null && orderItem.labor() < 0) {
             throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
     }
 
-    private OrderItemDto mapToDto(OrderItem orderItem) {
+    public OrderItemDto mapToDto(OrderItem orderItem) {
         return new OrderItemDto(
-                orderItem.getName(),
+                orderItem.getId(),
                 orderItem.getImageUrl(),
-                orderItem.getLabor(),
+                orderItem.getModel(),
+                orderItem.getType(),
+                orderItem.getBrand(),
                 orderItem.getObservation(),
                 orderItem.getVolt(),
                 orderItem.getSeries(),
-                orderItem.getStatus(),
-                orderItem.getLastReview(),
-                orderItem.getAnalyzedAt(),
+                orderItem.getLaborValue(),
                 orderItem.getCompletedAt()
         );
     }

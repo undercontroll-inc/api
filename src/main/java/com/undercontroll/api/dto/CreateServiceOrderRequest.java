@@ -6,15 +6,15 @@ import java.util.Date;
 public record CreateServiceOrderRequest(
 
         Integer orderId,
-        Integer fabricGuarantee,
-        Integer budget,
-        Integer returnGuarantee,
+        boolean haveFabricGuarantee,
+        Double budget,
+        boolean haveReturnGuarantee,
         String description,
         String nf,
         Date date,
         String store,
-        String issue,
-        LocalDateTime withdrawalAt,
+//        String issue,
+//        LocalDateTime withdrawalAt,
         LocalDateTime received_at
 
 ) {

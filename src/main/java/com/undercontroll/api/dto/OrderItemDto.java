@@ -1,19 +1,17 @@
 package com.undercontroll.api.dto;
 
-import com.undercontroll.api.model.OrderItemStatus;
-
 import java.time.LocalDateTime;
 
 public record OrderItemDto(
-    String name,
+    Integer id,
     String imageUrl,
-    Double labor,
+    String model,
+    String type,
+    String brand,
     String observation,
     String volt,
     String series,
-    OrderItemStatus status,
-    LocalDateTime lastReview,
-    LocalDateTime analyzedAt,
+    Double laborValue,
     LocalDateTime completedAt
 ) {
 }
