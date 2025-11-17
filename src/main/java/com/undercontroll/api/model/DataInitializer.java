@@ -1,5 +1,7 @@
 package com.undercontroll.api.model;
 
+import com.undercontroll.api.model.enums.OrderStatus;
+import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.repository.ComponentJpaRepository;
 import com.undercontroll.api.repository.DemandRepository;
 import com.undercontroll.api.repository.OrderJpaRepository;
@@ -10,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;

@@ -3,6 +3,7 @@ package com.undercontroll.api.service;
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.*;
+import com.undercontroll.api.model.enums.OrderStatus;
 import com.undercontroll.api.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -160,7 +161,7 @@ public class OrderService {
                                 appliance.model(),
                                 appliance.type(),
                                 "", // Future: lidar com imagens
-                                appliance.costumerNote(),
+                                appliance.customerNote(),
                                 appliance.volt(),
                                 appliance.series(),
                                 appliance.laborValue()
@@ -174,9 +175,12 @@ public class OrderService {
                         appliance.id(),
                         "", // Future: lidar com imagens
                         appliance.laborValue(),
-                        appliance.costumerNote(),
+                        appliance.customerNote(),
                         appliance.volt(),
                         appliance.series(),
+                        appliance.type(),
+                        appliance.brand(),
+                        appliance.model(),
                         request.status() == OrderStatus.COMPLETED ? LocalDateTime.now() : null
                 ));
                 log.info("Updated order item {} in order {}", appliance.id(), order.getId());

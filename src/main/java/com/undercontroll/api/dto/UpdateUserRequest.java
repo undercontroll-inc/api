@@ -1,7 +1,6 @@
 package com.undercontroll.api.dto;
 
-import com.undercontroll.api.model.UserType;
-import java.util.Date;
+import com.undercontroll.api.model.enums.UserType;
 
 public record UpdateUserRequest(
         Integer id,

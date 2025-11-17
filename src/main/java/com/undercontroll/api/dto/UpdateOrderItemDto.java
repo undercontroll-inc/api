@@ -8,6 +8,6 @@ public record UpdateOrderItemDto(
         String volt,
         String series,
         Double laborValue,
-        String costumerNote
+        String customerNote
 ) {
 }

@@ -69,6 +69,18 @@ public class OrderItemService {
         if (data.completedAt() != null) {
             orderFound.setCompletedAt(data.completedAt());
         }
+        if(data.labor() != null) {
+            orderFound.setLaborValue(data.labor());
+        }
+        if(data.type() != null) {
+            orderFound.setType(data.type());
+        }
+        if(data.brand() != null) {
+            orderFound.setBrand(data.brand());
+        }
+        if(data.model() != null) {
+            orderFound.setModel(data.model());
+        }
 
         repository.save(orderFound);
     }

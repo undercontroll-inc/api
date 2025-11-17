@@ -6,6 +6,8 @@ import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;
 import com.undercontroll.api.exception.UserNotFoundException;
 import com.undercontroll.api.model.User;
+import com.undercontroll.api.model.enums.PasswordEventType;
+import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,9 +22,12 @@ public class UserService {
     private final UserJpaRepository repository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordEventService passwordEventService;
     private final GoogleTokenVerifier googleTokenVerifier;
 
-    public CreateUserResponse createUser(CreateUserRequest request) {
+    public CreateUserResponse createUser(
+            CreateUserRequest request
+    ) {
         validateCreateUserRequest(request);
 
         Optional<User> existingUserByEmail = repository.findUserByEmail(request.email());
@@ -43,13 +48,20 @@ public class UserService {
             throw new InvalidUserException("CPF is already in use");
         }
 
-        String encryptedPassword = passwordEncoder.encode(request.password());
+        String password =
+                request.userType().equals(UserType.ADMINISTRATOR)
+                ? passwordEncoder.encode(request.password())
+                : passwordEncoder.encode(passwordEventService.create(new CreatePasswordEventRequest(
+                        PasswordEventType.CREATE,
+                        null, // Agent null pois é o alexandre que estara criando
+                        request.phone()
+                )).getValue());
 
         User user = User.builder()
                 .name(request.name())
                 .email(request.email())
                 .lastName(request.lastName())
-                .password(encryptedPassword)
+                .password(password)
                 .address(request.address())
                 .cpf(request.cpf())
                 .CEP(request.CEP())

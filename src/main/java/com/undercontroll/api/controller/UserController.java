@@ -2,7 +2,6 @@ package com.undercontroll.api.controller;
 
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.model.User;
-import com.undercontroll.api.model.UserType;
 import com.undercontroll.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

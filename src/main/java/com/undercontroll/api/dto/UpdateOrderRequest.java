@@ -1,6 +1,6 @@
 package com.undercontroll.api.dto;
 
-import com.undercontroll.api.model.OrderStatus;
+import com.undercontroll.api.model.enums.OrderStatus;
 
 import java.util.List;
 

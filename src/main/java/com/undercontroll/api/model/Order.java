@@ -1,5 +1,6 @@
 package com.undercontroll.api.model;
 
+import com.undercontroll.api.model.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
