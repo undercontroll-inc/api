@@ -113,16 +113,20 @@ public class OrderItemService {
                             "Could not find order item with id: " + orderItemId);
                 });
 
+        // Busca o Order que contém este OrderItem
+        Optional<Order> orderOpt = orderRepository.findOrderByOrderItemId(orderItemId);
 
-        Order order = orderRepository.findOrderByOrderItemId(orderItemId)
-                .orElse(null);
-
-        if (order != null) {
-            // Remove o item da lista do Order
-            // O orphanRemoval=true fará a deleção automática
+        if (orderOpt.isPresent()) {
+            Order order = orderOpt.get();
             log.info("Removing order item {} from order {}", orderItemId, order.getId());
-            order.getOrderItems().remove(orderItem);
+
+            // Remove o item da coleção do Order
+            // O orphanRemoval=true irá deletar o OrderItem automaticamente
+            order.getOrderItems().removeIf(item -> item.getId().equals(orderItemId));
+
+            // Salva o Order - o JPA vai cuidar da deleção do órfão
             orderRepository.save(order);
+
             log.info("Order item {} removed successfully from order {}", orderItemId, order.getId());
         } else {
             // OrderItem órfão (sem Order associado), pode deletar diretamente

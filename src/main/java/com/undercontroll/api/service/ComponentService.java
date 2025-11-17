@@ -5,16 +5,18 @@ import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.ComponentPart;
 import com.undercontroll.api.repository.ComponentJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ComponentService {
 
     private final ComponentJpaRepository repository;
-    private final DemandService demandService;
 
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);
@@ -41,14 +43,14 @@ public class ComponentService {
         );
     }
 
-    public void updateComponent(UpdateComponentRequest request) {
-        validateUpdate(request);
+    public ComponentDto updateComponent(UpdateComponentRequest request, Integer componentId) {
+        validateUpdate(componentId);
 
-        ComponentPart component = repository.findById(request.id())
-                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + request.id()));
+        ComponentPart component = repository.findById(componentId)
+                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + componentId));
 
-        if(request.name() != null && !request.name().isEmpty()) {
-            component.setName(request.name());
+        if(request.item() != null && !request.item().isEmpty()) {
+            component.setName(request.item());
         }
 
         if(request.description() != null && !request.description().isEmpty()) {
@@ -71,7 +73,7 @@ public class ComponentService {
             component.setSupplier(request.supplier());
         }
 
-        repository.save(component);
+        return this.mapToDto(repository.save(component));
     }
 
     public List<ComponentDto> getComponents() {
@@ -131,14 +133,37 @@ public class ComponentService {
                 .toList();
     }
 
+    public ComponentDto getComponentById(Integer id) {
+        return this.mapToDto(repository.findById(id).orElseThrow(
+                () -> new ComponentNotFoundException("Could not found the component with id " + id)
+        ));
+    }
+
+    @Transactional
     public void deleteComponent(Integer componentId) {
         validateDelete(componentId);
 
         ComponentPart component = repository.findById(componentId)
                 .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + componentId));
 
+        // Log para rastreamento
+        log.info("Attempting to delete component with id: {}, name: {}", componentId, component.getName());
+
+        // Verificar se há demandas relacionadas
+        if (!component.getDemands().isEmpty()) {
+            log.warn("Component {} has {} active demand(s) that will be removed",
+                    componentId, component.getDemands().size());
+
+            // As demandas serão removidas automaticamente devido ao CascadeType.ALL e orphanRemoval = true
+            // Mas vamos logar para auditoria
+            component.getDemands().forEach(demand ->
+                log.info("Removing demand {} for component {} in order {}",
+                        demand.getId(), componentId, demand.getOrder().getId())
+            );
+        }
 
         repository.delete(component);
+        log.info("Component {} successfully deleted", componentId);
     }
 
     private void validateCreate(RegisterComponentRequest request) {
@@ -151,8 +176,8 @@ public class ComponentService {
         }
     }
 
-    private void validateUpdate(UpdateComponentRequest request) {
-        if(request.id() == null || request.id() <= 0) {
+    private void validateUpdate(Integer componentId) {
+        if(componentId == null || componentId <= 0) {
             throw new InvalidUpdateComponentException("Component id cannot be null or invalid");
         }
     }
@@ -161,6 +186,19 @@ public class ComponentService {
         if(componentId == null || componentId <= 0) {
             throw new InvalidDeleteComponentException("Invalid id for deletion");
         }
+    }
+
+    private ComponentDto mapToDto(ComponentPart component) {
+        return new ComponentDto(
+                component.getId(),
+                component.getName(),
+                component.getDescription(),
+                component.getBrand(),
+                component.getPrice(),
+                component.getQuantity(),
+                component.getSupplier(),
+                component.getCategory()
+        );
     }
 
 }

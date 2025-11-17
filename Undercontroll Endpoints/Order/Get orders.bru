@@ -7,9 +7,14 @@ meta {
 get {
   url: http://localhost:8080/v1/api/orders
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6ImFsZXhhbmRyZUBnbWFpbC5jb20iLCJleHAiOjE3NjM0MTQzMjAsImlhdCI6MTc2MzQxMDcyMH0.PuGh3TwD0-p4Uo9604dWJfIkaCwsjWdBp93A2G7gsSaxeEYyEDxwlIQGun3yRsvQ1OUKWD9wbVoZpCdGVdNZIjTL1xUdjQJGOXG7qYx9Ni_lKFZQnCCsSgUgaqcgR4YE53aq6U-eckoaGfFXgsaBXU3sDkpUGONoNHtU322y85K8UZTYOOCEzJLmjEVUgjltGOBCailyhLMm2cyk8Sru4-eXbgK5IljUEFE4Y8xELdmPoFYjGT2bTSk2-yFxbUHBiXbDYS_OwUfqF7QJfEWG7rp_mJvjFIMPOyoSdToO3cePMXPtV6GCrZsl8nWZI00JUTk0vX67eaC80En_HpFZZw
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

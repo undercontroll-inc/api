@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDateTime;
 
+@ToString
 @Entity
 @Getter
 @Setter

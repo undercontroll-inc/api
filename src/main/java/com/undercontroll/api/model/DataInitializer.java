@@ -50,8 +50,20 @@ public class DataInitializer {
         component = componentRepository.save(component);
 
         // Criar User CUSTOMER
-        User customer = User.builder()
+        User customer1 = User.builder()
                 .name("Lucas Furquim")
+                .email("lucas@gmail.com")
+                .lastName("Furquim")
+                .password(encoder.encode("123"))
+                .address("Rua")
+                .cpf("55739713860")
+                .CEP("09571300")
+                .phone("11988310059")
+                .userType(UserType.CUSTOMER)
+                .build();
+
+        User customer2 = User.builder()
+                .name("Lucas Furquim2")
                 .email("lucas2@gmail.com")
                 .lastName("Furquim")
                 .password(encoder.encode("123"))
@@ -74,7 +86,8 @@ public class DataInitializer {
                 .userType(UserType.ADMINISTRATOR)
                 .build();
 
-        customer = userRepository.save(customer);
+        customer1 = userRepository.save(customer1);
+        customer2 = userRepository.save(customer2);
         userRepository.save(admin);
 
 
@@ -95,7 +108,7 @@ public class DataInitializer {
 
         // Criar Order
         Order order = Order.builder()
-                .user(customer)
+                .user(customer1)
                 .orderItems(new ArrayList<>(List.of(orderItem)))
                 .demands(new ArrayList<>())
                 .nf("string")
@@ -106,6 +119,34 @@ public class DataInitializer {
                 .description("string")
                 .status(OrderStatus.PENDING)
                 .build();
+
+        orderRepository.save(order);
+
+        // Criar OrderItem (appliance)
+        orderItem = OrderItem.builder()
+                .type("string")
+                .brand("string")
+                .model("string")
+                .volt("string")
+                .series("string")
+                .observation("string")
+                .laborValue(20.0)
+                .build();
+
+        // Criar Order
+        order = Order.builder()
+                .user(customer2)
+                .orderItems(new ArrayList<>(List.of(orderItem)))
+                .demands(new ArrayList<>())
+                .nf("string")
+                .returnGuarantee(true)
+                .fabricGuarantee(true)
+                .discount(12.1)
+                .received_at(LocalDate.parse(date, formatter))
+                .description("string")
+                .status(OrderStatus.PENDING)
+                .build();
+
         order = orderRepository.save(order);
 
         // Criar Demand (parts)

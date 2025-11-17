@@ -34,6 +34,13 @@ public class ComponentController {
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{componentId}")
+    public ResponseEntity<ComponentDto> getById(@PathVariable Integer componentId) {
+        var response = service.getComponentById(componentId);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/category/{category}")
     public ResponseEntity<List<ComponentDto>> findByCategory(
             @PathVariable String category
@@ -52,13 +59,14 @@ public class ComponentController {
         return response.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(response);
     }
 
-    @PutMapping
-    public ResponseEntity<Void> updateComponent(
-            @RequestBody UpdateComponentRequest request
+    @PutMapping("/{componentId}")
+    public ResponseEntity<ComponentDto> updateComponent(
+            @RequestBody UpdateComponentRequest request,
+            @PathVariable Integer componentId
     ) {
-        service.updateComponent(request);
+        ComponentDto component = service.updateComponent(request, componentId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(component) ;
     }
 
     @DeleteMapping("/{componentId}")
