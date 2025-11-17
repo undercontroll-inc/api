@@ -4,6 +4,9 @@ package com.undercontroll.api.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -30,5 +33,9 @@ public class ComponentPart {
     private String category;
 
     private Long quantity;
+
+    @OneToMany(mappedBy = "component", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Demand> demands = new ArrayList<>();
 
 }

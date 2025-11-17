@@ -1,8 +1,7 @@
 package com.undercontroll.api.dto;
 
 public record UpdateComponentRequest(
-        Integer id,
-        String name,
+        String item,
         String description,
         String brand,
         Double price,

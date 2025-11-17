@@ -4,6 +4,7 @@ import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.*;
 import com.undercontroll.api.model.*;
 import com.undercontroll.api.model.enums.OrderStatus;
+import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -252,113 +253,49 @@ public class OrderService {
     }
 
     public GetAllOrdersResponse getOrders() {
-
+        log.info("Fetching all orders");
         List<Order> orders = repository.findAll();
-        List<OrderEnrichedDto> data = new ArrayList<>();
-
-        for (Order order : orders) {
-            Double partsTotal = repository.calculatePartsTotalByOrderId(order.getId());
-
-            List<OrderItemDto> items = new ArrayList<>();
-            Double totalLaborValue = 0.0;
-
-            for(OrderItem i : order.getOrderItems()) {
-                items.add(orderItemService.mapToDto(i));
-
-                totalLaborValue += i.getLaborValue();
-            }
-
-            // Valor total = total de todas as peças utilizadas + total de toda a mão de obra do pedido - o desconto
-            Double total = partsTotal + totalLaborValue - order.getDiscount();
-            List<ComponentDto> parts = getPartsByOrderId(order.getId());
-
-            data.add(new OrderEnrichedDto(
-                    order.getId(),
-                    userService.mapToDto(order.getUser()),
-                    items,
-                    parts,
-                    partsTotal,
-                    totalLaborValue,
-                    order.getDiscount(),
-                    total,
-                    order.getReceived_at() == null ? null :order.getReceived_at().toString(),
-                    order.getCompletedTime() == null ? null :order.getCompletedTime().toString(),
-                    order.getNf(),
-                    order.isReturnGuarantee(),
-                    order.getDescription(),
-                    null,
-                    order.getStatus(),
-                    order.getUpdatedAt().toString()
-            ));
-        }
-
-        return new GetAllOrdersResponse(
-                data
-        );
+        List<OrderEnrichedDto> enrichedOrders = mapOrdersToEnrichedDtos(orders);
+        return new GetAllOrdersResponse(enrichedOrders);
     }
 
-    public void deleteOrder(Integer orderId) {
-        validateDeleteOrder(orderId);
+    public GetOrderByIdResponse getOrderById(Integer orderId, String token) {
+        log.info("Fetching order with id {}", orderId);
 
-        Optional<Order> orderFound = repository.findById(orderId);
-
-        if(orderFound.isEmpty()) {
-            throw new OrderNotFoundException("Could not found the order");
+        if (orderId == null || orderId <= 0) {
+            throw new InvalidUpdateOrderException("Order id must be a positive number");
         }
 
-        repository.delete(orderFound.get());
+        Order order = repository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(
+                        String.format("Order with id %d not found", orderId)));
+
+        User user = userService.getUserByToken(token);
+
+        validateOrderUser(order, user);
+
+        OrderEnrichedDto enrichedOrder = mapOrderToEnrichedDto(order);
+        return new GetOrderByIdResponse(enrichedOrder);
     }
 
     public GetOrdersByUserIdResponse getOrdersByUserId(Integer userId) {
+        log.info("Fetching orders for user id {}", userId);
 
-        // Caso receba o id de um usuário realiza o filtro
-        List<Order> orders =
-                userId == null
-                        ? repository.findAll()
-                        : repository.findByUser_id(userId);
+        List<Order> orders = repository.findByUser_id(userId);
 
-        List<OrderEnrichedDto> data = new ArrayList<>();
+        List<OrderEnrichedDto> enrichedOrders = mapOrdersToEnrichedDtos(orders);
+        return new GetOrdersByUserIdResponse(enrichedOrders);
+    }
 
-        for (Order order : orders) {
-            Double partsTotal = repository.calculatePartsTotalByOrderId(order.getId());
+    public void deleteOrder(Integer orderId) {
+        log.info("Deleting order with id {}", orderId);
+        validateDeleteOrder(orderId);
 
-            List<OrderItemDto> items = new ArrayList<>();
-            Double totalLaborValue = 0.0;
+        Order order = repository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Could not found the order"));
 
-            for(OrderItem i : order.getOrderItems()) {
-                items.add(orderItemService.mapToDto(i));
-
-                totalLaborValue += i.getLaborValue();
-            }
-
-            // Valor total = total de todas as peças utilizadas + total de toda a mão de obra do pedido - o desconto
-            Double total = partsTotal + totalLaborValue - order.getDiscount();
-
-            List<ComponentDto> parts = getPartsByOrderId(order.getId());
-
-            data.add(new OrderEnrichedDto(
-                    order.getId(),
-                    userService.mapToDto(order.getUser()),
-                    items,
-                    parts,
-                    partsTotal,
-                    totalLaborValue,
-                    order.getDiscount(),
-                    total,
-                    order.getReceived_at().toString(),
-                    order.getCompletedTime().toString(),
-                    order.getNf(),
-                    order.isReturnGuarantee(),
-                    order.getDescription(),
-                    null,
-                    order.getStatus(),
-                    order.getUpdatedAt().toString()
-            ));
-        }
-
-        return new GetOrdersByUserIdResponse(
-                data
-        );
+        repository.delete(order);
+        log.info("Order {} deleted successfully", orderId);
     }
 
     public List<ComponentDto> getPartsByOrderId(Integer orderId) {
@@ -378,9 +315,69 @@ public class OrderService {
                 .toList();
     }
 
+    private List<OrderEnrichedDto> mapOrdersToEnrichedDtos(List<Order> orders) {
+        return orders.stream()
+                .map(this::mapOrderToEnrichedDto)
+                .toList();
+    }
+
+    private OrderEnrichedDto mapOrderToEnrichedDto(Order order) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+
+        Double partsTotal = repository.calculatePartsTotalByOrderId(order.getId());
+        Double laborTotal = calculateLaborTotal(order);
+        List<OrderItemDto> orderItemDtos = mapOrderItems(order);
+        List<ComponentDto> parts = getPartsByOrderId(order.getId());
+        Double totalValue = partsTotal + laborTotal - order.getDiscount();
+
+        return new OrderEnrichedDto(
+                order.getId(),
+                userService.mapToDto(order.getUser()),
+                orderItemDtos,
+                parts,
+                partsTotal,
+                laborTotal,
+                order.getDiscount(),
+                totalValue,
+                formatDate(order.getReceived_at(), formatter),
+                formatDate(order.getCompletedTime(), formatter),
+                order.getNf(),
+                order.isReturnGuarantee(),
+                order.getDescription(),
+                null,
+                order.getStatus(),
+                order.getUpdatedAt().format(formatter)
+        );
+    }
+
+    private Double calculateLaborTotal(Order order) {
+        return order.getOrderItems().stream()
+                .mapToDouble(OrderItem::getLaborValue)
+                .sum();
+    }
+
+    private List<OrderItemDto> mapOrderItems(Order order) {
+        return order.getOrderItems().stream()
+                .map(orderItemService::mapToDto)
+                .toList();
+    }
+
+    private String formatDate(LocalDate date, DateTimeFormatter formatter) {
+        return date == null ? null : date.format(formatter);
+    }
+
     private void validateUpdateOrder(UpdateOrderRequest request, Integer id) {
         if(id == null || id <= 0){
             throw new InvalidUpdateOrderException("Order id cannot be null for the update");
+        }
+    }
+
+    private void validateOrderUser(Order order, User user) {
+        log.info("Usuário autenticado: {}", user);
+
+        if(!user.getId().equals(order.getUser().getId()) && !user.getUserType().equals(UserType.ADMINISTRATOR)) {
+            throw new UnauthorizedOrderOperation("User is not authorized to perform this operation on the order");
         }
     }
 

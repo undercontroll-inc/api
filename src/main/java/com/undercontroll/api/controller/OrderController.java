@@ -3,13 +3,14 @@ package com.undercontroll.api.controller;
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.service.OrderService;
-import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Locale;
 
+@Slf4j
 @RestController
 @RequestMapping("/v1/api/orders")
 @RequiredArgsConstructor
@@ -43,7 +44,20 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    @DeleteMapping("{orderId}")
+    @GetMapping("/{orderId}")
+    public ResponseEntity<GetOrderByIdResponse> getOrderById(
+            @PathVariable Integer orderId,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        GetOrderByIdResponse response = orderService.getOrderById(
+                orderId,
+                authorizationHeader.split("Bearer ")[1]
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{orderId}")
     public ResponseEntity<Void> deleteOrder(
             @PathVariable Integer orderId
     ) {
@@ -52,10 +66,12 @@ public class OrderController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("{userId}")
+    @GetMapping("/filter")
     public ResponseEntity<GetOrdersByUserIdResponse> getOrdersByUserId(
-            @RequestParam(value = "userId", required = false) Integer userId
+            @RequestParam(value = "userId") Integer userId
     ) {
+
+        log.info("Oie");
         GetOrdersByUserIdResponse response = orderService.getOrdersByUserId(userId);
 
         return ResponseEntity.ok(response);

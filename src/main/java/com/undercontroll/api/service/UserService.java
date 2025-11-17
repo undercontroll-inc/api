@@ -208,6 +208,22 @@ public class UserService {
         return user.get();
     }
 
+    public User getUserByToken(String token) {
+        String subject = tokenService.extractUsername(token);
+
+        if(subject == null || subject.isEmpty()) {
+            throw new InvalidAuthException("Token is invalid");
+        }
+
+        Optional<User> user = repository.findUserByEmail(subject);
+
+        if(user.isEmpty()) {
+            throw new UserNotFoundException("User not found with email: %s".formatted(subject));
+        }
+
+        return user.get();
+    }
+
     public List<UserDto> getCustomers() {
         return this.repository
                 .findAllCustomers()

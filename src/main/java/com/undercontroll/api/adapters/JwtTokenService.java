@@ -2,7 +2,9 @@ package com.undercontroll.api.adapters;
 
 import com.undercontroll.api.service.TokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 public class JwtTokenService implements TokenService {
 
     private final JwtEncoder jwtEncoder;
+    private final JwtDecoder jwtDecoder;
 
     @Override
     public String generateToken(String username) {
@@ -27,5 +30,11 @@ public class JwtTokenService implements TokenService {
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+
+    @Override
+    public String extractUsername(String token) {
+        Jwt jwt = jwtDecoder.decode(token);
+        return jwt.getSubject();
     }
 }
