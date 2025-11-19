@@ -41,6 +41,8 @@ public class User {
 
     private Boolean alreadyRecurrent;
 
+    private Boolean inFirstLogin;
+
     private String avatarUrl;
 
     private Boolean hasWhatsApp;

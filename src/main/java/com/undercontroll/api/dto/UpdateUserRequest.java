@@ -13,5 +13,6 @@ public record UpdateUserRequest(
         String CEP,
         Boolean alreadyRecurrent,
         Boolean hasWhatsApp,
+        Boolean inFirstLogin,
         UserType userType
 ) {}

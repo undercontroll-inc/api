@@ -14,5 +14,6 @@ public record UserDto (
      String avatarUrl,
      Boolean hasWhatsApp,
      Boolean alreadyRecurrent,
+     Boolean inFirstLogin,
      UserType userType
 ) {}

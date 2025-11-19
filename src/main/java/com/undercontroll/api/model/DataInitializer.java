@@ -64,7 +64,7 @@ public class DataInitializer {
 
         User customer2 = User.builder()
                 .name("Lucas Furquim2")
-                .email("lucas2@gmail.com")
+                .email("furquimmsw@gmail.com")
                 .lastName("Furquim")
                 .password(encoder.encode("123"))
                 .address("Rua")

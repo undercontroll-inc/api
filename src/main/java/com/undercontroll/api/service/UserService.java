@@ -69,6 +69,7 @@ public class UserService {
                 .avatarUrl(request.avatarUrl())
                 .hasWhatsApp(request.hasWhatsApp())
                 .alreadyRecurrent(request.alreadyRecurrent())
+                .inFirstLogin(request.inFirstLogin())
                 .userType(request.userType())
                 .build();
 
@@ -146,6 +147,9 @@ public class UserService {
         }
         if(request.alreadyRecurrent() != null) {
             userFound.setAlreadyRecurrent(request.alreadyRecurrent());
+        }
+        if(request.inFirstLogin() != null) {
+            userFound.setInFirstLogin(request.inFirstLogin());
         }
         if(request.phone() != null) {
             userFound.setPhone(request.phone());
@@ -245,6 +249,15 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("Costumer not found with id: %d".formatted(id)));
     }
 
+    public List<UserDto> findAllCustomersThatHaveEmail() {
+        return this
+                .repository
+                .findAllCustomersThatHaveEmail()
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
 
     private void validateCreateUserRequest(CreateUserRequest request) {
         if (request.name() == null || request.name().trim().isEmpty()) {
@@ -289,6 +302,7 @@ public class UserService {
                 user.getAvatarUrl(),
                 user.getHasWhatsApp(),
                 user.getAlreadyRecurrent(),
+                user.getInFirstLogin(),
                 user.getUserType()
         );
     }
