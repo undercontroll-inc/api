@@ -12,5 +12,7 @@ public record UserDto (
      String CEP,
      String phone,
      String avatarUrl,
+     Boolean hasWhatsApp,
+     Boolean alreadyRecurrent,
      UserType userType
 ) {}

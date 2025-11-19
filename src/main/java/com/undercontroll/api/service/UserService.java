@@ -67,6 +67,8 @@ public class UserService {
                 .CEP(request.CEP())
                 .phone(request.phone())
                 .avatarUrl(request.avatarUrl())
+                .hasWhatsApp(request.hasWhatsApp())
+                .alreadyRecurrent(request.alreadyRecurrent())
                 .userType(request.userType())
                 .build();
 
@@ -107,13 +109,13 @@ public class UserService {
         );
     }
 
-    public void updateUser (UpdateUserRequest request) {
+    public void updateUser (UpdateUserRequest request, Integer id) {
         validateUpdateUser(request);
 
-        Optional<User> user = repository.findById(request.id());
+        Optional<User> user = repository.findById(id);
 
         if(user.isEmpty()) {
-            throw new InvalidUserException("Could not found the user for update with id: %d".formatted(request.id()));
+            throw new InvalidUserException("Could not found the user for update with id: %d".formatted(id));
         }
 
         User userFound = user.get();
@@ -136,11 +138,15 @@ public class UserService {
         if (request.password() != null) {
             userFound.setPassword(request.password());
         }
-
+        if(request.hasWhatsApp() != null) {
+            userFound.setHasWhatsApp(request.hasWhatsApp());
+        }
         if(request.CEP() != null){
             userFound.setCEP(request.CEP());
         }
-
+        if(request.alreadyRecurrent() != null) {
+            userFound.setAlreadyRecurrent(request.alreadyRecurrent());
+        }
         if(request.phone() != null) {
             userFound.setPhone(request.phone());
         }
@@ -281,6 +287,8 @@ public class UserService {
                 user.getCEP(),
                 user.getPhone(),
                 user.getAvatarUrl(),
+                user.getHasWhatsApp(),
+                user.getAlreadyRecurrent(),
                 user.getUserType()
         );
     }

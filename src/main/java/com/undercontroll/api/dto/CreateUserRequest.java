@@ -12,6 +12,8 @@ public record CreateUserRequest(
         String cpf,
         String avatarUrl,
         UserType userType,
+        Boolean hasWhatsApp,
+        Boolean alreadyRecurrent,
         String CEP
 ){
 }

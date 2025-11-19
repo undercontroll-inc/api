@@ -43,11 +43,12 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping
-    public ResponseEntity<Void> updateOrder(
-            @RequestBody UpdateUserRequest request
+    @PutMapping("/{userId}")
+    public ResponseEntity<Void> updateUser(
+            @RequestBody UpdateUserRequest request,
+            @PathVariable Integer userId
     ) {
-        service.updateUser(request);
+        service.updateUser(request, userId);
 
         return ResponseEntity.ok().build();
     }

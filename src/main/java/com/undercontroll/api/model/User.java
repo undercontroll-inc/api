@@ -39,7 +39,11 @@ public class User {
 
     private String phone;
 
+    private Boolean alreadyRecurrent;
+
     private String avatarUrl;
+
+    private Boolean hasWhatsApp;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

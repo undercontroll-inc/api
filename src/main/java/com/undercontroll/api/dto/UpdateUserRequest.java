@@ -3,7 +3,6 @@ package com.undercontroll.api.dto;
 import com.undercontroll.api.model.enums.UserType;
 
 public record UpdateUserRequest(
-        Integer id,
         String name,
         String lastName,
         String password,
@@ -12,5 +11,7 @@ public record UpdateUserRequest(
         String phone,
         String avatarUrl,
         String CEP,
+        Boolean alreadyRecurrent,
+        Boolean hasWhatsApp,
         UserType userType
 ) {}
