@@ -116,13 +116,14 @@ public class UserService {
                 throw new InvalidAuthException("Email or password is invalid");
             }
 
-            String token = tokenService.generateToken(userFound.get().getEmail());
+            User user = userFound.get();
+            String token = tokenService.generateToken(user.getEmail(), user.getUserType());
 
             metricsService.incrementLoginSuccess();
 
             return new AuthUserResponse(
                     token,
-                    mapToDto(userFound.get())
+                    mapToDto(user)
             );
         } catch (InvalidAuthException e) {
             throw e;
@@ -220,13 +221,14 @@ public class UserService {
                 throw new InvalidAuthException("Google token is invalid");
             }
 
-            String token = tokenService.generateToken(userFound.get().getEmail());
+            User user = userFound.get();
+            String token = tokenService.generateToken(user.getEmail(), user.getUserType());
 
             metricsService.incrementGoogleLoginSuccess();
 
             return new AuthUserResponse(
                     token,
-                    mapToDto(userFound.get())
+                    mapToDto(user)
             );
         } catch (GoogleAccountNotFoundException | InvalidAuthException e) {
             throw e;

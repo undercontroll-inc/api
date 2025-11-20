@@ -1,5 +1,6 @@
 package com.undercontroll.api.adapters;
 
+import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -20,13 +21,14 @@ public class JwtTokenService implements TokenService {
     private final JwtDecoder jwtDecoder;
 
     @Override
-    public String generateToken(String username) {
+    public String generateToken(String username, UserType userType) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(username)
                 .issuer("undercontroll-inc")
                 .issuedAt(now)
-                .expiresAt(now.plus(1, ChronoUnit.HOURS)) // 1 hour
+                .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                .claim("userType", userType.name())
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
