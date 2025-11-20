@@ -6,6 +6,7 @@ import com.undercontroll.api.service.EmailService;
 import com.undercontroll.api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class AnnouncementCreatedListener {
     private final EmailService emailService;
     private final UserService userService;
 
+    @Async("taskExecutor")
     @EventListener
     public void handleNewAnnouncementEvent(AnnouncementCreatedEvent event) {
 
