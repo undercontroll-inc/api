@@ -43,5 +43,10 @@ public interface MetricsService {
     void incrementAnnouncementCreated();
 
     void incrementAnnouncementEmailsSent(int count);
-}
 
+    void incrementCacheHit(String cacheName);
+
+    void incrementCacheMiss(String cacheName);
+
+    void incrementCacheEviction(String cacheName);
+}

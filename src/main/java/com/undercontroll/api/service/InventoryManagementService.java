@@ -7,6 +7,7 @@ import com.undercontroll.api.repository.ComponentJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ public class InventoryManagementService {
     private final ComponentJpaRepository componentRepository;
     private final MetricsService metricsService;
 
+    @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
     public void decreaseStock(Integer componentId, Integer quantity) {
         log.info("Attempting to decrease stock for component {} by {} units", componentId, quantity);
 
@@ -32,6 +34,7 @@ public class InventoryManagementService {
                 componentId, newQuantity);
     }
 
+    @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
     public void increaseStock(Integer componentId, Integer quantity) {
         log.info("Attempting to increase stock for component {} by {} units", componentId, quantity);
 

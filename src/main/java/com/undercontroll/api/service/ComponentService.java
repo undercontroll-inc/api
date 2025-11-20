@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 
@@ -19,6 +21,7 @@ public class ComponentService {
     private final ComponentJpaRepository repository;
     private final MetricsService metricsService;
 
+    @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);
 
@@ -46,6 +49,7 @@ public class ComponentService {
         );
     }
 
+    @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
     public ComponentDto updateComponent(UpdateComponentRequest request, Integer componentId) {
         validateUpdate(componentId);
 
@@ -83,6 +87,7 @@ public class ComponentService {
         return result;
     }
 
+    @Cacheable(value = "components")
     public List<ComponentDto> getComponents() {
         return  repository
                 .findAll()
@@ -100,6 +105,7 @@ public class ComponentService {
                 .toList();
     }
 
+    @Cacheable(value = "componentsByCategory", key = "#category")
     public List<ComponentDto> getComponentsByCategory(String category) {
         if(category == null || category.isEmpty()){
             throw new InvalidGetComponentsByCategoryExcepiton("Category cannot be empty");
@@ -120,6 +126,7 @@ public class ComponentService {
                 .toList();
     }
 
+    @Cacheable(value = "componentsByName", key = "#name")
     public List<ComponentDto> getComponentsByName(String name) {
         if(name == null || name.isEmpty()){
             throw new InvalidGetComponentsByCategoryExcepiton("Name cannot be empty");
@@ -140,6 +147,7 @@ public class ComponentService {
                 .toList();
     }
 
+    @Cacheable(value = "component", key = "#id")
     public ComponentDto getComponentById(Integer id) {
         return this.mapToDto(repository.findById(id).orElseThrow(
                 () -> new ComponentNotFoundException("Could not found the component with id " + id)
@@ -147,6 +155,7 @@ public class ComponentService {
     }
 
     @Transactional
+    @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
     public void deleteComponent(Integer componentId) {
         validateDelete(componentId);
 

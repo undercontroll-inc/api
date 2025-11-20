@@ -12,6 +12,8 @@ import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +28,7 @@ public class UserService {
     private final GoogleTokenVerifier googleTokenVerifier;
     private final MetricsService metricsService;
 
+    @CacheEvict(value = {"users", "customers"}, allEntries = true)
     public CreateUserResponse createUser(
             CreateUserRequest request
     ) {
@@ -126,6 +129,7 @@ public class UserService {
         }
     }
 
+    @CacheEvict(value = {"users", "customers", "user"}, allEntries = true)
     public void updateUser (UpdateUserRequest request, Integer id) {
         validateUpdateUser(request);
 
@@ -178,6 +182,7 @@ public class UserService {
         repository.save(userFound);
     }
 
+    @Cacheable(value = "users")
     public List<UserDto> getUsers() {
         return repository
                 .findAll()
@@ -186,6 +191,7 @@ public class UserService {
                 .toList();
     }
 
+    @CacheEvict(value = {"users", "customers", "user"}, allEntries = true)
     public void deleteUser(Integer userId) {
         if (userId == null) {
             throw new InvalidUserException("User ID cannot be null");
@@ -227,6 +233,7 @@ public class UserService {
         }
     }
 
+    @Cacheable(value = "user", key = "#userId")
     public User getUserById(Integer userId) {
         if (userId == null) {
             throw new InvalidUserException("User ID cannot be null");
@@ -241,6 +248,7 @@ public class UserService {
         return user.get();
     }
 
+    @Cacheable(value = "user", key = "#token")
     public User getUserByToken(String token) {
         String subject = tokenService.extractUsername(token);
 
@@ -257,6 +265,7 @@ public class UserService {
         return user.get();
     }
 
+    @Cacheable(value = "customers")
     public List<UserDto> getCustomers() {
         return this.repository
                 .findAllCustomers()
@@ -265,6 +274,7 @@ public class UserService {
                 .toList();
     }
 
+    @Cacheable(value = "user", key = "#id")
     public UserDto getCustomersById(Integer id) {
         return this.repository
                 .findCustomerById(id)
@@ -272,6 +282,7 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("Costumer not found with id: %d".formatted(id)));
     }
 
+    @Cacheable(value = "customers")
     public List<UserDto> findAllCustomersThatHaveEmail() {
         return this
                 .repository

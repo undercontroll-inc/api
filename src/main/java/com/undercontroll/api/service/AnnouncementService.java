@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 
@@ -26,6 +28,7 @@ public class AnnouncementService {
     private final ApplicationEventPublisher publisher;
     private final MetricsService metricsService;
 
+    @CacheEvict(value = "announcements", allEntries = true)
     public CreateAnnouncementResponse createAnnouncement(
             @Valid CreateAnnouncementRequest request
     ) {
@@ -55,6 +58,7 @@ public class AnnouncementService {
         );
     }
 
+    @CacheEvict(value = "announcements", allEntries = true)
     public AnnouncementDto updateAnnouncement(
             UpdateAnnouncementRequest request,
             Integer id
@@ -81,6 +85,7 @@ public class AnnouncementService {
         return this.mapToDto(announcementRepository.save(announcement));
     }
 
+    @CacheEvict(value = "announcements", allEntries = true)
     public void deleteAnnouncement(Integer id){
         Announcement announcement =
                 announcementRepository
@@ -92,6 +97,7 @@ public class AnnouncementService {
         announcementRepository.delete(announcement);
     }
 
+    @Cacheable(value = "announcements", key = "#page + '-' + #size")
     public List<AnnouncementDto> getAllAnnouncementsPaginated(
             Integer page,
             Integer size

@@ -44,6 +44,10 @@ firebase:
   config:
     path: firebase-service-account.json
 
+logging:
+  level:
+    com.undercontroll.api.config.CacheLoggingAspect: DEBUG
+
 server:
   error:
     include-binding-errors: always
