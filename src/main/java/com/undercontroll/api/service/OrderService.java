@@ -26,9 +26,11 @@ public class OrderService {
     private final DemandService demandService;
     private final UserService userService;
     private final InventoryManagementService inventoryManagementService;
+    private final MetricsService metricsService;
 
     @Transactional(rollbackFor = Exception.class)
     public Order createOrder(CreateOrderRequest request) {
+        long startTime = System.currentTimeMillis();
         log.info("Creating new order for user {}", request.userId());
 
         LocalDate completedFormatted = this.formatOrderDate(request.deadline());
@@ -95,8 +97,6 @@ public class OrderService {
 
         log.info("Order {} created successfully", savedOrder.getId());
 
-        // Cria as demandas e diminui o estoque
-        // (precisa ser feito depois do pedido por precisar do id gerado do pedido)
         for (PartDto part : request.parts()) {
             ComponentPart component = validatedComponents.get(part.id());
 
@@ -111,40 +111,48 @@ public class OrderService {
             inventoryManagementService.decreaseStock(component.getId(), part.quantity());
         }
 
+        metricsService.incrementOrderCreated();
+        metricsService.recordOrderProcessingTime(startTime);
+
         log.info("Order {} created with {} demands", savedOrder.getId(), request.parts().size());
         return savedOrder;
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void updateOrder(UpdateOrderRequest request, Integer id) {
-        log.info("Updating order {}", id);
+        try {
+            log.info("Updating order {}", id);
 
-        validateUpdateOrder(request, id);
+            validateUpdateOrder(request, id);
 
-        Order order = repository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
+            Order order = repository.findById(id)
+                    .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
 
-//        if (order.getStatus() == OrderStatus.COMPLETED) {
-//            log.error("Attempted to update completed order {}", id);
-//            throw new ImmutableOrderException("Cannot update a completed order. Completed orders are immutable.");
-//        }
+            updateDemands(request.parts(), order);
 
-        // Atualiza demandas primeiro para falhar cedo em caso de estoque insuficiente
-        updateDemands(request.parts(), order);
+            updateOrderItems(request, order);
 
-        updateOrderItems(request, order);
+            OrderStatus previousStatus = order.getStatus();
 
-        if (request.status() != null) {
-            order.setStatus(request.status());
-            log.info("Order {} status updated to {}", id, request.status());
+            if (request.status() != null) {
+                order.setStatus(request.status());
+                log.info("Order {} status updated to {}", id, request.status());
+
+                if (request.status() == OrderStatus.COMPLETED && previousStatus != OrderStatus.COMPLETED) {
+                    metricsService.incrementOrderCompleted();
+                }
+            }
+
+            if (request.serviceDescription() != null) {
+                order.setDescription(request.serviceDescription());
+            }
+
+            repository.save(order);
+            log.info("Order {} updated successfully", id);
+        } catch (Exception e) {
+            metricsService.incrementOrderUpdateFailed();
+            throw e;
         }
-
-        if (request.serviceDescription() != null) {
-            order.setDescription(request.serviceDescription());
-        }
-
-        repository.save(order);
-        log.info("Order {} updated successfully", id);
     }
 
     private void updateOrderItems(UpdateOrderRequest request, Order order) {

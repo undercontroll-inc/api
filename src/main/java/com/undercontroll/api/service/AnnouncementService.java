@@ -24,6 +24,7 @@ public class AnnouncementService {
 
     private final AnnouncementRepository announcementRepository;
     private final ApplicationEventPublisher publisher;
+    private final MetricsService metricsService;
 
     public CreateAnnouncementResponse createAnnouncement(
             @Valid CreateAnnouncementRequest request
@@ -39,6 +40,8 @@ public class AnnouncementService {
         // publica o evento que dispara email para usuarios que possuem um email cadastrado
         // para alertar sobre o novo anuncio
         publisher.publishEvent(new AnnouncementCreatedEvent(this,announcementCreated));
+
+        metricsService.incrementAnnouncementCreated();
 
         log.info("New announcement event published successfully");
 

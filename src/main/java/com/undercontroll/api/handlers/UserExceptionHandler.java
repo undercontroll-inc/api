@@ -1,6 +1,7 @@
 package com.undercontroll.api.handlers;
 
 import com.undercontroll.api.controller.UserController;
+import com.undercontroll.api.exception.GoogleAccountNotFoundException;
 import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;
 import com.undercontroll.api.exception.UserNotFoundException;
@@ -27,7 +28,7 @@ public class UserExceptionHandler  extends GenericExceptionHandler {
     public ResponseEntity<ExceptionHandlerResponse> handleUserNotFound(
             UserNotFoundException ex, HttpServletRequest request
     ) {
-        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+        return this.buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(InvalidAuthException.class)
@@ -37,5 +38,14 @@ public class UserExceptionHandler  extends GenericExceptionHandler {
         log.error("Erro de autenticação: {}", ex.getMessage());
 
         return this.buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(GoogleAccountNotFoundException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleGoogleAccountNotFoundException(
+            GoogleAccountNotFoundException ex, HttpServletRequest request
+    ) {
+        log.error("Google account not found: {}", ex.getMessage());
+
+        return this.buildErrorResponse(HttpStatus.NOT_FOUND, "Google account not found", request.getRequestURI());
     }
 }

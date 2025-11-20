@@ -24,90 +24,106 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordEventService passwordEventService;
     private final GoogleTokenVerifier googleTokenVerifier;
+    private final MetricsService metricsService;
 
     public CreateUserResponse createUser(
             CreateUserRequest request
     ) {
-        validateCreateUserRequest(request);
+        try {
+            validateCreateUserRequest(request);
 
-        Optional<User> existingUserByEmail = repository.findUserByEmail(request.email());
+            Optional<User> existingUserByEmail = repository.findUserByEmail(request.email());
 
-        if(existingUserByEmail.isPresent()) {
-            throw new InvalidUserException("Email is already in use");
+            if(existingUserByEmail.isPresent()) {
+                throw new InvalidUserException("Email is already in use");
+            }
+
+            Optional<User> existingUserByPhone = repository.findUserByPhone(request.phone());
+
+            if (existingUserByPhone.isPresent()) {
+                throw new InvalidUserException("Phone is already in use");
+            }
+
+            Optional<User> existingUserByCpf = repository.findUserByCpf(request.cpf());
+
+            if(existingUserByCpf.isPresent()) {
+                throw new InvalidUserException("CPF is already in use");
+            }
+
+            String password =
+                    request.userType().equals(UserType.ADMINISTRATOR)
+                    ? passwordEncoder.encode(request.password())
+                    : passwordEncoder.encode(passwordEventService.create(new CreatePasswordEventRequest(
+                            PasswordEventType.CREATE,
+                            null,
+                            request.phone()
+                    )).getValue());
+
+            User user = User.builder()
+                    .name(request.name())
+                    .email(request.email())
+                    .lastName(request.lastName())
+                    .password(password)
+                    .address(request.address())
+                    .cpf(request.cpf())
+                    .CEP(request.CEP())
+                    .phone(request.phone())
+                    .avatarUrl(request.avatarUrl())
+                    .hasWhatsApp(request.hasWhatsApp())
+                    .alreadyRecurrent(request.alreadyRecurrent())
+                    .inFirstLogin(request.inFirstLogin())
+                    .userType(request.userType())
+                    .build();
+
+            repository.save(user);
+
+            metricsService.incrementAccountCreated();
+
+            return new CreateUserResponse(
+                    request.name(),
+                    request.email(),
+                    request.lastName(),
+                    request.address(),
+                    request.cpf(),
+                    request.CEP(),
+                    request.phone(),
+                    request.avatarUrl(),
+                    request.userType()
+            );
+        } catch (InvalidUserException e) {
+            metricsService.incrementAccountCreationFailed();
+            throw e;
         }
-
-        Optional<User> existingUserByPhone = repository.findUserByPhone(request.phone());
-
-        if (existingUserByPhone.isPresent()) {
-            throw new InvalidUserException("Phone is already in use");
-        }
-
-        Optional<User> existingUserByCpf = repository.findUserByCpf(request.cpf());
-
-        if(existingUserByCpf.isPresent()) {
-            throw new InvalidUserException("CPF is already in use");
-        }
-
-        String password =
-                request.userType().equals(UserType.ADMINISTRATOR)
-                ? passwordEncoder.encode(request.password())
-                : passwordEncoder.encode(passwordEventService.create(new CreatePasswordEventRequest(
-                        PasswordEventType.CREATE,
-                        null, // Agent null pois é o alexandre que estara criando
-                        request.phone()
-                )).getValue());
-
-        User user = User.builder()
-                .name(request.name())
-                .email(request.email())
-                .lastName(request.lastName())
-                .password(password)
-                .address(request.address())
-                .cpf(request.cpf())
-                .CEP(request.CEP())
-                .phone(request.phone())
-                .avatarUrl(request.avatarUrl())
-                .hasWhatsApp(request.hasWhatsApp())
-                .alreadyRecurrent(request.alreadyRecurrent())
-                .inFirstLogin(request.inFirstLogin())
-                .userType(request.userType())
-                .build();
-
-        repository.save(user);
-
-        return new CreateUserResponse(
-                request.name(),
-                request.email(),
-                request.lastName(),
-                request.address(),
-                request.cpf(),
-                request.CEP(),
-                request.phone(),
-                request.avatarUrl(),
-                request.userType()
-        );
     }
 
     public AuthUserResponse authUser(AuthUserRequest request) {
-        Optional<User> userFound = repository.findUserByEmail(request.email());
+        try {
+            Optional<User> userFound = repository.findUserByEmail(request.email());
 
-        if(userFound.isEmpty()){
-            throw new InvalidAuthException("Email or password is invalid");
+            if(userFound.isEmpty()){
+                metricsService.incrementLoginFailed();
+                throw new InvalidAuthException("Email or password is invalid");
+            }
+
+            boolean passwordMatch = passwordEncoder
+                    .matches(request.password(), userFound.get().getPassword());
+
+            if(!passwordMatch){
+                metricsService.incrementLoginFailed();
+                throw new InvalidAuthException("Email or password is invalid");
+            }
+
+            String token = tokenService.generateToken(userFound.get().getEmail());
+
+            metricsService.incrementLoginSuccess();
+
+            return new AuthUserResponse(
+                    token,
+                    mapToDto(userFound.get())
+            );
+        } catch (InvalidAuthException e) {
+            throw e;
         }
-
-        boolean passwordMatch = passwordEncoder
-                .matches(request.password(), userFound.get().getPassword());
-
-        if(!passwordMatch){
-            throw new InvalidAuthException("Email or password is invalid");
-        }
-
-        String token = tokenService.generateToken(userFound.get().getEmail());
-
-        return new AuthUserResponse(
-                token,
-                mapToDto(userFound.get())
-        );
     }
 
     public void updateUser (UpdateUserRequest request, Integer id) {
@@ -183,25 +199,32 @@ public class UserService {
     }
 
     public AuthUserResponse authUserByGoogle(AuthGoogleRequest request) {
-        Optional<User> userFound = repository.findUserByEmail(request.email());
+        try {
+            Optional<User> userFound = repository.findUserByEmail(request.email());
 
-        if(userFound.isEmpty()){
-            throw new GoogleAccountNotFoundException();
+            if(userFound.isEmpty()){
+                metricsService.incrementGoogleLoginFailed();
+                throw new GoogleAccountNotFoundException();
+            }
+
+            boolean valid = googleTokenVerifier.verify(request.token(), request.email());
+
+            if(!valid){
+                metricsService.incrementGoogleLoginFailed();
+                throw new InvalidAuthException("Google token is invalid");
+            }
+
+            String token = tokenService.generateToken(userFound.get().getEmail());
+
+            metricsService.incrementGoogleLoginSuccess();
+
+            return new AuthUserResponse(
+                    token,
+                    mapToDto(userFound.get())
+            );
+        } catch (GoogleAccountNotFoundException | InvalidAuthException e) {
+            throw e;
         }
-
-        // Verifica se o token recebido realmente pertence ao Google e corresponde ao email enviado
-        boolean valid = googleTokenVerifier.verify(request.token(), request.email());
-
-        if(!valid){
-            throw new InvalidAuthException("Google token is invalid");
-        }
-
-        String token = tokenService.generateToken(userFound.get().getEmail());
-
-        return new AuthUserResponse(
-                token,
-                mapToDto(userFound.get())
-        );
     }
 
     public User getUserById(Integer userId) {
