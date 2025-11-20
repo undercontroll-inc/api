@@ -4,6 +4,7 @@ import com.undercontroll.api.dto.UserDto;
 import com.undercontroll.api.events.AnnouncementCreatedEvent;
 import com.undercontroll.api.service.EmailService;
 import com.undercontroll.api.service.UserService;
+import com.undercontroll.api.service.MetricsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -17,6 +18,7 @@ public class AnnouncementCreatedListener {
 
     private final EmailService emailService;
     private final UserService userService;
+    private final MetricsService metricsService;
 
     @Async("taskExecutor")
     @EventListener
@@ -33,6 +35,8 @@ public class AnnouncementCreatedListener {
                     event
             );
         });
+
+        metricsService.incrementAnnouncementEmailsSent(users.size());
 
     }
 

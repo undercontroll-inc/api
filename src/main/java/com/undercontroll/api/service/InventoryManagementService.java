@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class InventoryManagementService {
 
     private final ComponentJpaRepository componentRepository;
+    private final MetricsService metricsService;
 
     public void decreaseStock(Integer componentId, Integer quantity) {
         log.info("Attempting to decrease stock for component {} by {} units", componentId, quantity);
@@ -24,6 +25,8 @@ public class InventoryManagementService {
         Long newQuantity = component.getQuantity() - quantity;
         component.setQuantity(newQuantity);
         componentRepository.save(component);
+
+        metricsService.incrementStockDecreased();
 
         log.info("Stock decreased successfully for component {}. New quantity: {}",
                 componentId, newQuantity);
@@ -46,6 +49,9 @@ public class InventoryManagementService {
         if (component.getQuantity() < requiredQuantity) {
             log.error("Insufficient stock for component {}. Required: {}, Available: {}",
                     component.getId(), requiredQuantity, component.getQuantity());
+
+            metricsService.incrementInsufficientStock(component.getName());
+
             throw new InsuficientComponentException(
                     String.format("Insufficient stock for component '%s' (ID: %d). Required: %d, Available: %d",
                             component.getName(), component.getId(), requiredQuantity, component.getQuantity()));
@@ -61,4 +67,3 @@ public class InventoryManagementService {
                 });
     }
 }
-

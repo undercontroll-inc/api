@@ -1,8 +1,7 @@
 package com.undercontroll.api.handlers;
 
-import com.undercontroll.api.exception.OrderNotFoundException;
+import com.undercontroll.api.exception.*;
 import com.undercontroll.api.dto.ExceptionHandlerResponse;
-import com.undercontroll.api.exception.UnauthorizedOrderOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +25,46 @@ public class OrderExceptionHandler extends GenericExceptionHandler {
     ) {
 
         return this.buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidDeleteOrderException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidDeleteOrderException(
+            InvalidDeleteOrderException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidOrderDateException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidOrderDateException(
+            InvalidOrderDateException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidUpdateOrderException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidUpdateOrderException(
+            InvalidUpdateOrderException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(ImmutableOrderException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleImmutableOrderException(
+            ImmutableOrderException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InsuficientComponentException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInsuficientComponentException(
+            InsuficientComponentException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request.getRequestURI());
     }
 
 }

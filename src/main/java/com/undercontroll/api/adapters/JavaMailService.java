@@ -3,6 +3,7 @@ package com.undercontroll.api.adapters;
 import com.undercontroll.api.events.AnnouncementCreatedEvent;
 import com.undercontroll.api.exception.MailSendingException;
 import com.undercontroll.api.service.EmailService;
+import com.undercontroll.api.service.MetricsService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,12 +23,14 @@ import java.time.format.DateTimeFormatter;
 public class JavaMailService implements EmailService {
 
     private final JavaMailSender mailSender;
+    private final MetricsService metricsService;
 
     @Value("${spring.mail.username}")
     private String from;
 
-    public JavaMailService(JavaMailSender mailSender) {
+    public JavaMailService(JavaMailSender mailSender, MetricsService metricsService) {
         this.mailSender = mailSender;
+        this.metricsService = metricsService;
     }
 
     @Override
@@ -60,7 +63,11 @@ public class JavaMailService implements EmailService {
 
             mailSender.send(message);
 
+            metricsService.incrementEmailSent();
+
         } catch(Exception e) {
+            metricsService.incrementEmailFailed();
+
             throw new MailSendingException(
                     "Houve um erro ao enviar o email para %s: %s".formatted(to, e.getMessage())
             );

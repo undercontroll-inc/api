@@ -18,6 +18,7 @@ import java.util.Optional;
 public class DemandService {
 
     private final DemandRepository repository;
+    private final MetricsService metricsService;
 
     public Demand createDemand(CreateDemandRequest createDemandRequest) {
         if(createDemandRequest.quantity() == null || createDemandRequest.quantity() <= 0) {
@@ -35,7 +36,11 @@ public class DemandService {
                 createDemandRequest.order().getId(),
                 createDemandRequest.quantity());
 
-        return repository.save(demand);
+        Demand savedDemand = repository.save(demand);
+
+        metricsService.incrementDemandCreated();
+
+        return savedDemand;
     }
 
     public Demand updateDemand(Demand demand) {
@@ -59,7 +64,10 @@ public class DemandService {
                 demand.getId(),
                 demand.getComponent().getId(),
                 demand.getOrder().getId());
+
         repository.delete(demand);
+
+        metricsService.incrementDemandRemoved();
     }
 
     public void deleteAllDemandsForOrder(Order order) {

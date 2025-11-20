@@ -51,4 +51,12 @@ public class ComponentExceptionHandler extends GenericExceptionHandler {
         return this.buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(InvalidDeleteComponentException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidDeleteComponentException(
+            InvalidDeleteComponentException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
 }

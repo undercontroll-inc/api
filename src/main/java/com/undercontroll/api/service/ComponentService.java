@@ -17,6 +17,7 @@ import java.util.List;
 public class ComponentService {
 
     private final ComponentJpaRepository repository;
+    private final MetricsService metricsService;
 
     public RegisterComponentResponse register(RegisterComponentRequest request) {
         validateCreate(request);
@@ -32,6 +33,8 @@ public class ComponentService {
                 .build();
 
         repository.save(component);
+
+        metricsService.incrementComponentCreated();
 
         return new RegisterComponentResponse(
                 request.item(),
@@ -73,7 +76,11 @@ public class ComponentService {
             component.setSupplier(request.supplier());
         }
 
-        return this.mapToDto(repository.save(component));
+        ComponentDto result = this.mapToDto(repository.save(component));
+
+        metricsService.incrementComponentUpdated();
+
+        return result;
     }
 
     public List<ComponentDto> getComponents() {
