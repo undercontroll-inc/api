@@ -28,5 +28,8 @@ public interface UserJpaRepository extends JpaRepository<User, Integer> {
 """)
     Optional<User> findCustomerById(@Param("id") Integer id);
 
+    @Query("SELECT u FROM User u WHERE u.userType = 'CUSTOMER' AND u.email IS NOT NULL")
+    List<User> findAllCustomersThatHaveEmail();
+
 
 }

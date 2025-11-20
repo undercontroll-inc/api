@@ -14,6 +14,7 @@ public record CreateUserRequest(
         UserType userType,
         Boolean hasWhatsApp,
         Boolean alreadyRecurrent,
+        Boolean inFirstLogin,
         String CEP
 ){
 }
