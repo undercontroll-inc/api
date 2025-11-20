@@ -34,6 +34,9 @@ public class MicrometerMetricsService implements MetricsService {
     private final Counter emailFailedCounter;
     private final Counter announcementCreatedCounter;
     private final Counter announcementEmailsSentCounter;
+    private final Counter cacheHitCounter;
+    private final Counter cacheMissCounter;
+    private final Counter cacheEvictionCounter;
 
     public MicrometerMetricsService(MeterRegistry meterRegistry) {
         this.loginFailedCounter = Counter.builder("auth.login.failed")
@@ -122,6 +125,21 @@ public class MicrometerMetricsService implements MetricsService {
 
         this.announcementEmailsSentCounter = Counter.builder("announcement.emails.sent")
                 .description("Total de emails de anúncio enviados")
+                .register(meterRegistry);
+
+        this.cacheHitCounter = Counter.builder("cache.hit")
+                .description("Total de cache hits")
+                .tag("type", "all")
+                .register(meterRegistry);
+
+        this.cacheMissCounter = Counter.builder("cache.miss")
+                .description("Total de cache misses")
+                .tag("type", "all")
+                .register(meterRegistry);
+
+        this.cacheEvictionCounter = Counter.builder("cache.eviction")
+                .description("Total de cache evictions")
+                .tag("type", "all")
                 .register(meterRegistry);
 
         log.info("MicrometerMetricsService initialized with all business metrics counters");
@@ -253,5 +271,22 @@ public class MicrometerMetricsService implements MetricsService {
         announcementEmailsSentCounter.increment(count);
         log.debug("Announcement emails sent counter incremented by {}", count);
     }
-}
 
+    @Override
+    public void incrementCacheHit(String cacheName) {
+        cacheHitCounter.increment();
+        log.debug("Cache hit counter incremented for cache: {}", cacheName);
+    }
+
+    @Override
+    public void incrementCacheMiss(String cacheName) {
+        cacheMissCounter.increment();
+        log.debug("Cache miss counter incremented for cache: {}", cacheName);
+    }
+
+    @Override
+    public void incrementCacheEviction(String cacheName) {
+        cacheEvictionCounter.increment();
+        log.debug("Cache eviction counter incremented for cache: {}", cacheName);
+    }
+}

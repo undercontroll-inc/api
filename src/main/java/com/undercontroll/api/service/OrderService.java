@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ public class OrderService {
     private final MetricsService metricsService;
 
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts"}, allEntries = true)
     public Order createOrder(CreateOrderRequest request) {
         long startTime = System.currentTimeMillis();
         log.info("Creating new order for user {}", request.userId());
@@ -119,6 +122,7 @@ public class OrderService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts"}, allEntries = true)
     public void updateOrder(UpdateOrderRequest request, Integer id) {
         try {
             log.info("Updating order {}", id);
@@ -260,6 +264,7 @@ public class OrderService {
         log.info("Demands updated successfully for order {}", order.getId());
     }
 
+    @Cacheable(value = "orders")
     public GetAllOrdersResponse getOrders() {
         log.info("Fetching all orders");
         List<Order> orders = repository.findAll();
@@ -267,6 +272,7 @@ public class OrderService {
         return new GetAllOrdersResponse(enrichedOrders);
     }
 
+    @Cacheable(value = "order", key = "#orderId")
     public GetOrderByIdResponse getOrderById(Integer orderId, String token) {
         log.info("Fetching order with id {}", orderId);
 
@@ -286,6 +292,7 @@ public class OrderService {
         return new GetOrderByIdResponse(enrichedOrder);
     }
 
+    @Cacheable(value = "ordersByUser", key = "#userId")
     public GetOrdersByUserIdResponse getOrdersByUserId(Integer userId) {
         log.info("Fetching orders for user id {}", userId);
 
@@ -295,6 +302,7 @@ public class OrderService {
         return new GetOrdersByUserIdResponse(enrichedOrders);
     }
 
+    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts"}, allEntries = true)
     public void deleteOrder(Integer orderId) {
         log.info("Deleting order with id {}", orderId);
         validateDeleteOrder(orderId);
@@ -306,6 +314,7 @@ public class OrderService {
         log.info("Order {} deleted successfully", orderId);
     }
 
+    @Cacheable(value = "orderParts", key = "#orderId")
     public List<ComponentDto> getPartsByOrderId(Integer orderId) {
         List<Object[]> results = repository.findAllPartsByOrderIdNative(orderId);
 
