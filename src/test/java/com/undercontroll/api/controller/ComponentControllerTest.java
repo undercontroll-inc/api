@@ -2,6 +2,7 @@ package com.undercontroll.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.api.config.SecurityConfig;
+import com.undercontroll.api.controller.impl.ComponentController;
 import com.undercontroll.api.dto.ComponentDto;
 import com.undercontroll.api.dto.RegisterComponentRequest;
 import com.undercontroll.api.dto.RegisterComponentResponse;
@@ -265,4 +266,3 @@ class ComponentControllerTest {
         verify(componentService, never()).deleteComponent(anyInt());
     }
 }
-

@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: Undercontroll API
   security:
     oauth2:
       resourceserver:
@@ -16,8 +18,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:username}
+    password: ${MAIL_PASSWORD:password}
     properties:
       mail:
         smtp:
@@ -39,6 +41,38 @@ spring:
     properties:
       hibernate:
         globally_quoted_identifiers: true
+
+# Configurações da API
+api:
+  version: 1.0.0
+  description: API RESTful para gerenciamento de componentes eletrônicos, pedidos, usuários e anúncios. Sistema completo com autenticação JWT e controle de permissões.
+
+# Configurações do Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    show-extensions: true
+    show-common-extensions: true
+    default-models-expand-depth: 1
+    default-model-expand-depth: 1
+    doc-expansion: none
+    filter: true
+    persist-authorization: true
+    try-it-out-enabled: true
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  writer-with-default-pretty-printer: true
+  override-with-generic-response: false
+  cache:
+    disabled: false
 
 firebase:
   config:

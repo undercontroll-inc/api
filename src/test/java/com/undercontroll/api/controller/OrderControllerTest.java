@@ -2,6 +2,7 @@ package com.undercontroll.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.api.config.SecurityConfig;
+import com.undercontroll.api.controller.impl.OrderController;
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.model.enums.OrderStatus;

@@ -1,10 +1,12 @@
-package com.undercontroll.api.controller;
+package com.undercontroll.api.controller.impl;
 
+import com.undercontroll.api.controller.OrderApi;
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.model.Order;
 import com.undercontroll.api.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,42 +16,36 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/v1/api/orders")
+@RequestMapping(value = "/v1/api/orders", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-public class OrderController {
+public class OrderController implements OrderApi {
 
     private final OrderService orderService;
 
-    @PostMapping
-    public ResponseEntity<Order> createOrder(
-            @RequestBody CreateOrderRequest createOrderRequest
-    ) {
+    @Override
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Order> createOrder(@RequestBody CreateOrderRequest createOrderRequest) {
         Order order = orderService.createOrder(createOrderRequest);
-
         return ResponseEntity.status(201).body(order);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<Void> updateOrder(
-            @PathVariable Integer id,
-            @RequestBody UpdateOrderRequest request
-    ) {
+    @Override
+    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateOrder(@PathVariable Integer id, @RequestBody UpdateOrderRequest request) {
         orderService.updateOrder(request, id);
-
         return ResponseEntity.ok().build();
     }
 
+    @Override
     @GetMapping
     public ResponseEntity<GetAllOrdersResponse> getOrders() {
         GetAllOrdersResponse orders = orderService.getOrders();
-
         return ResponseEntity.ok(orders);
     }
 
+    @Override
     @GetMapping("/{orderId}")
-    public ResponseEntity<GetOrderByIdResponse> getOrderById(
-            @PathVariable Integer orderId
-    ) {
+    public ResponseEntity<GetOrderByIdResponse> getOrderById(@PathVariable Integer orderId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = null;
         if (auth != null) {
@@ -65,24 +61,19 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @Override
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrder(
-            @PathVariable Integer orderId
-    ) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable Integer orderId) {
         orderService.deleteOrder(orderId);
-
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @GetMapping("/filter")
-    public ResponseEntity<GetOrdersByUserIdResponse> getOrdersByUserId(
-            @RequestParam(value = "userId") Integer userId
-    ) {
-
+    public ResponseEntity<GetOrdersByUserIdResponse> getOrdersByUserId(@RequestParam("userId") Integer userId) {
         log.info("Oie");
         GetOrdersByUserIdResponse response = orderService.getOrdersByUserId(userId);
-
         return ResponseEntity.ok(response);
     }
-
 }
+

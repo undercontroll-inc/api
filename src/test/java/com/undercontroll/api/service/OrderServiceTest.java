@@ -204,7 +204,7 @@ class OrderServiceTest {
         when(repository.calculatePartsTotalByOrderId(anyInt())).thenReturn(5.0);
         when(userService.mapToDto(any(User.class))).thenReturn(
                 new UserDto(1, "João Silva", "joao@email.com", "Silva", "Rua A",
-                        "123456789", "12345-678", "999999999", null, true, false, UserType.CUSTOMER));
+                        "123456789", "12345-678", "999999999", null, true, false, false, UserType.CUSTOMER));
         when(orderItemService.mapToDto(any(OrderItem.class))).thenReturn(
                 new OrderItemDto(1, null, "Galaxy A50", "Smartphone", "Samsung",
                         "Tela quebrada", "220V", "SN123", 50.0, null));
@@ -224,7 +224,7 @@ class OrderServiceTest {
         when(repository.calculatePartsTotalByOrderId(anyInt())).thenReturn(5.0);
         when(userService.mapToDto(any(User.class))).thenReturn(
                 new UserDto(1, "João Silva", "joao@email.com", "Silva", "Rua A",
-                        "123456789", "12345-678", "999999999", null, true, false, UserType.CUSTOMER));
+                        "123456789", "12345-678", "999999999", null, true, false,false, UserType.CUSTOMER));
         when(orderItemService.mapToDto(any(OrderItem.class))).thenReturn(
                 new OrderItemDto(1, null, "Galaxy A50", "Smartphone", "Samsung",
                         "Tela quebrada", "220V", "SN123", 50.0, null));
@@ -266,7 +266,7 @@ class OrderServiceTest {
         when(repository.calculatePartsTotalByOrderId(anyInt())).thenReturn(5.0);
         when(userService.mapToDto(any(User.class))).thenReturn(
                 new UserDto(1, "João Silva", "joao@email.com", "Silva", "Rua A",
-                        "123456789", "12345-678", "999999999", null, true, false, UserType.CUSTOMER));
+                        "123456789", "12345-678", "999999999", null, true, false,false, UserType.CUSTOMER));
         when(orderItemService.mapToDto(any(OrderItem.class))).thenReturn(
                 new OrderItemDto(1, null, "Galaxy A50", "Smartphone", "Samsung",
                         "Tela quebrada", "220V", "SN123", 50.0, null));
@@ -464,7 +464,7 @@ class OrderServiceTest {
         when(repository.calculatePartsTotalByOrderId(anyInt())).thenReturn(5.0);
         when(userService.mapToDto(any(User.class))).thenReturn(
                 new UserDto(1, "João Silva", "joao@email.com", "Silva", "Rua A",
-                        "123456789", "12345-678", "999999999", null, true, false, UserType.CUSTOMER));
+                        "123456789", "12345-678", "999999999", null, true, false,false, UserType.CUSTOMER));
         when(orderItemService.mapToDto(any(OrderItem.class))).thenReturn(
                 new OrderItemDto(1, null, "Galaxy A50", "Smartphone", "Samsung",
                         "Tela quebrada", "220V", "SN123", 50.0, null));

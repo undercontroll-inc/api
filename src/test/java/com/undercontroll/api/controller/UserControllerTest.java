@@ -2,6 +2,7 @@ package com.undercontroll.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.api.config.SecurityConfig;
+import com.undercontroll.api.controller.impl.UserController;
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.model.User;
 import com.undercontroll.api.model.enums.UserType;

@@ -98,6 +98,8 @@ public class SecurityConfig {
                         .requestMatchers("/v1/api/orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/components/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/service-orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers("/v1/api/order-items/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers("/v1/api/demands/**").hasAuthority("SCOPE_ADMINISTRATOR")
 
                         .anyRequest().authenticated()
                 )

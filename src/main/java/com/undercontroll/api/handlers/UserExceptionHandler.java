@@ -1,6 +1,6 @@
 package com.undercontroll.api.handlers;
 
-import com.undercontroll.api.controller.UserController;
+import com.undercontroll.api.controller.impl.UserController;
 import com.undercontroll.api.exception.GoogleAccountNotFoundException;
 import com.undercontroll.api.exception.InvalidAuthException;
 import com.undercontroll.api.exception.InvalidUserException;

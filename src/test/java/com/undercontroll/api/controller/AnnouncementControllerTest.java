@@ -2,6 +2,7 @@ package com.undercontroll.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.api.config.SecurityConfig;
+import com.undercontroll.api.controller.impl.AnnouncementController;
 import com.undercontroll.api.dto.AnnouncementDto;
 import com.undercontroll.api.dto.CreateAnnouncementRequest;
 import com.undercontroll.api.dto.CreateAnnouncementResponse;
@@ -80,7 +81,6 @@ class AnnouncementControllerTest {
         );
 
         when(announcementService.createAnnouncement(any(CreateAnnouncementRequest.class))).thenReturn(response);
-
         mockMvc.perform(post("/v1/api/announcements")
                         .with(csrf())
                         .with(jwt().jwt(createAdminJwtToken()).authorities(new SimpleGrantedAuthority("SCOPE_ADMINISTRATOR")))

@@ -1,10 +1,13 @@
 package com.undercontroll.api.service;
 
 import com.undercontroll.api.dto.CreateDemandRequest;
+import com.undercontroll.api.dto.DemandDto;
 import com.undercontroll.api.exception.InvalidDemandException;
 import com.undercontroll.api.model.Demand;
 import com.undercontroll.api.model.Order;
+import com.undercontroll.api.repository.ComponentJpaRepository;
 import com.undercontroll.api.repository.DemandRepository;
+import com.undercontroll.api.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ public class DemandService {
 
     private final DemandRepository repository;
     private final MetricsService metricsService;
+    private final ComponentJpaRepository componentRepository;
+    private final OrderJpaRepository orderRepository;
 
     public Demand createDemand(CreateDemandRequest createDemandRequest) {
         if(createDemandRequest.quantity() == null || createDemandRequest.quantity() <= 0) {
@@ -73,6 +78,50 @@ public class DemandService {
     public void deleteAllDemandsForOrder(Order order) {
         log.info("Deleting all demands for order {}", order.getId());
         repository.deleteByOrder(order);
+    }
+
+
+    public List<DemandDto> getDemandsByOrderId(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new InvalidDemandException("Order not found with id: " + orderId));
+
+        return findDemandsByOrder(order).stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    public DemandDto getDemandByOrderAndComponentId(Integer orderId, Integer componentId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new InvalidDemandException("Order not found with id: " + orderId));
+
+        Demand demand = findDemandByOrderAndComponent(order, componentId)
+                .orElseThrow(() -> new InvalidDemandException(
+                        "Demand not found for component " + componentId + " in order " + orderId));
+
+        return mapToDto(demand);
+    }
+
+    public void deleteDemandById(Integer demandId) {
+        Demand demand = repository.findById(demandId)
+                .orElseThrow(() -> new InvalidDemandException("Demand not found with id: " + demandId));
+
+        deleteDemand(demand);
+    }
+
+    public void deleteAllDemandsByOrderId(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new InvalidDemandException("Order not found with id: " + orderId));
+
+        deleteAllDemandsForOrder(order);
+    }
+
+    private DemandDto mapToDto(Demand demand) {
+        return new DemandDto(
+                demand.getId(),
+                demand.getComponent().getId(),
+                demand.getOrder().getId(),
+                demand.getQuantity()
+        );
     }
 
 }
