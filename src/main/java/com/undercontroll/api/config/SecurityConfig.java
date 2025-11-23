@@ -77,19 +77,45 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer<HttpSecurity>::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // Comentar isso em cenários de desenvolvimento para facilitar
-                        // Public endpoints
-//                        .requestMatchers("/v1/api/users/auth", "/swagger-ui/**").permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth/google").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
+
+                        .requestMatchers(HttpMethod.PUT, "/v1/api/users/{userId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/filter").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
+
+                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements").hasAnyAuthority("SCOPE_ADMINISTRATOR", "SCOPE_CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
+
+                        .requestMatchers("/v1/api/users/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers("/v1/api/orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers("/v1/api/components/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers("/v1/api/service-orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
+
+                        .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {
-        return new JwtAuthenticationConverter();
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            String userType = jwt.getClaimAsString("userType");
+            if (userType != null) {
+                return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("SCOPE_" + userType));
+            }
+            return List.of();
+        });
+        return converter;
     }
 
     @Bean
