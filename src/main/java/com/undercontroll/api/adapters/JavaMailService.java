@@ -25,6 +25,11 @@ public class JavaMailService implements EmailService {
     private final JavaMailSender mailSender;
     private final MetricsService metricsService;
 
+    private final String contact = "contato@gmail.com";
+    private final String year = String.valueOf(LocalDateTime.now().getYear());
+    private final String websiteUrl = "IrmãosPelluci.com";
+    private final String contactUrl = "contato@contato";
+
     @Value("${spring.mail.username}")
     private String from;
 
@@ -85,7 +90,10 @@ public class JavaMailService implements EmailService {
                 .replace("{{type}}", announcement.getAnnouncement().getType().toString())
                 .replace("{{title}}", announcement.getAnnouncement().getTitle())
                 .replace("{{content}}", announcement.getAnnouncement().getContent())
-                .replace("{{createdAt}}",this.formatDateTime(announcement.getAnnouncement().getPublishedAt()));
+                .replace("{{createdAt}}",this.formatDateTime(announcement.getAnnouncement().getPublishedAt())
+                .replace("{{year}}", this.year)
+                .replace("{{websiteUrl}}", this.websiteUrl)
+                .replace("{{contactUrl}}", this.contactUrl));
     }
 
     private String formatDateTime(LocalDateTime dateTime) {

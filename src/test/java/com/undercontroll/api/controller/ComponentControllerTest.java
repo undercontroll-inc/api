@@ -1,6 +1,7 @@
 package com.undercontroll.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.undercontroll.api.config.SecurityConfig;
 import com.undercontroll.api.dto.ComponentDto;
 import com.undercontroll.api.dto.RegisterComponentRequest;
 import com.undercontroll.api.dto.RegisterComponentResponse;
@@ -9,20 +10,29 @@ import com.undercontroll.api.service.ComponentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(SecurityConfig.class)
+@AutoConfigureMockMvc
 @WebMvcTest(ComponentController.class)
 class ComponentControllerTest {
 
@@ -34,6 +44,27 @@ class ComponentControllerTest {
 
     @MockitoBean
     private ComponentService componentService;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
+    private Jwt createJwtToken(String userType, String email) {
+        return Jwt.withTokenValue("token")
+                .header("alg", "RS256")
+                .claim("userType", userType)
+                .claim("sub", email)
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .build();
+    }
+
+    private Jwt createAdminJwtToken() {
+        return createJwtToken("ADMINISTRATOR", "admin@example.com");
+    }
+
+    private Jwt createCustomerJwtToken() {
+        return createJwtToken("CUSTOMER", "customer@example.com");
+    }
 
     @Test
     @WithMockUser(authorities = "SCOPE_ADMINISTRATOR")
@@ -54,7 +85,7 @@ class ComponentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.item").value("Resistor"))
+                .andExpect(jsonPath("$.name").value("Resistor"))
                 .andExpect(jsonPath("$.price").value(1.50))
                 .andExpect(jsonPath("$.category").value("Electronics"));
 
@@ -62,7 +93,6 @@ class ComponentControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "SCOPE_CUSTOMER")
     @DisplayName("POST /v1/api/components - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToCreateComponent() throws Exception {
         RegisterComponentRequest request = new RegisterComponentRequest(
@@ -71,6 +101,7 @@ class ComponentControllerTest {
 
         mockMvc.perform(post("/v1/api/components")
                         .with(csrf())
+                        .with(jwt().jwt(createCustomerJwtToken()).authorities(new SimpleGrantedAuthority("SCOPE_CUSTOMER")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -90,8 +121,8 @@ class ComponentControllerTest {
         mockMvc.perform(get("/v1/api/components")
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Resistor"))
-                .andExpect(jsonPath("$[1].name").value("Capacitor"))
+                .andExpect(jsonPath("$[0].item").value("Resistor"))
+                .andExpect(jsonPath("$[1].item").value("Capacitor"))
                 .andExpect(jsonPath("$.length()").value(2));
 
         verify(componentService, times(1)).getComponents();
@@ -111,11 +142,11 @@ class ComponentControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "SCOPE_CUSTOMER")
     @DisplayName("GET /v1/api/components - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToGetAllComponents() throws Exception {
         mockMvc.perform(get("/v1/api/components")
-                        .with(csrf()))
+                        .with(csrf())
+                        .with(jwt().jwt(createCustomerJwtToken()).authorities(new SimpleGrantedAuthority("SCOPE_CUSTOMER"))))
                 .andExpect(status().isForbidden());
 
         verify(componentService, never()).getComponents();
@@ -133,7 +164,7 @@ class ComponentControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Resistor"));
+                .andExpect(jsonPath("$.item").value("Resistor"));
 
         verify(componentService, times(1)).getComponentById(1);
     }
@@ -187,14 +218,13 @@ class ComponentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Resistor Updated"))
+                .andExpect(jsonPath("$.item").value("Resistor Updated"))
                 .andExpect(jsonPath("$.price").value(1.75));
 
         verify(componentService, times(1)).updateComponent(any(UpdateComponentRequest.class), eq(1));
     }
 
     @Test
-    @WithMockUser(authorities = "SCOPE_CUSTOMER")
     @DisplayName("PUT /v1/api/components/{componentId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToUpdateComponent() throws Exception {
         UpdateComponentRequest request = new UpdateComponentRequest(
@@ -203,6 +233,7 @@ class ComponentControllerTest {
 
         mockMvc.perform(put("/v1/api/components/1")
                         .with(csrf())
+                        .with(jwt().jwt(createCustomerJwtToken()).authorities(new SimpleGrantedAuthority("SCOPE_CUSTOMER")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -224,11 +255,11 @@ class ComponentControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "SCOPE_CUSTOMER")
     @DisplayName("DELETE /v1/api/components/{componentId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteComponent() throws Exception {
         mockMvc.perform(delete("/v1/api/components/1")
-                        .with(csrf()))
+                        .with(csrf())
+                        .with(jwt().jwt(createCustomerJwtToken()).authorities(new SimpleGrantedAuthority("SCOPE_CUSTOMER"))))
                 .andExpect(status().isForbidden());
 
         verify(componentService, never()).deleteComponent(anyInt());

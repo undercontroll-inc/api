@@ -5,10 +5,12 @@ import com.undercontroll.api.model.Order;
 import com.undercontroll.api.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Locale;
 
 @Slf4j
 @RestController
@@ -46,14 +48,20 @@ public class OrderController {
 
     @GetMapping("/{orderId}")
     public ResponseEntity<GetOrderByIdResponse> getOrderById(
-            @PathVariable Integer orderId,
-            @RequestHeader("Authorization") String authorizationHeader
+            @PathVariable Integer orderId
     ) {
-        GetOrderByIdResponse response = orderService.getOrderById(
-                orderId,
-                authorizationHeader.split("Bearer ")[1]
-        );
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = null;
+        if (auth != null) {
+            Object principal = auth.getPrincipal();
+            if (principal instanceof Jwt jwt) {
+                email = jwt.getClaimAsString("sub");
+            }
+        }
+        if (email == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        GetOrderByIdResponse response = orderService.getOrderById(orderId, email);
         return ResponseEntity.ok(response);
     }
 
@@ -76,8 +84,5 @@ public class OrderController {
 
         return ResponseEntity.ok(response);
     }
-
-
-
 
 }

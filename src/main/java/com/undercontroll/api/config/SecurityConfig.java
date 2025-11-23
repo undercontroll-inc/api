@@ -5,7 +5,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -73,7 +72,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    @Profile("!test")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(CsrfConfigurer<HttpSecurity>::disable)
@@ -91,46 +89,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/filter").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
 
+                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements").hasAnyAuthority("SCOPE_ADMINISTRATOR", "SCOPE_CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
+
                         .requestMatchers("/v1/api/users/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/components/**").hasAuthority("SCOPE_ADMINISTRATOR")
-                        .requestMatchers("/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/service-orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
 
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        return http.build();
-    }
-
-    @Bean
-    @Profile("test")
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(CsrfConfigurer<HttpSecurity>::disable)
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-
-                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth/google").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
-
-                        .requestMatchers(HttpMethod.PUT, "/v1/api/users/{userId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/filter").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
-
-                        .requestMatchers("/v1/api/users/**").hasAuthority("SCOPE_ADMINISTRATOR")
-                        .requestMatchers("/v1/api/orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
-                        .requestMatchers("/v1/api/components/**").hasAuthority("SCOPE_ADMINISTRATOR")
-                        .requestMatchers("/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
-                        .requestMatchers("/v1/api/service-orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
-
-                        .anyRequest().authenticated()
-                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
