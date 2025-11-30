@@ -29,5 +29,9 @@ public interface AnnouncementApi {
     @Operation(summary = "Deletar anúncio")
     @DeleteApiResponses
     ResponseEntity<Void> deleteAnnouncement(@Parameter(example = "1") Integer announcementId);
+
+    @Operation(summary = "Buscar ultimo anúncio")
+    @GetApiResponses
+    ResponseEntity<AnnouncementDto> getLastAnnouncement();
 }
 

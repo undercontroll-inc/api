@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AnnouncementRepository extends JpaRepository<Announcement, Integer> {
@@ -14,4 +15,6 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Inte
     @Query("SELECT a FROM Announcement a")
     List<Announcement> findAllPaginated(Pageable pageable);
 
+    @Query("SELECT a FROM Announcement a ORDER BY a.publishedAt DESC LIMIT 1")
+    Optional<Announcement> findLastAnnouncement();
 }

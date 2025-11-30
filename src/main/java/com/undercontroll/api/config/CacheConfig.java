@@ -24,7 +24,8 @@ public class CacheConfig {
                 "componentsByCategory",
                 "componentsByName",
                 "component",
-                "announcements"
+                "announcements",
+                "lastAnnouncement"
         );
     }
 }

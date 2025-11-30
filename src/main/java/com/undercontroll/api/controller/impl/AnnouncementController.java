@@ -48,5 +48,13 @@ public class AnnouncementController implements AnnouncementApi {
         service.deleteAnnouncement(announcementId);
         return ResponseEntity.ok().build();
     }
+
+    @Override
+    @GetMapping("/last")
+    public ResponseEntity<AnnouncementDto> getLastAnnouncement() {
+        AnnouncementDto announcement = service.getLastAnnouncement();
+
+        return announcement == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(announcement);
+    }
 }
 
