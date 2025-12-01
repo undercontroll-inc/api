@@ -19,11 +19,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Testes do Serviço de Gerenciamento de Inventário")
 class InventoryManagementServiceTest {
 
     @Mock
     private ComponentJpaRepository componentRepository;
+
+    @Mock
+    private MetricsService metricsService;
 
     @InjectMocks
     private InventoryManagementService inventoryManagementService;

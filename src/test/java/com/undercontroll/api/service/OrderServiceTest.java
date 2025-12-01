@@ -25,7 +25,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Testes do Serviço de Pedidos")
 class OrderServiceTest {
 
     @Mock
@@ -42,6 +41,9 @@ class OrderServiceTest {
 
     @Mock
     private InventoryManagementService inventoryManagementService;
+
+    @Mock
+    private MetricsService metricsService;
 
     @InjectMocks
     private OrderService orderService;
@@ -474,4 +476,3 @@ class OrderServiceTest {
         verify(repository, times(1)).findById(1);
     }
 }
-
