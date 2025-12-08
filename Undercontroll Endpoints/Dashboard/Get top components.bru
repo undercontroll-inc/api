@@ -1,0 +1,17 @@
+meta {
+  name: Get top components
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/charts/top-components?period=ALL&status=ALL
+  body: none
+  auth: bearer
+}
+
+params:query {
+  period: ALL
+  status: ALL
+}
+

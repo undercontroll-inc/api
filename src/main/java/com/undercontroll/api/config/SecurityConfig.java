@@ -94,6 +94,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
 
+                        .requestMatchers("/v1/api/dashboard/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/users/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/orders/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers("/v1/api/components/**").hasAuthority("SCOPE_ADMINISTRATOR")
