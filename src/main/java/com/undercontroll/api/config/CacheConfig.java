@@ -26,7 +26,7 @@ public class CacheConfig {
                 "component",
                 "announcements",
                 "dashboardMetrics",
-                "dashboardCharts"
+                "dashboardCharts",
                 "lastAnnouncement"
         );
     }

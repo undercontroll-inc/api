@@ -1,21 +1,24 @@
 package com.undercontroll.api.service;
 
 import com.undercontroll.api.dto.*;
-import com.undercontroll.api.exception.GoogleAccountNotFoundException;
-import com.undercontroll.api.exception.InvalidAuthException;
-import com.undercontroll.api.exception.InvalidUserException;
-import com.undercontroll.api.exception.UserNotFoundException;
+import com.undercontroll.api.exception.*;
+import com.undercontroll.api.model.PasswordEvent;
 import com.undercontroll.api.model.User;
+import com.undercontroll.api.model.enums.PasswordEventStatus;
 import com.undercontroll.api.model.enums.PasswordEventType;
 import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -59,7 +62,8 @@ public class UserService {
                     : passwordEncoder.encode(passwordEventService.create(new CreatePasswordEventRequest(
                             PasswordEventType.CREATE,
                             null,
-                            request.phone()
+                            request.phone(),
+                            null // Passando nulo pois se trata de um evento de criacao de senha, nao de reset.
                     )).getValue());
 
             User user = User.builder()
@@ -292,6 +296,55 @@ public class UserService {
                 .stream()
                 .map(this::mapToDto)
                 .toList();
+    }
+
+    public void resetPassword(
+            ResetPasswordRequest request,
+            Integer userId,
+            String token
+    ) {
+        if(request.newPassword().isEmpty()) {
+            throw new InvalidPasswordResetException("New password cannot be empty");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime lastWeek = now.minusDays(7);
+
+        boolean alreadyChangedThePasswordInTheLastWeek = !passwordEventService
+                .findEventBetween(lastWeek, now).isEmpty();
+
+        if(alreadyChangedThePasswordInTheLastWeek) {
+            throw new InvalidPasswordResetException("Password has already been reset in the interval of a week");
+        }
+
+        Optional<User> user = repository.findById(userId);
+
+        if(user.isEmpty()) {
+            throw new UserNotFoundException("");
+        }
+
+        // Validacao se o usuario esta tentando alterar a senha a senha de outra conta.
+        if(!tokenService.extractUsername(token).equals(user.get().getEmail())) {
+            throw new InvalidAuthException("Cannot change the password, of another account.");
+        }
+
+        String encryptedPassword = passwordEncoder.encode(request.newPassword());
+
+        passwordEventService.create(new CreatePasswordEventRequest(
+                PasswordEventType.RESET,
+                null,
+                user.get().getPhone(),
+                encryptedPassword
+        ));
+
+        if(request.inFirstLogin()) {
+            user.get().setInFirstLogin(false);
+        }
+
+        user.get().setPassword(encryptedPassword);
+
+        repository.save(user.get());
     }
 
 

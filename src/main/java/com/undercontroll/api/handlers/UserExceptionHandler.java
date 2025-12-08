@@ -1,10 +1,7 @@
 package com.undercontroll.api.handlers;
 
 import com.undercontroll.api.controller.impl.UserController;
-import com.undercontroll.api.exception.GoogleAccountNotFoundException;
-import com.undercontroll.api.exception.InvalidAuthException;
-import com.undercontroll.api.exception.InvalidUserException;
-import com.undercontroll.api.exception.UserNotFoundException;
+import com.undercontroll.api.exception.*;
 import com.undercontroll.api.dto.ExceptionHandlerResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -48,4 +45,13 @@ public class UserExceptionHandler  extends GenericExceptionHandler {
 
         return this.buildErrorResponse(HttpStatus.NOT_FOUND, "Google account not found", request.getRequestURI());
     }
+
+    @ExceptionHandler(InvalidPasswordResetException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidPasswordResetException(
+            InvalidPasswordResetException ex, HttpServletRequest request
+    ) {
+
+        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage() , request.getRequestURI());
+    }
+
 }

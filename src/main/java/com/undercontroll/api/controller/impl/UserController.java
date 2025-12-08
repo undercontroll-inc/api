@@ -80,5 +80,20 @@ public class UserController implements UserApi {
         service.deleteUser(userId);
         return ResponseEntity.ok().build();
     }
+
+    @Override
+    @PatchMapping("/reset-password/{userId}")
+    public ResponseEntity<Void> resetPassword(
+            @RequestBody ResetPasswordRequest request,
+            @PathVariable Integer userId,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.substring(7);
+
+        service.resetPassword(request, userId, token);
+
+        return ResponseEntity.ok().build();
+    }
+
 }
 

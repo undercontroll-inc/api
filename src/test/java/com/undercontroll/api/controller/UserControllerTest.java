@@ -290,4 +290,50 @@ class UserControllerTest {
 
         verify(userService, never()).deleteUser(anyInt());
     }
+
+    @Test
+    @DisplayName("PATCH /v1/api/users/reset-password/{userId} - Should reset password successfully and return 200")
+    void shouldResetPasswordSuccessfully() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("newPassword123", false);
+        String bearerToken = "Bearer mock-customer-token";
+        String tokenWithoutBearer = "mock-customer-token";
+
+        Jwt mockJwt = createCustomerJwtToken();
+        when(jwtDecoder.decode(tokenWithoutBearer)).thenReturn(mockJwt);
+
+        doNothing().when(userService).resetPassword(any(ResetPasswordRequest.class), eq(1), eq(tokenWithoutBearer));
+
+        mockMvc.perform(patch("/v1/api/users/reset-password/1")
+                        .with(csrf())
+                        .with(jwt().jwt(mockJwt).authorities(new SimpleGrantedAuthority("SCOPE_CUSTOMER")))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(userService, times(1)).resetPassword(any(ResetPasswordRequest.class), eq(1), eq(tokenWithoutBearer));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/api/users/reset-password/{userId} - ADMINISTRATOR should reset password successfully and return 200")
+    void administratorShouldResetPasswordSuccessfully() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("newAdminPassword123", true);
+        String bearerToken = "Bearer mock-admin-token";
+        String tokenWithoutBearer = "mock-admin-token";
+
+        Jwt mockJwt = createAdminJwtToken();
+        when(jwtDecoder.decode(tokenWithoutBearer)).thenReturn(mockJwt);
+
+        doNothing().when(userService).resetPassword(any(ResetPasswordRequest.class), eq(2), eq(tokenWithoutBearer));
+
+        mockMvc.perform(patch("/v1/api/users/reset-password/2")
+                        .with(csrf())
+                        .with(jwt().jwt(mockJwt).authorities(new SimpleGrantedAuthority("SCOPE_ADMINISTRATOR")))
+                        .header("Authorization", bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        verify(userService, times(1)).resetPassword(any(ResetPasswordRequest.class), eq(2), eq(tokenWithoutBearer));
+    }
 }

@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -21,11 +23,19 @@ public class PasswordEventService {
 
     public PasswordEvent create(CreatePasswordEventRequest request) {
 
-        // Caso seja reset de senha o valor vai ser o código de confirmação
-        // Caso não sera utilizado o telefone dele para senha de entrada
-        String value = request.type().equals(PasswordEventType.RESET)
-                ? generateAlphaNumericCode()
-                : request.userPhone();
+        String value = request.userPhone();
+
+        if(request.type().equals(PasswordEventType.RESET)){
+            PasswordEvent activePassword = repository.findByStatusAndType(PasswordEventStatus.ACTIVE, PasswordEventType.RESET);
+
+            if(activePassword != null){
+                activePassword.setStatus(PasswordEventStatus.USED);
+
+                repository.save(activePassword);
+            }
+
+            value = request.value();
+        }
 
         PasswordEvent passwordEvent = PasswordEvent.builder()
                 .id(UUID.randomUUID())
@@ -39,15 +49,8 @@ public class PasswordEventService {
         return repository.save(passwordEvent);
     }
 
-    private static String generateAlphaNumericCode() {
-        StringBuilder code = new StringBuilder(6);
-
-        for (int i = 0; i < 6; i++) {
-            int index = random.nextInt(CHARACTERS.length());
-            code.append(CHARACTERS.charAt(index));
-        }
-
-        return code.toString();
+    public List<PasswordEvent> findEventBetween(LocalDateTime dateStart, LocalDateTime dateEnd) {
+        return this.repository.findByCreatedAtBetween(dateStart, dateEnd);
     }
 
 }

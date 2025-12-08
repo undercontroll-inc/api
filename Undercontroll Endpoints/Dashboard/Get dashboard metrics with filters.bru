@@ -19,6 +19,10 @@ auth:bearer {
   token: {{authToken}}
 }
 
+vars:pre-request {
+  baseUrl: http://localhost:8080
+}
+
 docs {
   # Get Dashboard Metrics with Filters
   
