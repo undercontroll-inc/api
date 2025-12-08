@@ -31,7 +31,7 @@ public class OrderService {
     private final MetricsService metricsService;
 
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts"}, allEntries = true)
+    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
     public Order createOrder(CreateOrderRequest request) {
         long startTime = System.currentTimeMillis();
         log.info("Creating new order for user {}", request.userId());
@@ -122,7 +122,7 @@ public class OrderService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts"}, allEntries = true)
+    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
     public void updateOrder(UpdateOrderRequest request, Integer id) {
         try {
             log.info("Updating order {}", id);
@@ -302,7 +302,7 @@ public class OrderService {
         return new GetOrdersByUserIdResponse(enrichedOrders);
     }
 
-    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts"}, allEntries = true)
+    @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
     public void deleteOrder(Integer orderId) {
         log.info("Deleting order with id {}", orderId);
         validateDeleteOrder(orderId);

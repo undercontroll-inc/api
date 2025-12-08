@@ -1,0 +1,47 @@
+meta {
+  name: Get dashboard metrics with filters
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/metrics?period=THIRTY_DAYS&status=COMPLETED
+  body: none
+  auth: bearer
+}
+
+params:query {
+  period: THIRTY_DAYS
+  status: COMPLETED
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+docs {
+  # Get Dashboard Metrics with Filters
+  
+  Retorna a receita total com filtros de período e status.
+  
+  ## Query Parameters
+  
+  - **period** (opcional): Filtro de período
+    - SEVEN_DAYS: Últimos 7 dias
+    - THIRTY_DAYS: Últimos 30 dias
+    - NINETY_DAYS: Últimos 90 dias
+    - YEAR: Último ano
+    - ALL: Todos os períodos (padrão)
+  
+  - **status** (opcional): Filtro de status
+    - ONGOING: Em andamento (PENDING + IN_ANALYSIS)
+    - COMPLETED: Completadas
+    - DELIVERED: Entregues
+    - ALL: Todos os status (padrão)
+  
+  ## Examples
+  
+  - Last 7 days, completed only: `?period=SEVEN_DAYS&status=COMPLETED`
+  - Last 30 days, all statuses: `?period=THIRTY_DAYS&status=ALL`
+  - All periods, ongoing only: `?period=ALL&status=ONGOING`
+}
