@@ -5,8 +5,20 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/v1/api/dashboard/metrics
+  url: {{baseUrl}}/v1/api/dashboard/metrics?status=DELIVERED
   body: none
   auth: bearer
 }
 
+params:query {
+  status: DELIVERED
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+vars:pre-request {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6ImFkbWluQHVuZGVyY29udHJvbGwuY29tIiwidXNlclR5cGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoxNzY1MjI0NzI2LCJpYXQiOjE3NjUyMjExMjZ9.aGa_TdwyMBd2dOeFDf0TOBR265YDoZsjOYWIENvsG6bnOAEqugIM4GTTBBDX5aiyBbUY7xgCCTiVN_o6F8h3xNJ_FbyDXTuz9d4CJfO4ZcqpwBOoet8x5qmakN8pO7mI5g8YRbdcusXSMW_0gr2Ok3KBH7F8EGGEndWpwR0TRRiXT2OaZWyRV_2aS75g4VnuaJ39udh6M5Vu0m_mFZ0_INGX5nSHwiOgjrknsYxRmGBwUWvUp2dw6-y1tl7S3uWfcDCUzrI4dYjI02-vEXbP46idZICrqHfBP7dCwtsiEELTLRIea1CKxdkPTn66qcRtupRYitLcBl9xhxy6sEAbXw
+  baseUrl: http://localhost:8080
+}

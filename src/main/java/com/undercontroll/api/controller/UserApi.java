@@ -55,5 +55,10 @@ public interface UserApi {
     @DeleteApiResponses
     @SecurityRequirement(name = "Bearer Authentication")
     ResponseEntity<Void> deleteUser(@Parameter(example = "1") Integer userId);
+
+    @Operation(summary = "Resetar senha do usuário")
+    @PutApiResponses
+    @SecurityRequirement(name = "Bearer Authentication")
+    ResponseEntity<Void> resetPassword(ResetPasswordRequest request, @Parameter(example = "1") Integer userId, String authHeader);
 }
 
