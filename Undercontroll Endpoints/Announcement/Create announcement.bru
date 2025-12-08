@@ -7,7 +7,11 @@ meta {
 post {
   url: http://localhost:8080/v1/api/announcements
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6ImFsZXhhbmRyZUBnbWFpbC5jb20iLCJ1c2VyVHlwZSI6IkFETUlOSVNUUkFUT1IiLCJleHAiOjE3NjQ1MzEzMjEsImlhdCI6MTc2NDUyNzcyMX0.BiIXYD1NKYCbAQmojtvARTLGq8Dcfhu904jdVFerrL8wNeJKJgip9vh6tkoqLJU4o2HERSQEbUNoiwWg8u8B-GNve1j3kz1UGjRdUoKm3KmlfwPYDfPDUDMZflXab2Tu4vXEuddoXDj-PH0RMBvOtrJitflDTou0zquX1qUNSQr9hgCbSPlPB_OwRexfA3wHR-a3sFCxvND1MTWwrok36_P2X-xke9M6LUDheuuLsoT642XE256cK-pEFLniWH53K2WQulEqJxa8pbGpD9IW9Y_mjYBZKQkG4wvikDLJsSvmz8LRFO8LPVAMBlcMIhAVkrp_hG-BEw8vNcA0-2k7uw
 }
 
 body:json {
