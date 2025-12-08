@@ -2,5 +2,10 @@ package com.undercontroll.api.model.enums;
 
 public enum AnnouncementType {
 
-    HOLIDAY
+    PROMOTIONS,
+    HOLIDAY,
+    WARNINGS,
+    RECOMMENDATIONS,
+    UPDATES
+
 }

@@ -27,6 +27,7 @@ public class CacheConfig {
                 "announcements",
                 "dashboardMetrics",
                 "dashboardCharts"
+                "lastAnnouncement"
         );
     }
 }

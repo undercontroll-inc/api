@@ -89,13 +89,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/v1/api/users/auth").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/users/auth/google").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements/last").permitAll()
 
                         .requestMatchers(HttpMethod.PUT, "/v1/api/users/{userId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/v1/api/users/reset-password/{userId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/filter").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
 
-                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements").hasAnyAuthority("SCOPE_ADMINISTRATOR", "SCOPE_CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")

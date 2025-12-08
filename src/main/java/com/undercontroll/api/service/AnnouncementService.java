@@ -18,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class AnnouncementService {
     private final ApplicationEventPublisher publisher;
     private final MetricsService metricsService;
 
-    @CacheEvict(value = "announcements", allEntries = true)
+    @CacheEvict(value = {"announcements", "lastAnnouncement"}, allEntries = true)
     public CreateAnnouncementResponse createAnnouncement(
             @Valid CreateAnnouncementRequest request
     ) {
@@ -58,7 +59,7 @@ public class AnnouncementService {
         );
     }
 
-    @CacheEvict(value = "announcements", allEntries = true)
+    @CacheEvict(value = {"announcements", "lastAnnouncement"}, allEntries = true)
     public AnnouncementDto updateAnnouncement(
             UpdateAnnouncementRequest request,
             Integer id
@@ -85,7 +86,7 @@ public class AnnouncementService {
         return this.mapToDto(announcementRepository.save(announcement));
     }
 
-    @CacheEvict(value = "announcements", allEntries = true)
+    @CacheEvict(value = {"announcements", "lastAnnouncement"}, allEntries = true)
     public void deleteAnnouncement(Integer id){
         Announcement announcement =
                 announcementRepository
@@ -108,6 +109,13 @@ public class AnnouncementService {
         return announcements.stream()
                 .map(this::mapToDto)
                 .toList();
+    }
+
+    @Cacheable(value = "lastAnnouncement")
+    public AnnouncementDto getLastAnnouncement(){
+        Optional<Announcement> announcement = announcementRepository.findLastAnnouncement();
+
+        return announcement.map(this::mapToDto).orElse(null);
     }
 
     public AnnouncementDto mapToDto(Announcement announcement){
