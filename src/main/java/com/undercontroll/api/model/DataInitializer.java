@@ -375,7 +375,7 @@ public class DataInitializer {
                 .brand("Corsair")
                 .model("CX500")
                 .laborValue(150.00)
-                .completedAt(LocalDateTime.parse("2024-10-08T16:00:00"))
+                .completedAt(LocalDateTime.parse("2025-10-08T16:00:00"))
                 .build();
 
         Order order1 = orderRepository.save(Order.builder()
@@ -389,10 +389,10 @@ public class DataInitializer {
                 .returnGuarantee(true)
                 .description("Reparo em fonte de alimentação")
                 .nf("NF-001")
-                .date(sdf.parse("2024-10-01"))
+                .date(sdf.parse("2025-01-05"))
                 .store("Loja Centro")
-                .received_at(LocalDate.parse("2024-10-01", dtf))
-                .completedTime(LocalDate.parse("2024-10-08", dtf))
+                .received_at(LocalDate.parse("2025-01-05", dtf))
+                .completedTime(LocalDate.parse("2025-01-12", dtf))
                 .build());
 
         // Order 2 - COMPLETED
@@ -405,7 +405,7 @@ public class DataInitializer {
                 .brand("Onkyo")
                 .model("TX-8020")
                 .laborValue(120.00)
-                .completedAt(LocalDateTime.parse("2024-10-10T14:30:00"))
+                .completedAt(LocalDateTime.parse("2025-10-10T14:30:00"))
                 .build();
 
         Order order2 = orderRepository.save(Order.builder()
@@ -419,10 +419,10 @@ public class DataInitializer {
                 .returnGuarantee(true)
                 .description("Manutenção em amplificador")
                 .nf("NF-002")
-                .date(sdf.parse("2024-10-05"))
+                .date(sdf.parse("2025-01-15"))
                 .store("Loja Centro")
-                .received_at(LocalDate.parse("2024-10-05", dtf))
-                .completedTime(LocalDate.parse("2024-10-10", dtf))
+                .received_at(LocalDate.parse("2025-01-15", dtf))
+                .completedTime(LocalDate.parse("2025-01-20", dtf))
                 .build());
 
         // Order 3 - COMPLETED (2 items)
@@ -435,7 +435,7 @@ public class DataInitializer {
                 .brand("Samsung")
                 .model("UN55TU7000")
                 .laborValue(280.00)
-                .completedAt(LocalDateTime.parse("2024-10-20T11:20:00"))
+                .completedAt(LocalDateTime.parse("2025-10-20T11:20:00"))
                 .build();
 
         OrderItem orderItem3b = OrderItem.builder()
@@ -447,7 +447,7 @@ public class DataInitializer {
                 .brand("Samsung")
                 .model("UN55TU7000")
                 .laborValue(120.00)
-                .completedAt(LocalDateTime.parse("2024-10-20T11:20:00"))
+                .completedAt(LocalDateTime.parse("2025-10-20T11:20:00"))
                 .build();
 
         Order order3 = orderRepository.save(Order.builder()
@@ -461,10 +461,10 @@ public class DataInitializer {
                 .returnGuarantee(true)
                 .description("Troca de componentes TV LED")
                 .nf("NF-003")
-                .date(sdf.parse("2024-10-10"))
+                .date(sdf.parse("2025-02-01"))
                 .store("Loja Centro")
-                .received_at(LocalDate.parse("2024-10-10", dtf))
-                .completedTime(LocalDate.parse("2024-10-20", dtf))
+                .received_at(LocalDate.parse("2025-02-01", dtf))
+                .completedTime(LocalDate.parse("2025-02-10", dtf))
                 .build());
 
         // Order 4 - COMPLETED
@@ -477,7 +477,7 @@ public class DataInitializer {
                 .brand("Creative")
                 .model("Sound Blaster X3")
                 .laborValue(60.00)
-                .completedAt(LocalDateTime.parse("2024-10-18T15:45:00"))
+                .completedAt(LocalDateTime.parse("2025-02-25T15:45:00"))
                 .build();
 
         Order order4 = orderRepository.save(Order.builder()
@@ -507,7 +507,7 @@ public class DataInitializer {
                 .brand("Dell")
                 .model("Inspiron 15 3000")
                 .laborValue(180.00)
-                .completedAt(LocalDateTime.parse("2024-11-07T10:00:00"))
+                .completedAt(LocalDateTime.parse("2025-03-17T10:00:00"))
                 .build();
 
         Order order5 = orderRepository.save(Order.builder()
@@ -537,7 +537,7 @@ public class DataInitializer {
                 .brand("Custom Build")
                 .model("Gaming PC")
                 .laborValue(95.00)
-                .completedAt(LocalDateTime.parse("2024-11-12T16:30:00"))
+                .completedAt(LocalDateTime.parse("2025-04-08T16:30:00"))
                 .build();
 
         Order order6 = orderRepository.save(Order.builder()
@@ -567,7 +567,7 @@ public class DataInitializer {
                 .brand("ASUS")
                 .model("ROG Strix X570")
                 .laborValue(180.00)
-                .completedAt(LocalDateTime.parse("2024-11-25T14:00:00"))
+                .completedAt(LocalDateTime.parse("2025-05-10T14:00:00"))
                 .build();
 
         Order order7 = orderRepository.save(Order.builder()
@@ -597,7 +597,7 @@ public class DataInitializer {
                 .brand("HP")
                 .model("Pavilion Desktop")
                 .laborValue(120.00)
-                .completedAt(LocalDateTime.parse("2024-11-22T09:30:00"))
+                .completedAt(LocalDateTime.parse("2025-06-18T09:30:00"))
                 .build();
 
         Order order8 = orderRepository.save(Order.builder()
@@ -614,7 +614,337 @@ public class DataInitializer {
                 .date(sdf.parse("2024-11-20"))
                 .store("Loja Norte")
                 .received_at(LocalDate.parse("2024-11-20", dtf))
-                .completedTime(LocalDate.parse("2024-11-22", dtf))
+                .completedTime(LocalDate.parse("2025-06-18", dtf))
+                .build());
+
+        // Order 15 - COMPLETED
+        OrderItem orderItem15 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1593359677879-a4bb92f829d1")
+                .observation("TV não liga, possível problema na placa de fonte")
+                .volt("110V")
+                .series("LED-50")
+                .type("TV LED")
+                .brand("LG")
+                .model("50UN7310")
+                .laborValue(200.00)
+                .completedAt(LocalDateTime.parse("2025-07-10T14:00:00"))
+                .build();
+
+        Order order15 = orderRepository.save(Order.builder()
+                .user(user4)
+                .orderItems(new ArrayList<>(List.of(orderItem15)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(350.00)
+                .discount(0.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(true)
+                .description("Reparo TV LED - placa fonte")
+                .nf("NF-010")
+                .date(sdf.parse("2025-07-01"))
+                .store("Loja Centro")
+                .received_at(LocalDate.parse("2025-07-01", dtf))
+                .completedTime(LocalDate.parse("2025-07-10", dtf))
+                .build());
+
+        // Order 16 - COMPLETED
+        OrderItem orderItem16 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1588872657578-7efd1f1555ed")
+                .observation("Notebook com tela piscando")
+                .volt("19V")
+                .series("NB-2023")
+                .type("Notebook")
+                .brand("Lenovo")
+                .model("IdeaPad 3")
+                .laborValue(220.00)
+                .completedAt(LocalDateTime.parse("2025-07-25T11:30:00"))
+                .build();
+
+        Order order16 = orderRepository.save(Order.builder()
+                .user(user5)
+                .orderItems(new ArrayList<>(List.of(orderItem16)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(320.00)
+                .discount(10.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(true)
+                .description("Reparo notebook - tela")
+                .nf("NF-011")
+                .date(sdf.parse("2025-07-18"))
+                .store("Loja Norte")
+                .received_at(LocalDate.parse("2025-07-18", dtf))
+                .completedTime(LocalDate.parse("2025-07-25", dtf))
+                .build());
+
+        // Order 17 - COMPLETED
+        OrderItem orderItem17 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1587202372634-32705e3bf49c")
+                .observation("PC com problema de inicialização")
+                .volt("110V")
+                .series("PC-2022")
+                .type("Desktop")
+                .brand("Dell")
+                .model("OptiPlex 3080")
+                .laborValue(150.00)
+                .completedAt(LocalDateTime.parse("2025-08-08T15:00:00"))
+                .build();
+
+        Order order17 = orderRepository.save(Order.builder()
+                .user(user7)
+                .orderItems(new ArrayList<>(List.of(orderItem17)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(230.00)
+                .discount(0.00)
+                .fabricGuarantee(false)
+                .returnGuarantee(true)
+                .description("Reparo desktop - inicialização")
+                .nf("NF-012")
+                .date(sdf.parse("2025-08-01"))
+                .store("Loja Centro")
+                .received_at(LocalDate.parse("2025-08-01", dtf))
+                .completedTime(LocalDate.parse("2025-08-08", dtf))
+                .build());
+
+        // Order 18 - COMPLETED
+        OrderItem orderItem18 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1545128485-c400e7702796")
+                .observation("Receiver sem saída de áudio")
+                .volt("220V")
+                .series("RCV-200")
+                .type("Receiver")
+                .brand("Sony")
+                .model("STR-DH590")
+                .laborValue(180.00)
+                .completedAt(LocalDateTime.parse("2025-08-22T10:30:00"))
+                .build();
+
+        Order order18 = orderRepository.save(Order.builder()
+                .user(user2)
+                .orderItems(new ArrayList<>(List.of(orderItem18)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(280.00)
+                .discount(15.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(false)
+                .description("Reparo receiver - saída áudio")
+                .nf("NF-013")
+                .date(sdf.parse("2025-08-15"))
+                .store("Loja Norte")
+                .received_at(LocalDate.parse("2025-08-15", dtf))
+                .completedTime(LocalDate.parse("2025-08-22", dtf))
+                .build());
+
+        // Order 19 - COMPLETED
+        OrderItem orderItem19 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea")
+                .observation("Placa mãe com slots USB queimados")
+                .volt("12V")
+                .series("MB-B550")
+                .type("Motherboard")
+                .brand("MSI")
+                .model("B550 GAMING PLUS")
+                .laborValue(160.00)
+                .completedAt(LocalDateTime.parse("2025-09-05T14:45:00"))
+                .build();
+
+        Order order19 = orderRepository.save(Order.builder()
+                .user(user3)
+                .orderItems(new ArrayList<>(List.of(orderItem19)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(240.00)
+                .discount(0.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(true)
+                .description("Reparo motherboard - USB")
+                .nf("NF-014")
+                .date(sdf.parse("2025-09-01"))
+                .store("Loja Centro")
+                .received_at(LocalDate.parse("2025-09-01", dtf))
+                .completedTime(LocalDate.parse("2025-09-05", dtf))
+                .build());
+
+        // Order 20 - COMPLETED
+        OrderItem orderItem20 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1598327105666-5b89351aff97")
+                .observation("Fonte com ruído e instabilidade")
+                .volt("220V")
+                .series("PS-750W")
+                .type("Fonte ATX")
+                .brand("Seasonic")
+                .model("FOCUS GX-750")
+                .laborValue(130.00)
+                .completedAt(LocalDateTime.parse("2025-09-18T16:00:00"))
+                .build();
+
+        Order order20 = orderRepository.save(Order.builder()
+                .user(user8)
+                .orderItems(new ArrayList<>(List.of(orderItem20)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(210.00)
+                .discount(5.00)
+                .fabricGuarantee(false)
+                .returnGuarantee(true)
+                .description("Reparo fonte ATX - estabilização")
+                .nf("NF-015")
+                .date(sdf.parse("2025-09-12"))
+                .store("Loja Norte")
+                .received_at(LocalDate.parse("2025-09-12", dtf))
+                .completedTime(LocalDate.parse("2025-09-18", dtf))
+                .build());
+
+        // Order 21 - COMPLETED
+        OrderItem orderItem21 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1593359677879-a4bb92f829d1")
+                .observation("TV com som mas sem imagem")
+                .volt("110V")
+                .series("LED-43")
+                .type("TV LED")
+                .brand("Philco")
+                .model("PTV43G50SN")
+                .laborValue(190.00)
+                .completedAt(LocalDateTime.parse("2025-10-03T11:00:00"))
+                .build();
+
+        Order order21 = orderRepository.save(Order.builder()
+                .user(user6)
+                .orderItems(new ArrayList<>(List.of(orderItem21)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(290.00)
+                .discount(0.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(true)
+                .description("Reparo TV LED - backlight")
+                .nf("NF-016")
+                .date(sdf.parse("2025-09-28"))
+                .store("Loja Centro")
+                .received_at(LocalDate.parse("2025-09-28", dtf))
+                .completedTime(LocalDate.parse("2025-10-03", dtf))
+                .build());
+
+        // Order 22 - COMPLETED
+        OrderItem orderItem22 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1588872657578-7efd1f1555ed")
+                .observation("Notebook superaquecendo")
+                .volt("19V")
+                .series("NB-2024")
+                .type("Notebook")
+                .brand("ASUS")
+                .model("VivoBook 15")
+                .laborValue(140.00)
+                .completedAt(LocalDateTime.parse("2025-10-15T13:30:00"))
+                .build();
+
+        Order order22 = orderRepository.save(Order.builder()
+                .user(user4)
+                .orderItems(new ArrayList<>(List.of(orderItem22)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(200.00)
+                .discount(10.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(false)
+                .description("Manutenção notebook - limpeza térmica")
+                .nf("NF-017")
+                .date(sdf.parse("2025-10-10"))
+                .store("Loja Norte")
+                .received_at(LocalDate.parse("2025-10-10", dtf))
+                .completedTime(LocalDate.parse("2025-10-15", dtf))
+                .build());
+
+        // Order 23 - COMPLETED
+        OrderItem orderItem23 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1587202372634-32705e3bf49c")
+                .observation("PC gamer com placa de vídeo com artefatos")
+                .volt("110V")
+                .series("PC-GAM-2023")
+                .type("Desktop")
+                .brand("Custom Build")
+                .model("Gaming PC RTX")
+                .laborValue(250.00)
+                .completedAt(LocalDateTime.parse("2025-10-28T15:30:00"))
+                .build();
+
+        Order order23 = orderRepository.save(Order.builder()
+                .user(user7)
+                .orderItems(new ArrayList<>(List.of(orderItem23)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(380.00)
+                .discount(20.00)
+                .fabricGuarantee(false)
+                .returnGuarantee(true)
+                .description("Reparo GPU - artefatos")
+                .nf("NF-018")
+                .date(sdf.parse("2025-10-20"))
+                .store("Loja Centro")
+                .received_at(LocalDate.parse("2025-10-20", dtf))
+                .completedTime(LocalDate.parse("2025-10-28", dtf))
+                .build());
+
+        // Order 24 - COMPLETED
+        OrderItem orderItem24 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1527443224154-c4a3942d3acf")
+                .observation("Monitor com linhas horizontais")
+                .volt("110V")
+                .series("MON-27")
+                .type("Monitor IPS")
+                .brand("Samsung")
+                .model("S27R350")
+                .laborValue(170.00)
+                .completedAt(LocalDateTime.parse("2025-11-08T10:00:00"))
+                .build();
+
+        Order order24 = orderRepository.save(Order.builder()
+                .user(user5)
+                .orderItems(new ArrayList<>(List.of(orderItem24)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(260.00)
+                .discount(0.00)
+                .fabricGuarantee(true)
+                .returnGuarantee(true)
+                .description("Reparo monitor IPS - linhas")
+                .nf("NF-019")
+                .date(sdf.parse("2025-11-02"))
+                .store("Loja Norte")
+                .received_at(LocalDate.parse("2025-11-02", dtf))
+                .completedTime(LocalDate.parse("2025-11-08", dtf))
+                .build());
+
+        // Order 25 - COMPLETED
+        OrderItem orderItem25 = OrderItem.builder()
+                .imageUrl("https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6")
+                .observation("Impressora com papel enroscando")
+                .volt("110V")
+                .series("PRINT-HP")
+                .type("Impressora")
+                .brand("HP")
+                .model("LaserJet Pro M404")
+                .laborValue(120.00)
+                .completedAt(LocalDateTime.parse("2025-11-18T14:30:00"))
+                .build();
+
+        Order order25 = orderRepository.save(Order.builder()
+                .user(user2)
+                .orderItems(new ArrayList<>(List.of(orderItem25)))
+                .demands(new ArrayList<>())
+                .status(OrderStatus.COMPLETED)
+                .total(180.00)
+                .discount(5.00)
+                .fabricGuarantee(false)
+                .returnGuarantee(true)
+                .description("Manutenção impressora - alimentação papel")
+                .nf("NF-020")
+                .date(sdf.parse("2025-11-12"))
+                .store("Loja Centro")
+                .received_at(LocalDate.parse("2025-11-12", dtf))
+                .completedTime(LocalDate.parse("2025-11-18", dtf))
                 .build());
 
         // Order 9 - IN_ANALYSIS
@@ -762,7 +1092,7 @@ public class DataInitializer {
                 .brand("Dell")
                 .model("65W Original")
                 .laborValue(130.00)
-                .completedAt(LocalDateTime.parse("2024-11-05T10:00:00"))
+                .completedAt(LocalDateTime.parse("2025-11-05T10:00:00"))
                 .build();
 
         Order order14 = orderRepository.save(Order.builder()
@@ -776,10 +1106,10 @@ public class DataInitializer {
                 .returnGuarantee(true)
                 .description("Conserto de carregador notebook")
                 .nf("NF-009")
-                .date(sdf.parse("2024-11-01"))
+                .date(sdf.parse("2025-11-01"))
                 .store("Loja Centro")
-                .received_at(LocalDate.parse("2024-11-01", dtf))
-                .completedTime(LocalDate.parse("2024-11-05", dtf))
+                .received_at(LocalDate.parse("2025-11-01", dtf))
+                .completedTime(LocalDate.parse("2025-11-05", dtf))
                 .build());
 
         // ====================================
@@ -839,5 +1169,55 @@ public class DataInitializer {
         // Order 14 - Carregador (DELIVERED)
         demandRepository.save(Demand.builder().quantity(1L).component(component6).order(order14).build());
         demandRepository.save(Demand.builder().quantity(2L).component(component4).order(order14).build());
+
+        // Order 15 - TV LED placa fonte (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(4L).component(component2).order(order15).build());
+        demandRepository.save(Demand.builder().quantity(2L).component(component4).order(order15).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component8).order(order15).build());
+
+        // Order 16 - Notebook tela (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(2L).component(component12).order(order16).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component13).order(order16).build());
+
+        // Order 17 - Desktop inicialização (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(3L).component(component2).order(order17).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component5).order(order17).build());
+        demandRepository.save(Demand.builder().quantity(2L).component(component7).order(order17).build());
+
+        // Order 18 - Receiver áudio (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(2L).component(component1).order(order18).build());
+        demandRepository.save(Demand.builder().quantity(3L).component(component2).order(order18).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component3).order(order18).build());
+
+        // Order 19 - Motherboard USB (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(2L).component(component5).order(order19).build());
+        demandRepository.save(Demand.builder().quantity(3L).component(component2).order(order19).build());
+
+        // Order 20 - Fonte ATX estabilização (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(4L).component(component2).order(order20).build());
+        demandRepository.save(Demand.builder().quantity(2L).component(component7).order(order20).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component4).order(order20).build());
+
+        // Order 21 - TV LED backlight (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(2L).component(component2).order(order21).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component8).order(order21).build());
+        demandRepository.save(Demand.builder().quantity(3L).component(component4).order(order21).build());
+
+        // Order 22 - Notebook limpeza térmica (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(1L).component(component14).order(order22).build());
+        demandRepository.save(Demand.builder().quantity(2L).component(component15).order(order22).build());
+
+        // Order 23 - GPU artefatos (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(2L).component(component15).order(order23).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component14).order(order23).build());
+        demandRepository.save(Demand.builder().quantity(3L).component(component2).order(order23).build());
+
+        // Order 24 - Monitor IPS linhas (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(3L).component(component2).order(order24).build());
+        demandRepository.save(Demand.builder().quantity(1L).component(component5).order(order24).build());
+
+        // Order 25 - Impressora alimentação papel (COMPLETED)
+        demandRepository.save(Demand.builder().quantity(1L).component(component8).order(order25).build());
+        demandRepository.save(Demand.builder().quantity(2L).component(component12).order(order25).build());
     }
 }

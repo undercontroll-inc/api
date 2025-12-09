@@ -51,7 +51,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
 
     // Calculate total revenue with filters
     @Query("SELECT COALESCE(SUM(o.total), 0.0) FROM Order o " +
-           "WHERE (:startDate IS NULL OR CAST(o.createdAt AS DATE) >= :startDate) " +
+           "WHERE (:startDate IS NULL OR o.received_at >= :startDate) " +
            "AND o.status IN :statuses")
     Double calculateTotalRevenueFiltered(
             @Param("startDate") LocalDate startDate,
@@ -63,7 +63,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     FROM `order` o
     INNER JOIN demand d ON o.id = d.order_id
     INNER JOIN component c ON d.component_id = c.id
-    WHERE (:startDate IS NULL OR CAST(o.created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
     """, nativeQuery = true)
     Double calculateTotalPartsCostFiltered(
@@ -72,7 +72,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
 
     // Calculate average order price with filters
     @Query("SELECT COALESCE(AVG(o.total), 0.0) FROM Order o " +
-           "WHERE (:startDate IS NULL OR CAST(o.createdAt AS DATE) >= :startDate) " +
+           "WHERE (:startDate IS NULL OR o.received_at >= :startDate) " +
            "AND o.status IN :statuses")
     Double calculateAverageOrderPriceFiltered(
             @Param("startDate") LocalDate startDate,
@@ -80,7 +80,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
 
     // Count ongoing orders with filters
     @Query("SELECT COUNT(o) FROM Order o " +
-           "WHERE (:startDate IS NULL OR CAST(o.createdAt AS DATE) >= :startDate) " +
+           "WHERE (:startDate IS NULL OR o.received_at >= :startDate) " +
            "AND o.status IN :statuses")
     Long countOngoingOrdersFiltered(
             @Param("startDate") LocalDate startDate,
@@ -90,7 +90,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     @Query(value = """
     SELECT COALESCE(AVG(TIMESTAMPDIFF(HOUR, received_at, completed_time)), 0.0)
     FROM `order`
-    WHERE (:startDate IS NULL OR CAST(created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR received_at >= :startDate)
       AND status IN :statuses
       AND received_at IS NOT NULL
       AND completed_time IS NOT NULL
@@ -103,7 +103,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     // Revenue Evolution - Daily aggregation
     @Query(value = """
     SELECT
-        CAST(o.created_at AS DATE) as date,
+        o.received_at as date,
         COALESCE(SUM(o.total), 0.0) as revenue,
         COALESCE(SUM(o.total) - SUM(COALESCE(parts_cost, 0)), 0.0) as profit,
         COUNT(o.id) as order_count
@@ -114,9 +114,10 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
         INNER JOIN component c ON d.component_id = c.id
         GROUP BY d.order_id
     ) parts ON o.id = parts.order_id
-    WHERE (:startDate IS NULL OR CAST(o.created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
-    GROUP BY CAST(o.created_at AS DATE)
+      AND o.received_at IS NOT NULL
+    GROUP BY o.received_at
     ORDER BY date
     """, nativeQuery = true)
     List<Object[]> getRevenueEvolution(
@@ -126,14 +127,15 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     // Customer Type Evolution - Daily aggregation
     @Query(value = """
     SELECT
-        CAST(o.created_at AS DATE) as date,
+        o.received_at as date,
         COUNT(DISTINCT CASE WHEN u.already_recurrent = true THEN u.id END) as recurrent_customers,
         COUNT(DISTINCT CASE WHEN u.already_recurrent = false THEN u.id END) as new_customers
     FROM `order` o
     INNER JOIN user u ON o.user_id = u.id
-    WHERE (:startDate IS NULL OR CAST(o.created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
-    GROUP BY CAST(o.created_at AS DATE)
+      AND o.received_at IS NOT NULL
+    GROUP BY o.received_at
     ORDER BY date
     """, nativeQuery = true)
     List<Object[]> getCustomerTypeEvolution(
@@ -146,7 +148,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
         o.status,
         COUNT(o.id) as count
     FROM `order` o
-    WHERE (:startDate IS NULL OR CAST(o.created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
     GROUP BY o.status
     ORDER BY count DESC
     """, nativeQuery = true)
@@ -160,7 +162,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
         COUNT(oi.id) as count
     FROM `order` o
     INNER JOIN order_item oi ON oi.order_id = o.id
-    WHERE (:startDate IS NULL OR CAST(o.created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
       AND oi.type IS NOT NULL
     GROUP BY oi.type, oi.brand
@@ -182,7 +184,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Integer> {
     FROM demand d
     INNER JOIN component c ON d.component_id = c.id
     INNER JOIN `order` o ON d.order_id = o.id
-    WHERE (:startDate IS NULL OR CAST(o.created_at AS DATE) >= :startDate)
+    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
     GROUP BY c.id, c.name, c.brand, c.category
     ORDER BY total_quantity DESC
