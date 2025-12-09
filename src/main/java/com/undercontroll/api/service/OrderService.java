@@ -29,6 +29,7 @@ public class OrderService {
     private final UserService userService;
     private final InventoryManagementService inventoryManagementService;
     private final MetricsService metricsService;
+    private final PdfExportService pdfExportService;
 
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
@@ -273,7 +274,7 @@ public class OrderService {
     }
 
     @Cacheable(value = "order", key = "#orderId")
-    public GetOrderByIdResponse getOrderById(Integer orderId, String token) {
+    public GetOrderByIdResponse getOrderById(Integer orderId, String email) {
         log.info("Fetching order with id {}", orderId);
 
         if (orderId == null || orderId <= 0) {
@@ -284,7 +285,7 @@ public class OrderService {
                 .orElseThrow(() -> new OrderNotFoundException(
                         String.format("Order with id %d not found", orderId)));
 
-        User user = userService.getUserByToken(token);
+        User user = userService.getUserByEmail(email);
 
         validateOrderUser(order, user);
 
@@ -330,6 +331,54 @@ public class OrderService {
                         (String) row[6]   // category
                 ))
                 .toList();
+    }
+
+    public byte[] exportPdf(Integer orderId) {
+        log.info("Exporting order {} to PDF", orderId);
+
+        Order order = repository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(
+                        String.format("Order with id %d not found", orderId)));
+
+        OrderEnrichedDto enrichedOrder = mapOrderToEnrichedDto(order);
+
+        List<ExportOrderRequest.ProductInfo> produtos = enrichedOrder.appliances().stream()
+                .map(item -> new ExportOrderRequest.ProductInfo(
+                        item.type() + " " + item.brand() + " " + item.model(),
+                        item.volt(),
+                        item.series()
+                ))
+                .toList();
+
+        List<ExportOrderRequest.PartInfo> pecas = enrichedOrder.parts().stream()
+                .map(part -> new ExportOrderRequest.PartInfo(
+                        part.quantity(),
+                        part.item(),
+                        String.format("R$ %.2f", part.price() * part.quantity())
+                ))
+                .toList();
+
+        ExportOrderRequest exportRequest = new ExportOrderRequest(
+                String.valueOf(enrichedOrder.id()),
+                String.valueOf(enrichedOrder.id()),
+                enrichedOrder.nf(),
+                enrichedOrder.receivedAt(),
+                "Loja",
+                produtos,
+                enrichedOrder.user().name(),
+                enrichedOrder.user().address(),
+                enrichedOrder.user().phone(),
+                enrichedOrder.receivedAt(),
+                pecas,
+                String.format("R$ %.2f", enrichedOrder.totalValue()),
+                enrichedOrder.deadline(),
+                "Técnico",
+                order.isFabricGuarantee(),
+                false, // orcamento - você pode adicionar este campo ao Order se necessário
+                order.isReturnGuarantee()
+        );
+
+        return pdfExportService.exportOS(exportRequest);
     }
 
     private List<OrderEnrichedDto> mapOrdersToEnrichedDtos(List<Order> orders) {
