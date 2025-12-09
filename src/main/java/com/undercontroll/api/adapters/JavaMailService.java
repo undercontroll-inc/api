@@ -91,7 +91,7 @@ public class JavaMailService implements EmailService {
                 .replace("{{title}}", announcement.getAnnouncement().getTitle())
                 .replace("{{content}}", announcement.getAnnouncement().getContent())
                 .replace("{{createdAt}}",this.formatDateTime(announcement.getAnnouncement().getPublishedAt())
-                .replace("{{year}}", this.year)
+                .replace("{{year}}", "2025")
                 .replace("{{websiteUrl}}", this.websiteUrl)
                 .replace("{{contactUrl}}", this.contactUrl));
     }
