@@ -1,9 +1,9 @@
 package com.undercontroll.api.service;
 
-import com.undercontroll.api.dto.ServiceOrderDto;
+import com.undercontroll.api.dto.ExportOrderRequest;
 
 public interface PdfExportService {
 
-    void exportOS(ServiceOrderDto serviceOrder);
+    byte[] exportOS(ExportOrderRequest request);
 
 }

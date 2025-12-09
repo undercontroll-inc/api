@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface PasswordEventRepository extends JpaRepository<PasswordEvent, UUID> {
 
     List<PasswordEvent> findByUserPhone(String userPhone);
-    List<PasswordEvent> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    List<PasswordEvent> findByCreatedAtBetweenAndType(LocalDateTime start, LocalDateTime end, PasswordEventType type);
 
     PasswordEvent findByStatusAndType(PasswordEventStatus status, PasswordEventType type);
 

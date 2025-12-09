@@ -2,23 +2,18 @@ package com.undercontroll.api.service;
 
 import com.undercontroll.api.dto.*;
 import com.undercontroll.api.exception.*;
-import com.undercontroll.api.model.PasswordEvent;
 import com.undercontroll.api.model.User;
-import com.undercontroll.api.model.enums.PasswordEventStatus;
 import com.undercontroll.api.model.enums.PasswordEventType;
 import com.undercontroll.api.model.enums.UserType;
 import com.undercontroll.api.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -271,6 +266,21 @@ public class UserService {
         return user.get();
     }
 
+    @Cacheable(value = "user", key = "#email")
+    public User getUserByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            throw new InvalidAuthException("Email cannot be null or empty");
+        }
+
+        Optional<User> user = repository.findUserByEmail(email);
+
+        if (user.isEmpty()) {
+            throw new UserNotFoundException("User not found with email: %s".formatted(email));
+        }
+
+        return user.get();
+    }
+
     @Cacheable(value = "customers")
     public List<UserDto> getCustomers() {
         return this.repository
@@ -305,17 +315,6 @@ public class UserService {
     ) {
         if(request.newPassword().isEmpty()) {
             throw new InvalidPasswordResetException("New password cannot be empty");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-
-        LocalDateTime lastWeek = now.minusDays(7);
-
-        boolean alreadyChangedThePasswordInTheLastWeek = !passwordEventService
-                .findEventBetween(lastWeek, now).isEmpty();
-
-        if(alreadyChangedThePasswordInTheLastWeek) {
-            throw new InvalidPasswordResetException("Password has already been reset in the interval of a week");
         }
 
         Optional<User> user = repository.findById(userId);

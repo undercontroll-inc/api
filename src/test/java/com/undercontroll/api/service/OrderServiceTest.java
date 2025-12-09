@@ -222,7 +222,7 @@ class OrderServiceTest {
     @DisplayName("Deve buscar pedido por ID com sucesso")
     void testGetOrderById_ShouldReturnOrder_WhenExists() {
         when(repository.findById(1)).thenReturn(Optional.of(order));
-        when(userService.getUserByToken(anyString())).thenReturn(user);
+        when(userService.getUserByEmail(anyString())).thenReturn(user);
         when(repository.calculatePartsTotalByOrderId(anyInt())).thenReturn(5.0);
         when(userService.mapToDto(any(User.class))).thenReturn(
                 new UserDto(1, "João Silva", "joao@email.com", "Silva", "Rua A",
@@ -231,7 +231,7 @@ class OrderServiceTest {
                 new OrderItemDto(1, null, "Galaxy A50", "Smartphone", "Samsung",
                         "Tela quebrada", "220V", "SN123", 50.0, null));
 
-        GetOrderByIdResponse response = orderService.getOrderById(1, "token");
+        GetOrderByIdResponse response = orderService.getOrderById(1, "joao@email.com");
 
         assertNotNull(response);
         assertEquals(1, response.data().id());
@@ -255,10 +255,10 @@ class OrderServiceTest {
         otherUser.setUserType(UserType.CUSTOMER);
 
         when(repository.findById(1)).thenReturn(Optional.of(order));
-        when(userService.getUserByToken(anyString())).thenReturn(otherUser);
+        when(userService.getUserByEmail(anyString())).thenReturn(otherUser);
 
         assertThrows(UnauthorizedOrderOperation.class,
-                () -> orderService.getOrderById(1, "token"));
+                () -> orderService.getOrderById(1, "other@email.com"));
     }
 
     @Test
@@ -462,7 +462,7 @@ class OrderServiceTest {
         adminUser.setUserType(UserType.ADMINISTRATOR);
 
         when(repository.findById(1)).thenReturn(Optional.of(order));
-        when(userService.getUserByToken(anyString())).thenReturn(adminUser);
+        when(userService.getUserByEmail(anyString())).thenReturn(adminUser);
         when(repository.calculatePartsTotalByOrderId(anyInt())).thenReturn(5.0);
         when(userService.mapToDto(any(User.class))).thenReturn(
                 new UserDto(1, "João Silva", "joao@email.com", "Silva", "Rua A",
@@ -471,7 +471,7 @@ class OrderServiceTest {
                 new OrderItemDto(1, null, "Galaxy A50", "Smartphone", "Samsung",
                         "Tela quebrada", "220V", "SN123", 50.0, null));
 
-        assertDoesNotThrow(() -> orderService.getOrderById(1, "token"));
+        assertDoesNotThrow(() -> orderService.getOrderById(1, "admin@email.com"));
 
         verify(repository, times(1)).findById(1);
     }

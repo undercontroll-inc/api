@@ -96,6 +96,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/v1/api/users/reset-password/{userId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/filter").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/export/{orderId}").hasAnyAuthority("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
 
                         .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasAuthority("SCOPE_ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasAuthority("SCOPE_ADMINISTRATOR")

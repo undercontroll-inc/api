@@ -75,5 +75,15 @@ public class OrderController implements OrderApi {
         GetOrdersByUserIdResponse response = orderService.getOrdersByUserId(userId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/export/{orderId}")
+    public ResponseEntity<byte[]> exportOrder(@PathVariable Integer orderId) {
+        byte[] pdf = orderService.exportPdf(orderId);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"relatorio.pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
 }
 
