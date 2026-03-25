@@ -45,12 +45,18 @@ public class AuthContextFilter extends OncePerRequestFilter {
         String userId = decoded.getSubject();
         String role = decoded.getClaim("roles").asString();
 
+        if (role == null || role.isBlank()) {
+            log.warn("No roles claim found in token for user: {}", userId);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         log.info("User id: {} resolved with roles: {}", userId, role);
 
-        SimpleGrantedAuthority authorities = new SimpleGrantedAuthority("ROLE_" + role);
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
         UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userId, null, List.of(authorities));
+                new UsernamePasswordAuthenticationToken(userId, null, List.of(authority));
 
         SecurityContextHolder.getContext().setAuthentication(auth);
 

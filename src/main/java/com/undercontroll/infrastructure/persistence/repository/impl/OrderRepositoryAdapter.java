@@ -7,6 +7,7 @@ import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
 import com.undercontroll.infrastructure.persistence.repository.jpa.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,11 +15,13 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class OrderRepositoryAdapter implements OrderRepositoryPort {
 
     private final OrderJpaRepository orderJpaRepository;
 
     @Override
+    @Transactional
     public Order save(Order order) {
         OrderJpaEntity jpaEntity = OrderJpaEntity.fromDomain(order);
         OrderJpaEntity savedEntity = orderJpaRepository.save(jpaEntity);

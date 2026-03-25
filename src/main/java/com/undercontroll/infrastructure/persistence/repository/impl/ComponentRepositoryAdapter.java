@@ -6,17 +6,20 @@ import com.undercontroll.infrastructure.persistence.entity.ComponentPartJpaEntit
 import com.undercontroll.infrastructure.persistence.repository.jpa.ComponentJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ComponentRepositoryAdapter implements ComponentRepositoryPort {
 
     private final ComponentJpaRepository componentJpaRepository;
 
     @Override
+    @Transactional
     public ComponentPart save(ComponentPart component) {
         ComponentPartJpaEntity jpaEntity = ComponentPartJpaEntity.fromDomain(component);
         ComponentPartJpaEntity savedEntity = componentJpaRepository.save(jpaEntity);
@@ -24,6 +27,7 @@ public class ComponentRepositoryAdapter implements ComponentRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void deleteById(Integer id) {
         componentJpaRepository.deleteById(id);
     }

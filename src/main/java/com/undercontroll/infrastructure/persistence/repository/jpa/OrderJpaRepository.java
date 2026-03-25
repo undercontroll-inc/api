@@ -89,7 +89,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     // Calculate average repair time with filters
     @Query(value = """
     SELECT COALESCE(AVG(TIMESTAMPDIFF(HOUR, received_at, completed_time)), 0.0)
-    FROM `order`
+    FROM `ORDER`
     WHERE (:startDate IS NULL OR received_at >= :startDate)
       AND status IN :statuses
       AND received_at IS NOT NULL

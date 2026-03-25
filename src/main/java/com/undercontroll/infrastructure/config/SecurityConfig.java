@@ -56,23 +56,29 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**", "/actuator/health/**", "/actuator/prometheus").permitAll()
                         
                         // Public auth endpoints
-                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth", "/v1/api/users/auth/google", "/v1/api/users/auth/refresh", "/v1/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth", "/v1/api/users/auth/google", "/v1/api/users/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
 
                         // Public announcement endpoints
                         .requestMatchers(HttpMethod.GET, "/v1/api/announcements", "/v1/api/announcements/last").permitAll()
                         
                         // Customer and Admin shared endpoints
-                        .requestMatchers(HttpMethod.PUT, "/v1/api/users/{userId}").hasAnyRole("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/v1/api/users/reset-password/{userId}").hasAnyRole("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}", "/v1/api/orders/filter", "/v1/api/orders/export/{orderId}").hasAnyRole("SCOPE_CUSTOMER", "SCOPE_ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/v1/api/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, "/v1/api/users/{userId}").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/api/users/reset-password/{userId}").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}", "/v1/api/orders/filter", "/v1/api/orders/export/{orderId}").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         
                         // Admin-only endpoints
                         .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/dashboard/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/v1/api/users/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/v1/api/orders/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/users").hasRole("ADMINISTRATOR")
+                            .requestMatchers(HttpMethod.DELETE, "/v1/api/users/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/components/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/service-orders/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/order-items/**").hasRole("ADMINISTRATOR")

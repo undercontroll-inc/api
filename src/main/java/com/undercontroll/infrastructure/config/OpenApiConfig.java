@@ -16,7 +16,7 @@ import java.util.List;
 
 
 @Configuration
-public class OpenApiConfig {
+public class    OpenApiConfig {
 
     @Value("${spring.application.name:Undercontroll API}")
     private String applicationName;

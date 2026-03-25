@@ -87,7 +87,6 @@ public class OrderJpaEntity {
     public static OrderJpaEntity fromDomain(Order order) {
         if (order == null) return null;
         return OrderJpaEntity.builder()
-                .id(order.getId())
                 .orderItems(order.getOrderItems() != null ? order.getOrderItems().stream().map(OrderItemJpaEntity::fromDomain).toList() : new ArrayList<>())
                 .demands(order.getDemands() != null ? order.getDemands().stream().map(DemandJpaEntity::fromDomain).toList() : new ArrayList<>())
                 .user(UserJpaEntity.fromDomain(order.getUser()))
@@ -103,7 +102,6 @@ public class OrderJpaEntity {
                 .updatedAt(order.getUpdatedAt())
                 .received_at(order.getReceived_at())
                 .completedTime(order.getCompletedTime())
-                .createdAt(order.getCreatedAt())
                 .build();
     }
 

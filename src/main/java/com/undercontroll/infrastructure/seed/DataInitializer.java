@@ -3,14 +3,20 @@ package com.undercontroll.infrastructure.seed;
 import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.model.ComponentPart;
 import com.undercontroll.domain.model.Announcement;
+import com.undercontroll.domain.model.Order;
+import com.undercontroll.domain.model.OrderItem;
+import com.undercontroll.domain.model.Demand;
 import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.domain.enums.UserType;
+import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.infrastructure.persistence.entity.UserJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.ComponentPartJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.AnnouncementJpaEntity;
+import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
 import com.undercontroll.infrastructure.persistence.repository.jpa.UserJpaRepository;
 import com.undercontroll.infrastructure.persistence.repository.jpa.ComponentJpaRepository;
 import com.undercontroll.infrastructure.persistence.repository.jpa.AnnouncementRepository;
+import com.undercontroll.infrastructure.persistence.repository.jpa.OrderJpaRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Slf4j
 @Component
@@ -27,6 +34,7 @@ public class DataInitializer {
     private final UserJpaRepository userRepository;
     private final ComponentJpaRepository componentRepository;
     private final AnnouncementRepository announcementRepository;
+    private final OrderJpaRepository orderRepository;
     private final PasswordEncoder encoder;
 
     @PostConstruct
@@ -174,6 +182,55 @@ public class DataInitializer {
                 .build();
 
         announcementRepository.save(AnnouncementJpaEntity.fromDomain(announcement1));
+
+        UserJpaEntity customer = userRepository.findUserByEmail("furquimmsw@gmail.com").orElse(null);
+
+        ComponentPartJpaEntity compMotorEntity = ComponentPartJpaEntity.builder()
+                .name("Motor")
+                .description("Motor 1/2HP")
+                .brand("Brand3")
+                .price(200.00)
+                .supplier("Supplier3")
+                .category("Motores")
+                .quantity(5L)
+                .build();
+        compMotorEntity = componentRepository.save(compMotorEntity);
+
+        if (customer != null) {
+            OrderItem orderItem = OrderItem.builder()
+                    .imageUrl("https://i.pravatar.cc/150?img=10")
+                    .observation("Troca de componente")
+                    .volt("220V")
+                    .series("ABC123")
+                    .type("Eletrodomésticos")
+                    .brand("Electrolux")
+                    .model("DF80")
+                    .laborValue(150.00)
+                    .build();
+
+            Demand demand = Demand.builder()
+                    .quantity(2L)
+                    .component(compMotorEntity.toDomain())
+                    .build();
+
+            Order order = Order.builder()
+                    .user(customer.toDomain())
+                    .status(OrderStatus.PENDING)
+                    .total(450.00)
+                    .discount(0.0)
+                    .fabricGuarantee(true)
+                    .returnGuarantee(true)
+                    .description("Reparo em placa principal")
+                    .nf("NF-001")
+                    .date(new Date())
+                    .store("Loja Centro")
+                    .build();
+
+            order.getOrderItems().add(orderItem);
+            order.getDemands().add(demand);
+
+            orderRepository.save(OrderJpaEntity.fromDomain(order));
+        }
 
         log.info("Seed data initialized successfully!");
     }

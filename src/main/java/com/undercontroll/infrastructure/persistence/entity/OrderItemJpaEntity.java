@@ -50,7 +50,6 @@ public class OrderItemJpaEntity {
     public static OrderItemJpaEntity fromDomain(OrderItem orderItem) {
         if (orderItem == null) return null;
         return OrderItemJpaEntity.builder()
-                .id(orderItem.getId())
                 .imageUrl(orderItem.getImageUrl())
                 .observation(orderItem.getObservation())
                 .volt(orderItem.getVolt())

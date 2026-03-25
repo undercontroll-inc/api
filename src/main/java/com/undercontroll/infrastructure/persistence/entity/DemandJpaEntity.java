@@ -38,10 +38,8 @@ public class DemandJpaEntity {
     public static DemandJpaEntity fromDomain(Demand demand) {
         if (demand == null) return null;
         return DemandJpaEntity.builder()
-                .id(demand.getId())
                 .quantity(demand.getQuantity())
                 .component(ComponentPartJpaEntity.fromDomain(demand.getComponent()))
-                .order(OrderJpaEntity.fromDomain(demand.getOrder()))
                 .build();
     }
 
