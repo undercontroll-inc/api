@@ -12,14 +12,13 @@ import com.undercontroll.presentation.dto.CreateAnnouncementResponse;
 import com.undercontroll.presentation.dto.UpdateAnnouncementRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RequiredArgsConstructor
-@RequestMapping(value = "/v1/api/announcements", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/api/announcements")
 @RestController
 public class AnnouncementController implements AnnouncementApi {
 
@@ -65,7 +64,7 @@ public class AnnouncementController implements AnnouncementApi {
     }
 
     @Override
-    @PutMapping(value = "/{announcementId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{announcementId}")
     public ResponseEntity<AnnouncementDto> updateAnnouncement(
             @Valid @RequestBody UpdateAnnouncementRequest request,
             @PathVariable Integer announcementId

@@ -9,14 +9,13 @@ import com.undercontroll.domain.model.User;
 import com.undercontroll.presentation.controller.UserApi;
 import com.undercontroll.presentation.dto.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/v1/api/users", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/api/users")
 @RequiredArgsConstructor
 public class UserController implements UserApi {
 
@@ -33,7 +32,7 @@ public class UserController implements UserApi {
     private final RefreshTokenPort refreshTokenPort;
 
     @Override
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest request) {
         var output = createUserPort.execute(new CreateUserPort.Input(
                 request.name(),
@@ -64,27 +63,27 @@ public class UserController implements UserApi {
     }
 
     @Override
-    @PostMapping(value = "/auth", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/auth")
     public ResponseEntity<AuthUserResponse> auth(@RequestBody AuthUserRequest request) {
         var output = authUserPort.execute(new AuthUserPort.Input(request.email(), request.password()));
         return ResponseEntity.ok(new AuthUserResponse(output.token(), output.refreshToken(), output.user()));
     }
 
     @Override
-    @PostMapping(value = "/auth/google", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/auth/google")
     public ResponseEntity<AuthUserResponse> authGoogle(@RequestBody AuthGoogleRequest request) {
         var output = authUserPort.execute(new AuthUserPort.Input(request.email(), null));
         return ResponseEntity.ok(new AuthUserResponse(output.token(), output.refreshToken(), output.user()));
     }
 
-    @PostMapping(value = "/auth/refresh", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/auth/refresh")
     public ResponseEntity<RefreshTokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
         var output = refreshTokenPort.execute(new RefreshTokenPort.Input(request.refreshToken()));
         return ResponseEntity.ok(new RefreshTokenResponse(output.accessToken(), output.refreshToken()));
     }
 
     @Override
-    @PutMapping(value = "/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{userId}")
     public ResponseEntity<Void> updateUser(@RequestBody UpdateUserRequest request, @PathVariable Integer userId) {
         updateUserPort.execute(new UpdateUserPort.Input(
                 userId,

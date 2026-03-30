@@ -27,7 +27,7 @@ public class ComponentController implements ComponentApi {
     private final DeleteComponentPort deleteComponentPort;
 
     @Override
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<RegisterComponentResponse> register(@RequestBody RegisterComponentRequest request) {
         var response = registerComponentPort.execute(new RegisterComponentPort.Input(
                 request.item(),
@@ -91,7 +91,7 @@ public class ComponentController implements ComponentApi {
     }
 
     @Override
-    @PutMapping(value = "/{componentId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{componentId}")
     public ResponseEntity<ComponentDto> updateComponent(@RequestBody UpdateComponentRequest request, @PathVariable Integer componentId) {
         var response = updateComponentPort.execute(new UpdateComponentPort.Input(
                 componentId,

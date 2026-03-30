@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/api/orders", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/api/orders")
 @RequiredArgsConstructor
 public class OrderController implements OrderApi {
 
@@ -31,7 +31,7 @@ public class OrderController implements OrderApi {
     private final ExportOrderPort exportOrderPort;
 
     @Override
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody CreateOrderRequest request) {
         var output = createOrderPort.execute(new CreateOrderPort.Input(
                 request.userId(),

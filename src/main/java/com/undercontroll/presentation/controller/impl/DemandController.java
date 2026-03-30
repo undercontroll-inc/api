@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/v1/api/demands", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/api/demands")
 @RequiredArgsConstructor
 public class DemandController implements DemandApi {
 
@@ -23,7 +23,7 @@ public class DemandController implements DemandApi {
     private final DeleteAllDemandsByOrderPort deleteAllDemandsByOrderPort;
 
     @Override
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<DemandDto> createDemand(@RequestBody CreateDemandRequest request) {
         var output = createDemandPort.execute(new CreateDemandPort.Input(
                 request.componentPartId(), request.quantity(), request.orderId()

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/v1/api/order-items", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/v1/api/order-items")
 @RequiredArgsConstructor
 public class OrderItemController implements OrderItemApi {
 
@@ -24,7 +24,7 @@ public class OrderItemController implements OrderItemApi {
     private final DeleteOrderItemPort deleteOrderItemPort;
 
     @Override
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     public ResponseEntity<OrderItemDto> createOrderItem(@RequestBody CreateOrderItemRequest request) {
         var output = createOrderItemPort.execute(new CreateOrderItemPort.Input(
                 request.brand(),
@@ -51,7 +51,7 @@ public class OrderItemController implements OrderItemApi {
     }
 
     @Override
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping
     public ResponseEntity<Void> updateOrderItem(@RequestBody UpdateOrderItemRequest request) {
         updateOrderItemPort.execute(new UpdateOrderItemPort.Input(
                 request.id(),
