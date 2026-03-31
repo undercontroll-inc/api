@@ -86,4 +86,9 @@ rate-limit:
   auth-requests-per-minute: ${RATE_LIMIT_AUTH_RPM:10}
   # Max requests per minute per IP for all other endpoints
   general-requests-per-minute: ${RATE_LIMIT_GENERAL_RPM:100}
+aws:
+  accessKeyId: ${ACCESS_KEY_ID}
+  secretAccessKey: ${SECRET_ACCESS_KEY}
+  sessionToken: ${SESSION_TOKEN}
+  region: us-east-1
 

@@ -1,5 +1,6 @@
 package com.undercontroll.application.usecase.order.impl;
 
+import com.undercontroll.application.port.StoragePort;
 import com.undercontroll.application.usecase.order.ExportOrderPort;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.exception.OrderNotFoundException;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -20,6 +22,7 @@ public class ExportOrderImpl implements ExportOrderPort {
 
     private final OrderRepositoryPort orderRepositoryPort;
     private final PdfExportPort pdfExportPort;
+    private final StoragePort storagePort;
 
     @Override
     public Output execute(Input input) {
@@ -68,6 +71,10 @@ public class ExportOrderImpl implements ExportOrderPort {
         );
 
         byte[] pdfData = pdfExportPort.exportOS(exportRequest);
+
+        final var key = String.format(order.getId().toString(), order.getNf(), ".pdf");
+
+        storagePort.putObject("dev-main-bucket", key, pdfData, Optional.of("application/pdf"));
 
         return new Output(pdfData);
     }
