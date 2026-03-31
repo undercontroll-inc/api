@@ -17,6 +17,7 @@ spring:
       notification: "notification.events"
     routing-key:
       announcement: "announcement.created"
+      user-created: "user.created"
 
 jwt:
   secret: test-secret-key-for-unit-tests
@@ -24,4 +25,3 @@ jwt:
 logging:
   level:
     root: ERROR
-

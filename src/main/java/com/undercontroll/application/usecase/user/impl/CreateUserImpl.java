@@ -3,6 +3,8 @@ package com.undercontroll.application.usecase.user.impl;
 import com.undercontroll.application.usecase.user.CreateUserPort;
 import com.undercontroll.domain.enums.PasswordEventType;
 import com.undercontroll.application.usecase.auth.CreatePasswordEventPort;
+import com.undercontroll.application.port.NotificationPort;
+import com.undercontroll.domain.events.UserCreatedEvent;
 import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.domain.exception.InvalidUserException;
@@ -22,6 +24,7 @@ public class CreateUserImpl implements CreateUserPort {
     private final CreatePasswordEventPort createPasswordEventPort;
     private final PasswordEncoder passwordEncoder;
     private final MetricsPort metricsPort;
+    private final NotificationPort notificationPort;
 
     @Override
     public Output execute(Input input) {
@@ -70,7 +73,16 @@ public class CreateUserImpl implements CreateUserPort {
                     .userType(input.userType())
                     .build();
 
-            userRepositoryPort.save(user);
+            User createdUser = userRepositoryPort.save(user);
+
+            if (UserType.CUSTOMER.equals(createdUser.getUserType())) {
+                notificationPort.handleUserCreated(new UserCreatedEvent(
+                        createdUser.getName(),
+                        createdUser.getEmail(),
+                        createdUser.getCreatedAt()
+                ));
+            }
+
             metricsPort.incrementAccountCreated();
 
             return new Output(
