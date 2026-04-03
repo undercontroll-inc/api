@@ -16,7 +16,6 @@ public class CreateOrderItemImpl implements CreateOrderItemPort {
     @Override
     public Output execute(Input input) {
         validateCreateOrderItemRequest(input);
-
         OrderItem orderItem = OrderItem.builder()
                 .brand(input.brand())
                 .model(input.model())
