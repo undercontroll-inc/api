@@ -131,8 +131,6 @@ jobs:
               "chmod 600 /opt/app/.env",
               "curl -fsSL -H '\''Authorization: token ${{ secrets.GH_PAT }}'\'' -H '\''Accept: application/vnd.github.v3.raw'\'' https://api.github.com/repos/undercontroll-inc/infra/contents/docker-compose.prod.yml -o /opt/app/docker-compose.yml",
               "sed -i '\''s|ghcr.io/undercontroll-inc/core-api:latest|ghcr.io/undercontroll-inc/core-api:${{ env.IMAGE_TAG }}|g'\'' /opt/app/docker-compose.yml",
-              "mkdir -p /opt/app/nginx",
-              "curl -fsSL -H '\''Authorization: token ${{ secrets.GH_PAT }}'\'' -H '\''Accept: application/vnd.github.v3.raw'\'' https://api.github.com/repos/undercontroll-inc/infra/contents/nginx/backend.conf -o /opt/app/nginx/backend.conf",
               "docker compose --env-file /opt/app/.env -f /opt/app/docker-compose.yml pull main-service nginx",
               "docker compose --env-file /opt/app/.env -f /opt/app/docker-compose.yml up -d main-service nginx",
               "docker image prune -f"

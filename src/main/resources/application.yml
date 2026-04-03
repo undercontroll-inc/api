@@ -92,3 +92,6 @@ aws:
   secretAccessKey: ${SECRET_ACCESS_KEY}
   sessionToken: ${SESSION_TOKEN}
   region: us-east-1
+  s3:
+    # TODO: Mudar para ser dinamico
+    export-bucket: undercontroll-dev-export-bucket
