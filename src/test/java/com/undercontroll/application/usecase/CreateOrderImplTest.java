@@ -2,19 +2,19 @@ package com.undercontroll.application.usecase;
 
 import com.undercontroll.application.dto.OrderItemCreateOrderRequest;
 import com.undercontroll.application.dto.PartDto;
-import com.undercontroll.application.usecase.order.impl.CreateOrderImpl;
+import com.undercontroll.domain.usecase.order.impl.CreateOrderImpl;
 import com.undercontroll.domain.exception.InsuficientComponentException;
 import com.undercontroll.domain.model.ComponentPart;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.application.usecase.demand.CreateDemandPort;
-import com.undercontroll.application.usecase.order_item.CreateOrderItemPort;
-import com.undercontroll.application.usecase.order.CreateOrderPort;
-import com.undercontroll.application.port.MetricsPort;
-import com.undercontroll.domain.repository.OrderRepositoryPort;
-import com.undercontroll.domain.repository.StockManagementPort;
-import com.undercontroll.domain.repository.UserRepositoryPort;
+import com.undercontroll.domain.usecase.demand.CreateDemandPort;
+import com.undercontroll.domain.usecase.order_item.CreateOrderItemPort;
+import com.undercontroll.domain.usecase.order.CreateOrderPort;
+import com.undercontroll.infrastructure.service.MetricsService;
+import com.undercontroll.domain.gateway.OrderGateway;
+import com.undercontroll.domain.gateway.StockManagementGateway;
+import com.undercontroll.domain.gateway.UserGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,13 +36,13 @@ import static org.mockito.Mockito.*;
 class CreateOrderImplTest {
 
     @Mock
-    private OrderRepositoryPort orderRepositoryPort;
+    private OrderGateway orderGateway;
 
     @Mock
-    private UserRepositoryPort userRepositoryPort;
+    private UserGateway userGateway;
 
     @Mock
-    private StockManagementPort stockManagementPort;
+    private StockManagementGateway stockManagementGateway;
 
     @Mock
     private CreateOrderItemPort createOrderItemPort;
@@ -51,7 +51,7 @@ class CreateOrderImplTest {
     private CreateDemandPort createDemandPort;
 
     @Mock
-    private MetricsPort metricsPort;
+    private MetricsService metricsService;
 
     @InjectMocks
     private CreateOrderImpl createOrderImpl;
@@ -89,17 +89,17 @@ class CreateOrderImplTest {
                 "TV", "Brand", "Model", "220V", "SN123", "Note", 50.0
         );
 
-        when(stockManagementPort.findComponentById(1)).thenReturn(Optional.of(component));
-        doNothing().when(stockManagementPort).validateStockAvailability(any(ComponentPart.class), anyInt());
+        when(stockManagementGateway.findComponentById(1)).thenReturn(Optional.of(component));
+        doNothing().when(stockManagementGateway).validateStockAvailability(any(ComponentPart.class), anyInt());
         when(createOrderItemPort.execute(any(CreateOrderItemPort.Input.class)))
                 .thenReturn(new CreateOrderItemPort.Output(1, "Brand", "Model", "TV", 50.0));
-        when(userRepositoryPort.findById(1)).thenReturn(Optional.of(user));
-        when(orderRepositoryPort.save(any(Order.class))).thenReturn(savedOrder);
+        when(userGateway.findById(1)).thenReturn(Optional.of(user));
+        when(orderGateway.save(any(Order.class))).thenReturn(savedOrder);
         when(createDemandPort.execute(any(CreateDemandPort.Input.class)))
                 .thenReturn(new CreateDemandPort.Output(1, 1, 1, 10L));
-        doNothing().when(stockManagementPort).decreaseStock(anyInt(), anyInt());
-        doNothing().when(metricsPort).incrementOrderCreated();
-        doNothing().when(metricsPort).recordOrderProcessingTime(anyLong());
+        doNothing().when(stockManagementGateway).decreaseStock(anyInt(), anyInt());
+        doNothing().when(metricsService).incrementOrderCreated();
+        doNothing().when(metricsService).recordOrderProcessingTime(anyLong());
 
         CreateOrderPort.Input input = new CreateOrderPort.Input(
                 1, List.of(part), List.of(appliance), 0.0,
@@ -112,14 +112,14 @@ class CreateOrderImplTest {
         assertEquals(1, output.id());
         assertEquals("PENDING", output.status());
 
-        verify(stockManagementPort, times(1)).findComponentById(1);
-        verify(stockManagementPort, times(1)).validateStockAvailability(any(ComponentPart.class), eq(10));
+        verify(stockManagementGateway, times(1)).findComponentById(1);
+        verify(stockManagementGateway, times(1)).validateStockAvailability(any(ComponentPart.class), eq(10));
         verify(createOrderItemPort, times(1)).execute(any(CreateOrderItemPort.Input.class));
-        verify(userRepositoryPort, times(1)).findById(1);
-        verify(orderRepositoryPort, times(1)).save(any(Order.class));
+        verify(userGateway, times(1)).findById(1);
+        verify(orderGateway, times(1)).save(any(Order.class));
         verify(createDemandPort, times(1)).execute(any(CreateDemandPort.Input.class));
-        verify(stockManagementPort, times(1)).decreaseStock(1, 10);
-        verify(metricsPort, times(1)).incrementOrderCreated();
+        verify(stockManagementGateway, times(1)).decreaseStock(1, 10);
+        verify(metricsService, times(1)).incrementOrderCreated();
     }
 
     @Test
@@ -127,9 +127,9 @@ class CreateOrderImplTest {
     void testCreateOrder_ShouldThrowException_WhenInsufficientStock() {
         PartDto part = new PartDto(1, 200);
 
-        when(stockManagementPort.findComponentById(1)).thenReturn(Optional.of(component));
+        when(stockManagementGateway.findComponentById(1)).thenReturn(Optional.of(component));
         doThrow(new InsuficientComponentException("Insufficient stock"))
-                .when(stockManagementPort).validateStockAvailability(any(ComponentPart.class), eq(200));
+                .when(stockManagementGateway).validateStockAvailability(any(ComponentPart.class), eq(200));
 
         CreateOrderPort.Input input = new CreateOrderPort.Input(
                 1, List.of(part), List.of(), 0.0,
@@ -138,8 +138,8 @@ class CreateOrderImplTest {
 
         assertThrows(InsuficientComponentException.class, () -> createOrderImpl.execute(input));
 
-        verify(stockManagementPort, times(1)).findComponentById(1);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(stockManagementGateway, times(1)).findComponentById(1);
+        verify(orderGateway, never()).save(any());
     }
 
     @Test
@@ -150,17 +150,17 @@ class CreateOrderImplTest {
                 "TV", "Brand", "Model", "220V", "SN123", "Note", 50.0
         ); // labor = 50.0
 
-        when(stockManagementPort.findComponentById(1)).thenReturn(Optional.of(component));
-        doNothing().when(stockManagementPort).validateStockAvailability(any(ComponentPart.class), anyInt());
+        when(stockManagementGateway.findComponentById(1)).thenReturn(Optional.of(component));
+        doNothing().when(stockManagementGateway).validateStockAvailability(any(ComponentPart.class), anyInt());
         when(createOrderItemPort.execute(any(CreateOrderItemPort.Input.class)))
                 .thenReturn(new CreateOrderItemPort.Output(1, "Brand", "Model", "TV", 50.0));
-        when(userRepositoryPort.findById(1)).thenReturn(Optional.of(user));
-        when(orderRepositoryPort.save(any(Order.class))).thenReturn(savedOrder);
+        when(userGateway.findById(1)).thenReturn(Optional.of(user));
+        when(orderGateway.save(any(Order.class))).thenReturn(savedOrder);
         when(createDemandPort.execute(any(CreateDemandPort.Input.class)))
                 .thenReturn(new CreateDemandPort.Output(1, 1, 1, 4L));
-        doNothing().when(stockManagementPort).decreaseStock(anyInt(), anyInt());
-        doNothing().when(metricsPort).incrementOrderCreated();
-        doNothing().when(metricsPort).recordOrderProcessingTime(anyLong());
+        doNothing().when(stockManagementGateway).decreaseStock(anyInt(), anyInt());
+        doNothing().when(metricsService).incrementOrderCreated();
+        doNothing().when(metricsService).recordOrderProcessingTime(anyLong());
 
         CreateOrderPort.Input input = new CreateOrderPort.Input(
                 1, List.of(part), List.of(appliance), 10.0,
@@ -171,17 +171,17 @@ class CreateOrderImplTest {
 
         // Verify that save was called with an order having the correct total: 10.0 + 50.0 - 10.0 = 50.0
         ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepositoryPort, times(1)).save(orderCaptor.capture());
+        verify(orderGateway, times(1)).save(orderCaptor.capture());
         assertEquals(50.0, orderCaptor.getValue().getTotal());
     }
 
     @Test
     @DisplayName("Should create order with no parts and no appliances")
     void testCreateOrder_ShouldCreateSuccessfully_WithNoParts() {
-        when(userRepositoryPort.findById(1)).thenReturn(Optional.of(user));
-        when(orderRepositoryPort.save(any(Order.class))).thenReturn(savedOrder);
-        doNothing().when(metricsPort).incrementOrderCreated();
-        doNothing().when(metricsPort).recordOrderProcessingTime(anyLong());
+        when(userGateway.findById(1)).thenReturn(Optional.of(user));
+        when(orderGateway.save(any(Order.class))).thenReturn(savedOrder);
+        doNothing().when(metricsService).incrementOrderCreated();
+        doNothing().when(metricsService).recordOrderProcessingTime(anyLong());
 
         CreateOrderPort.Input input = new CreateOrderPort.Input(
                 1, List.of(), List.of(), 0.0,
@@ -191,8 +191,8 @@ class CreateOrderImplTest {
         CreateOrderPort.Output output = createOrderImpl.execute(input);
 
         assertNotNull(output);
-        verify(orderRepositoryPort, times(1)).save(any(Order.class));
-        verify(stockManagementPort, never()).findComponentById(anyInt());
+        verify(orderGateway, times(1)).save(any(Order.class));
+        verify(stockManagementGateway, never()).findComponentById(anyInt());
         verify(createDemandPort, never()).execute(any());
     }
 }

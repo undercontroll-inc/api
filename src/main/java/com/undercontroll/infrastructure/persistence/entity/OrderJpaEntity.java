@@ -1,6 +1,5 @@
 package com.undercontroll.infrastructure.persistence.entity;
 
-import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -61,49 +60,6 @@ public class OrderJpaEntity {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    public Order toDomain() {
-        return Order.builder()
-                .id(id)
-                .orderItems(orderItems != null ? orderItems.stream().map(OrderItemJpaEntity::toDomain).toList() : new ArrayList<>())
-                .demands(demands != null ? demands.stream().map(DemandJpaEntity::toDomain).toList() : new ArrayList<>())
-                .user(user != null ? user.toDomain() : null)
-                .status(status)
-                .total(total)
-                .discount(discount)
-                .fabricGuarantee(fabricGuarantee)
-                .returnGuarantee(returnGuarantee)
-                .description(description)
-                .nf(nf)
-                .date(date)
-                .store(store)
-                .updatedAt(updatedAt)
-                .received_at(received_at)
-                .completedTime(completedTime)
-                .createdAt(createdAt)
-                .build();
-    }
-
-    public static OrderJpaEntity fromDomain(Order order) {
-        if (order == null) return null;
-        return OrderJpaEntity.builder()
-                .orderItems(order.getOrderItems() != null ? order.getOrderItems().stream().map(OrderItemJpaEntity::fromDomain).toList() : new ArrayList<>())
-                .demands(order.getDemands() != null ? order.getDemands().stream().map(DemandJpaEntity::fromDomain).toList() : new ArrayList<>())
-                .user(UserJpaEntity.fromDomain(order.getUser()))
-                .status(order.getStatus())
-                .total(order.getTotal())
-                .discount(order.getDiscount())
-                .fabricGuarantee(order.isFabricGuarantee())
-                .returnGuarantee(order.isReturnGuarantee())
-                .description(order.getDescription())
-                .nf(order.getNf())
-                .date(order.getDate())
-                .store(order.getStore())
-                .updatedAt(order.getUpdatedAt())
-                .received_at(order.getReceived_at())
-                .completedTime(order.getCompletedTime())
-                .build();
-    }
 
     public void addOrderItem(OrderItemJpaEntity orderItem) {
         this.orderItems.add(orderItem);

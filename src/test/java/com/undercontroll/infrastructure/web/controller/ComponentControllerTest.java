@@ -2,13 +2,13 @@ package com.undercontroll.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.application.dto.ComponentDto;
-import com.undercontroll.application.usecase.component.*;
-import com.undercontroll.application.port.TokenPort;
+import com.undercontroll.infrastructure.service.TokenServce;
+import com.undercontroll.domain.usecase.component.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.presentation.dto.RegisterComponentRequest;
-import com.undercontroll.presentation.dto.UpdateComponentRequest;
-import com.undercontroll.presentation.controller.impl.ComponentController;
+import com.undercontroll.application.dto.RegisterComponentRequest;
+import com.undercontroll.application.dto.UpdateComponentRequest;
+import com.undercontroll.application.controller.impl.ComponentController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +62,7 @@ class ComponentControllerTest {
 
     // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
-    private TokenPort tokenPort;
+    private TokenServce tokenServce;
 
     @Test
     @WithMockUser(roles = "ADMINISTRATOR")

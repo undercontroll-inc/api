@@ -1,6 +1,6 @@
 package com.undercontroll.infrastructure.config;
 
-import com.undercontroll.application.port.MetricsPort;
+import com.undercontroll.infrastructure.service.MetricsService;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -20,11 +20,11 @@ import java.util.Arrays;
 public class CacheLoggingAspect {
 
     private final CacheManager cacheManager;
-    private final MetricsPort metricsPort;
+    private final MetricsService metricsService;
 
-    public CacheLoggingAspect(CacheManager cacheManager, MetricsPort metricsPort) {
+    public CacheLoggingAspect(CacheManager cacheManager, MetricsService metricsService) {
         this.cacheManager = cacheManager;
-        this.metricsPort = metricsPort;
+        this.metricsService = metricsService;
     }
 
     @Around("@annotation(org.springframework.cache.annotation.Cacheable)")
@@ -45,7 +45,7 @@ public class CacheLoggingAspect {
                 if (valueWrapper != null) {
                     log.debug("CACHE HIT: [{}] key='{}' method={}.{}",
                             cacheName, key, className, methodName);
-                    metricsPort.incrementCacheHit(cacheName);
+                    metricsService.incrementCacheHit(cacheName);
                     return valueWrapper.get();
                 }
             }
@@ -54,7 +54,7 @@ public class CacheLoggingAspect {
         String cacheName = cacheNames.length > 0 ? cacheNames[0] : "unknown";
         log.debug("CACHE MISS: [{}] key='{}' method={}.{}",
                 cacheName, key, className, methodName);
-        metricsPort.incrementCacheMiss(cacheName);
+        metricsService.incrementCacheMiss(cacheName);
 
         Object result = joinPoint.proceed();
 
@@ -77,14 +77,14 @@ public class CacheLoggingAspect {
         if (allEntries) {
             log.debug("CACHE EVICT ALL: caches={}", Arrays.toString(cacheNames));
             for (String cacheName : cacheNames) {
-                metricsPort.incrementCacheEviction(cacheName);
+                metricsService.incrementCacheEviction(cacheName);
             }
         } else {
             String key = generateKey(joinPoint, cacheEvict.key());
             log.debug("CACHE EVICT: caches={} key='{}' method={}.{}",
                     Arrays.toString(cacheNames), key, className, methodName);
             for (String cacheName : cacheNames) {
-                metricsPort.incrementCacheEviction(cacheName);
+                metricsService.incrementCacheEviction(cacheName);
             }
         }
 

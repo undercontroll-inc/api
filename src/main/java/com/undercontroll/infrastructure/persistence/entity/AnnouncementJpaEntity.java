@@ -1,6 +1,5 @@
 package com.undercontroll.infrastructure.persistence.entity;
 
-import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.enums.AnnouncementType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -36,28 +35,5 @@ public class AnnouncementJpaEntity {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    public Announcement toDomain() {
-        return Announcement.builder()
-                .id(id)
-                .title(title)
-                .content(content)
-                .type(type)
-                .publishedAt(publishedAt)
-                .updatedAt(updatedAt)
-                .build();
-    }
-
-    public static AnnouncementJpaEntity fromDomain(Announcement announcement) {
-        if (announcement == null) return null;
-        return AnnouncementJpaEntity.builder()
-                .id(announcement.getId())
-                .title(announcement.getTitle())
-                .content(announcement.getContent())
-                .type(announcement.getType())
-                .publishedAt(announcement.getPublishedAt())
-                .updatedAt(announcement.getUpdatedAt())
-                .build();
-    }
 
 }

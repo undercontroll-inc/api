@@ -1,10 +1,10 @@
 package com.undercontroll.application.usecase;
 
-import com.undercontroll.application.usecase.order.impl.GetOrderByIdImpl;
+import com.undercontroll.domain.usecase.order.impl.GetOrderByIdImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.application.usecase.order.GetOrderByIdPort;
-import com.undercontroll.domain.repository.OrderRepositoryPort;
+import com.undercontroll.domain.usecase.order.GetOrderByIdPort;
+import com.undercontroll.domain.gateway.OrderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 class GetOrderByIdImplTest {
 
     @Mock
-    private OrderRepositoryPort orderRepositoryPort;
+    private OrderGateway orderGateway;
 
     @InjectMocks
     private GetOrderByIdImpl getOrderByIdImpl;
@@ -45,7 +45,7 @@ class GetOrderByIdImplTest {
     @Test
     @DisplayName("Should return order when it exists")
     void testGetOrderById_ShouldReturnOrder_WhenExists() {
-        when(orderRepositoryPort.findById(1)).thenReturn(Optional.of(order));
+        when(orderGateway.findById(1)).thenReturn(Optional.of(order));
 
         GetOrderByIdPort.Input input = new GetOrderByIdPort.Input(1, null);
         GetOrderByIdPort.Output output = getOrderByIdImpl.execute(input);
@@ -56,13 +56,13 @@ class GetOrderByIdImplTest {
         assertEquals(1, output.order().data().id());
         assertEquals(OrderStatus.PENDING, output.order().data().status());
 
-        verify(orderRepositoryPort, times(1)).findById(1);
+        verify(orderGateway, times(1)).findById(1);
     }
 
     @Test
     @DisplayName("Should return null order when order does not exist")
     void testGetOrderById_ShouldReturnNullOrder_WhenNotFound() {
-        when(orderRepositoryPort.findById(999)).thenReturn(Optional.empty());
+        when(orderGateway.findById(999)).thenReturn(Optional.empty());
 
         GetOrderByIdPort.Input input = new GetOrderByIdPort.Input(999, null);
         GetOrderByIdPort.Output output = getOrderByIdImpl.execute(input);
@@ -70,6 +70,6 @@ class GetOrderByIdImplTest {
         assertNotNull(output);
         assertNull(output.order());
 
-        verify(orderRepositoryPort, times(1)).findById(999);
+        verify(orderGateway, times(1)).findById(999);
     }
 }

@@ -1,15 +1,15 @@
 package com.undercontroll.application.usecase;
 
-import com.undercontroll.application.port.MetricsPort;
-import com.undercontroll.application.port.NotificationPort;
-import com.undercontroll.application.usecase.auth.CreatePasswordEventPort;
-import com.undercontroll.application.usecase.user.CreateUserPort;
-import com.undercontroll.application.usecase.user.impl.CreateUserImpl;
+import com.undercontroll.infrastructure.service.MetricsService;
+import com.undercontroll.infrastructure.service.NotificationService;
+import com.undercontroll.domain.usecase.auth.CreatePasswordEventPort;
+import com.undercontroll.domain.usecase.user.CreateUserPort;
+import com.undercontroll.domain.usecase.user.impl.CreateUserImpl;
 import com.undercontroll.domain.enums.PasswordEventType;
 import com.undercontroll.domain.enums.UserType;
-import com.undercontroll.domain.events.UserCreatedEvent;
+import com.undercontroll.infrastructure.events.UserCreatedEvent;
 import com.undercontroll.domain.model.User;
-import com.undercontroll.domain.repository.UserRepositoryPort;
+import com.undercontroll.domain.gateway.UserGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 class CreateUserImplTest {
 
     @Mock
-    private UserRepositoryPort userRepositoryPort;
+    private UserGateway userGateway;
 
     @Mock
     private CreatePasswordEventPort createPasswordEventPort;
@@ -38,10 +38,10 @@ class CreateUserImplTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private MetricsPort metricsPort;
+    private MetricsService metricsService;
 
     @Mock
-    private NotificationPort notificationPort;
+    private NotificationService notificationService;
 
     @InjectMocks
     private CreateUserImpl useCase;
@@ -64,9 +64,9 @@ class CreateUserImplTest {
                 "03143000"
         );
 
-        when(userRepositoryPort.findByEmail(input.email())).thenReturn(Optional.empty());
-        when(userRepositoryPort.findByPhone(input.phone())).thenReturn(Optional.empty());
-        when(userRepositoryPort.findByCpf(input.cpf())).thenReturn(Optional.empty());
+        when(userGateway.findByEmail(input.email())).thenReturn(Optional.empty());
+        when(userGateway.findByPhone(input.phone())).thenReturn(Optional.empty());
+        when(userGateway.findByCpf(input.cpf())).thenReturn(Optional.empty());
         when(createPasswordEventPort.execute(any(CreatePasswordEventPort.Input.class)))
                 .thenReturn(new CreatePasswordEventPort.Output("id", PasswordEventType.CREATE, "generated-pass", input.phone()));
         when(passwordEncoder.encode("generated-pass")).thenReturn("encoded-generated-pass");
@@ -78,12 +78,12 @@ class CreateUserImplTest {
                 .userType(UserType.CUSTOMER)
                 .createdAt(createdAt)
                 .build();
-        when(userRepositoryPort.save(any(User.class))).thenReturn(savedUser);
+        when(userGateway.save(any(User.class))).thenReturn(savedUser);
 
         useCase.execute(input);
 
         ArgumentCaptor<UserCreatedEvent> eventCaptor = ArgumentCaptor.forClass(UserCreatedEvent.class);
-        verify(notificationPort).handleUserCreated(eventCaptor.capture());
+        verify(notificationService).handleUserCreated(eventCaptor.capture());
         UserCreatedEvent event = eventCaptor.getValue();
 
         assertThat(event.name()).isEqualTo("Maria");
@@ -109,11 +109,11 @@ class CreateUserImplTest {
                 "03143000"
         );
 
-        when(userRepositoryPort.findByEmail(input.email())).thenReturn(Optional.empty());
-        when(userRepositoryPort.findByPhone(input.phone())).thenReturn(Optional.empty());
-        when(userRepositoryPort.findByCpf(input.cpf())).thenReturn(Optional.empty());
+        when(userGateway.findByEmail(input.email())).thenReturn(Optional.empty());
+        when(userGateway.findByPhone(input.phone())).thenReturn(Optional.empty());
+        when(userGateway.findByCpf(input.cpf())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(input.password())).thenReturn("encoded-admin-pass");
-        when(userRepositoryPort.save(any(User.class))).thenReturn(User.builder()
+        when(userGateway.save(any(User.class))).thenReturn(User.builder()
                 .name(input.name())
                 .email(input.email())
                 .userType(UserType.ADMINISTRATOR)
@@ -122,6 +122,6 @@ class CreateUserImplTest {
 
         useCase.execute(input);
 
-        verify(notificationPort, never()).handleUserCreated(any(UserCreatedEvent.class));
+        verify(notificationService, never()).handleUserCreated(any(UserCreatedEvent.class));
     }
 }

@@ -1,6 +1,6 @@
 package com.undercontroll.infrastructure.metrics;
 
-import com.undercontroll.application.port.MetricsPort;
+import com.undercontroll.infrastructure.service.MetricsService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class MicrometerMetricsAdapter implements MetricsPort {
+public class MicrometerMetricsAdapter implements MetricsService {
 
     private final Counter loginFailedCounter;
     private final Counter loginSuccessCounter;

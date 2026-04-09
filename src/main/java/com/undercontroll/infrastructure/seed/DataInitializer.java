@@ -9,14 +9,18 @@ import com.undercontroll.domain.model.Demand;
 import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.infrastructure.mapper.UserMapper;
+import com.undercontroll.infrastructure.mapper.ComponentPartMapper;
+import com.undercontroll.infrastructure.mapper.AnnouncementMapper;
+import com.undercontroll.infrastructure.mapper.OrderMapper;
 import com.undercontroll.infrastructure.persistence.entity.UserJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.ComponentPartJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.AnnouncementJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
-import com.undercontroll.infrastructure.persistence.repository.jpa.UserJpaRepository;
-import com.undercontroll.infrastructure.persistence.repository.jpa.ComponentJpaRepository;
-import com.undercontroll.infrastructure.persistence.repository.jpa.AnnouncementRepository;
-import com.undercontroll.infrastructure.persistence.repository.jpa.OrderJpaRepository;
+import com.undercontroll.infrastructure.persistence.repository.UserJpaRepository;
+import com.undercontroll.infrastructure.persistence.repository.ComponentJpaRepository;
+import com.undercontroll.infrastructure.persistence.repository.AnnouncementRepository;
+import com.undercontroll.infrastructure.persistence.repository.OrderJpaRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +40,10 @@ public class DataInitializer {
     private final AnnouncementRepository announcementRepository;
     private final OrderJpaRepository orderRepository;
     private final PasswordEncoder encoder;
+    private final UserMapper userMapper;
+    private final ComponentPartMapper componentPartMapper;
+    private final AnnouncementMapper announcementMapper;
+    private final OrderMapper orderMapper;
 
     @PostConstruct
     public void init() {
@@ -64,7 +72,7 @@ public class DataInitializer {
                 .userType(UserType.ADMINISTRATOR)
                 .build();
 
-        userRepository.save(UserJpaEntity.fromDomain(user1));
+        userRepository.save(userMapper.toEntity(user1));
 
 //        User user2 = User.builder()
 //                .name("João")
@@ -136,7 +144,7 @@ public class DataInitializer {
                 .userType(UserType.CUSTOMER)
                 .build();
 
-        userRepository.save(UserJpaEntity.fromDomain(user5));
+        userRepository.save(userMapper.toEntity(user5));
 
         ComponentPart component1 = ComponentPart.builder()
                 .name("Placa Principal")
@@ -148,7 +156,7 @@ public class DataInitializer {
                 .quantity(10L)
                 .build();
 
-        componentRepository.save(ComponentPartJpaEntity.fromDomain(component1));
+        componentRepository.save(componentPartMapper.toEntity(component1));
 
         ComponentPart component2 = ComponentPart.builder()
                 .name("Capacitor")
@@ -160,7 +168,7 @@ public class DataInitializer {
                 .quantity(50L)
                 .build();
 
-        componentRepository.save(ComponentPartJpaEntity.fromDomain(component2));
+        componentRepository.save(componentPartMapper.toEntity(component2));
 
         ComponentPart component3 = ComponentPart.builder()
                 .name("Motor")
@@ -172,7 +180,7 @@ public class DataInitializer {
                 .quantity(5L)
                 .build();
 
-        componentRepository.save(ComponentPartJpaEntity.fromDomain(component3));
+        componentRepository.save(componentPartMapper.toEntity(component3));
 
         Announcement announcement1 = Announcement.builder()
                 .title("Bem-vindo!")
@@ -181,7 +189,7 @@ public class DataInitializer {
                 .publishedAt(LocalDateTime.now())
                 .build();
 
-        announcementRepository.save(AnnouncementJpaEntity.fromDomain(announcement1));
+        announcementRepository.save(announcementMapper.toEntity(announcement1));
 
         UserJpaEntity customer = userRepository.findUserByEmail("furquimmsw@gmail.com").orElse(null);
 
@@ -210,11 +218,11 @@ public class DataInitializer {
 
             Demand demand = Demand.builder()
                     .quantity(2L)
-                    .component(compMotorEntity.toDomain())
+                    .component(componentPartMapper.toDomain(compMotorEntity))
                     .build();
 
             Order order = Order.builder()
-                    .user(customer.toDomain())
+                    .user(userMapper.toDomain(customer))
                     .status(OrderStatus.PENDING)
                     .total(450.00)
                     .discount(0.0)
@@ -229,7 +237,7 @@ public class DataInitializer {
             order.getOrderItems().add(orderItem);
             order.getDemands().add(demand);
 
-            orderRepository.save(OrderJpaEntity.fromDomain(order));
+            orderRepository.save(orderMapper.toEntity(order));
         }
 
         log.info("Seed data initialized successfully!");

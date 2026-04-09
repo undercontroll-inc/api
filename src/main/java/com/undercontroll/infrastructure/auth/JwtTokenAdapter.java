@@ -6,7 +6,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.undercontroll.domain.enums.UserType;
-import com.undercontroll.application.port.TokenPort;
+import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.domain.exception.TokenGenerationException;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.time.Instant;
 
 @RequiredArgsConstructor
 @Component
-public class JwtTokenAdapter implements TokenPort {
+public class JwtTokenAdapter implements TokenServce {
 
     @Value("${jwt.secret}")
     private String secret;

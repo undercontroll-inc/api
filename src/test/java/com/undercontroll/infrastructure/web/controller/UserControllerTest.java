@@ -3,18 +3,17 @@ package com.undercontroll.infrastructure.web.controller;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.undercontroll.application.dto.UserDto;
-import com.undercontroll.application.usecase.auth.AuthUserPort;
-import com.undercontroll.application.usecase.auth.RefreshTokenPort;
-import com.undercontroll.application.usecase.auth.ResetPasswordPort;
-import com.undercontroll.application.usecase.user.*;
+import com.undercontroll.application.dto.*;
+import com.undercontroll.domain.usecase.auth.AuthUserPort;
+import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
+import com.undercontroll.domain.usecase.auth.ResetPasswordPort;
 import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.enums.UserType;
-import com.undercontroll.application.port.TokenPort;
+import com.undercontroll.infrastructure.service.TokenServce;
+import com.undercontroll.domain.usecase.user.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.presentation.dto.*;
-import com.undercontroll.presentation.controller.impl.UserController;
+import com.undercontroll.application.controller.impl.UserController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +73,7 @@ class UserControllerTest {
 
     // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
-    private TokenPort tokenPort;
+    private TokenServce tokenServce;
 
     @MockitoBean
     private RefreshTokenPort refreshTokenPort;
@@ -85,7 +84,7 @@ class UserControllerTest {
         DecodedJWT decoded = mock(DecodedJWT.class);
         when(decoded.getSubject()).thenReturn("user@example.com");
         when(decoded.getClaim("roles")).thenReturn(claim);
-        when(tokenPort.validateToken(anyString())).thenReturn(decoded);
+        when(tokenServce.validateToken(anyString())).thenReturn(decoded);
     }
 
     @Test
@@ -173,7 +172,7 @@ class UserControllerTest {
                 .thenReturn(new UpdateUserPort.Output(true, "Updated"));
 
         mockMvc.perform(put("/v1/api/users/1")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
+                        .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -209,7 +208,7 @@ class UserControllerTest {
     @DisplayName("GET /v1/api/users - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToGetAllUsers() throws Exception {
         mockMvc.perform(get("/v1/api/users")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
+                        .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
         verify(getUsersPort, never()).execute(any(GetUsersPort.Input.class));
@@ -305,7 +304,7 @@ class UserControllerTest {
     @DisplayName("DELETE /v1/api/users/{userId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteUser() throws Exception {
         mockMvc.perform(delete("/v1/api/users/1")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
+                        .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
         verify(deleteUserPort, never()).execute(any(DeleteUserPort.Input.class));
@@ -314,7 +313,7 @@ class UserControllerTest {
     @Test
     @DisplayName("PATCH /v1/api/users/reset-password/{userId} - CUSTOMER should reset password successfully and return 200")
     void shouldResetPasswordSuccessfully() throws Exception {
-        mockTokenPortWithRole("SCOPE_CUSTOMER");
+        mockTokenPortWithRole("CUSTOMER");
 
         ResetPasswordRequest request = new ResetPasswordRequest("newPassword123", false);
 
@@ -333,7 +332,7 @@ class UserControllerTest {
     @Test
     @DisplayName("PATCH /v1/api/users/reset-password/{userId} - ADMINISTRATOR should reset password successfully and return 200")
     void administratorShouldResetPasswordSuccessfully() throws Exception {
-        mockTokenPortWithRole("SCOPE_ADMINISTRATOR");
+        mockTokenPortWithRole("ADMINISTRATOR");
 
         ResetPasswordRequest request = new ResetPasswordRequest("newAdminPassword123", true);
 

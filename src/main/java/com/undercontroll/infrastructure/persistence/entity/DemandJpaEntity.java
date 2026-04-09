@@ -1,6 +1,5 @@
 package com.undercontroll.infrastructure.persistence.entity;
 
-import com.undercontroll.domain.model.Demand;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,22 +24,5 @@ public class DemandJpaEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private OrderJpaEntity order;
-
-    public Demand toDomain() {
-        return Demand.builder()
-                .id(id)
-                .quantity(quantity)
-                .component(component != null ? component.toDomain() : null)
-                .order(order != null ? order.toDomain() : null)
-                .build();
-    }
-
-    public static DemandJpaEntity fromDomain(Demand demand) {
-        if (demand == null) return null;
-        return DemandJpaEntity.builder()
-                .quantity(demand.getQuantity())
-                .component(ComponentPartJpaEntity.fromDomain(demand.getComponent()))
-                .build();
-    }
 
 }

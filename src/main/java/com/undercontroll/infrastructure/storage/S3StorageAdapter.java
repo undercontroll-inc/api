@@ -1,6 +1,6 @@
 package com.undercontroll.infrastructure.storage;
 
-import com.undercontroll.application.port.StoragePort;
+import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class S3StorageAdapter implements StoragePort {
+public class S3StorageAdapter implements StorageService {
 
     private final S3Client s3Client;
 

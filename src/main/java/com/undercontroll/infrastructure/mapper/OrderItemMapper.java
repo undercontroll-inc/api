@@ -2,24 +2,24 @@ package com.undercontroll.infrastructure.mapper;
 
 import com.undercontroll.domain.model.OrderItem;
 import com.undercontroll.infrastructure.persistence.entity.OrderItemJpaEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 
-@Component
-public class OrderItemMapper {
+import java.util.List;
 
-    public OrderItem toDomain(OrderItemJpaEntity entity) {
-        return OrderItem.builder()
-                .id(entity.getId())
-                .imageUrl(entity.getImageUrl())
-                .observation(entity.getObservation())
-                .volt(entity.getVolt())
-                .series(entity.getSeries())
-                .type(entity.getType())
-                .brand(entity.getBrand())
-                .model(entity.getModel())
-                .laborValue(entity.getLaborValue())
-                .completedAt(entity.getCompletedAt())
-                .build();
-    }
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface OrderItemMapper {
 
+    OrderItem toDomain(OrderItemJpaEntity entity);
+
+    List<OrderItem> toDomainList(List<OrderItemJpaEntity> entities);
+
+    @Named("toEntity")
+    @Mapping(target = "id", ignore = true)
+    OrderItemJpaEntity toEntity(OrderItem domain);
+
+    @Named("toEntityWithId")
+    OrderItemJpaEntity toEntityWithId(OrderItem domain);
 }

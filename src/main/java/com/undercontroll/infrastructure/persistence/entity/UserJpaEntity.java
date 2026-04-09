@@ -1,6 +1,5 @@
 package com.undercontroll.infrastructure.persistence.entity;
 
-import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.enums.UserType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -53,46 +52,5 @@ public class UserJpaEntity {
 
     @Enumerated(EnumType.STRING)
     private UserType userType;
-
-    public User toDomain() {
-        return User.builder()
-                .id(id)
-                .name(name)
-                .lastName(lastName)
-                .email(email)
-                .password(password)
-                .address(address)
-                .cpf(cpf)
-                .CEP(CEP)
-                .phone(phone)
-                .alreadyRecurrent(alreadyRecurrent)
-                .inFirstLogin(inFirstLogin)
-                .avatarUrl(avatarUrl)
-                .hasWhatsApp(hasWhatsApp)
-                .createdAt(createdAt)
-                .userType(userType)
-                .build();
-    }
-
-    public static UserJpaEntity fromDomain(User user) {
-        if (user == null) return null;
-        return UserJpaEntity.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .address(user.getAddress())
-                .cpf(user.getCpf())
-                .CEP(user.getCEP())
-                .phone(user.getPhone())
-                .alreadyRecurrent(user.getAlreadyRecurrent())
-                .inFirstLogin(user.getInFirstLogin())
-                .avatarUrl(user.getAvatarUrl())
-                .hasWhatsApp(user.getHasWhatsApp())
-                .createdAt(user.getCreatedAt())
-                .userType(user.getUserType())
-                .build();
-    }
 
 }

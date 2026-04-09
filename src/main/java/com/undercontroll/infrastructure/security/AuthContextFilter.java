@@ -1,7 +1,7 @@
 package com.undercontroll.infrastructure.security;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.undercontroll.application.port.TokenPort;
+import com.undercontroll.infrastructure.service.TokenServce;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import java.util.List;
 @Component
 public class AuthContextFilter extends OncePerRequestFilter {
 
-    private final TokenPort tokenPort;
+    private final TokenServce tokenServce;
 
 
     @Override
@@ -40,7 +40,7 @@ public class AuthContextFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        DecodedJWT decoded = tokenPort.validateToken(token);
+        DecodedJWT decoded = tokenServce.validateToken(token);
 
         String userId = decoded.getSubject();
         String role = decoded.getClaim("roles").asString();

@@ -1,10 +1,10 @@
 package com.undercontroll.application.usecase;
 
-import com.undercontroll.application.usecase.order.impl.GetOrdersByUserIdImpl;
+import com.undercontroll.domain.usecase.order.impl.GetOrdersByUserIdImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.application.usecase.order.GetOrdersByUserIdPort;
-import com.undercontroll.domain.repository.OrderRepositoryPort;
+import com.undercontroll.domain.usecase.order.GetOrdersByUserIdPort;
+import com.undercontroll.domain.gateway.OrderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 class GetOrdersByUserIdImplTest {
 
     @Mock
-    private OrderRepositoryPort orderRepositoryPort;
+    private OrderGateway orderGateway;
 
     @InjectMocks
     private GetOrdersByUserIdImpl getOrdersByUserIdImpl;
@@ -42,7 +42,7 @@ class GetOrdersByUserIdImplTest {
     @Test
     @DisplayName("Should return orders for the given userId")
     void testGetOrdersByUserId_ShouldReturnUserOrders() {
-        when(orderRepositoryPort.findByUserId(1)).thenReturn(List.of(order));
+        when(orderGateway.findByUserId(1)).thenReturn(List.of(order));
 
         GetOrdersByUserIdPort.Input input = new GetOrdersByUserIdPort.Input(1);
         GetOrdersByUserIdPort.Output output = getOrdersByUserIdImpl.execute(input);
@@ -53,13 +53,13 @@ class GetOrdersByUserIdImplTest {
         assertEquals(1, output.orders().data().size());
         assertEquals(1, output.orders().data().get(0).id());
 
-        verify(orderRepositoryPort, times(1)).findByUserId(1);
+        verify(orderGateway, times(1)).findByUserId(1);
     }
 
     @Test
     @DisplayName("Should return empty list when user has no orders")
     void testGetOrdersByUserId_ShouldReturnEmptyList_WhenNoOrders() {
-        when(orderRepositoryPort.findByUserId(2)).thenReturn(List.of());
+        when(orderGateway.findByUserId(2)).thenReturn(List.of());
 
         GetOrdersByUserIdPort.Input input = new GetOrdersByUserIdPort.Input(2);
         GetOrdersByUserIdPort.Output output = getOrdersByUserIdImpl.execute(input);
@@ -68,6 +68,6 @@ class GetOrdersByUserIdImplTest {
         assertNotNull(output.orders());
         assertTrue(output.orders().data().isEmpty());
 
-        verify(orderRepositoryPort, times(1)).findByUserId(2);
+        verify(orderGateway, times(1)).findByUserId(2);
     }
 }

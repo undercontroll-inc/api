@@ -1,8 +1,8 @@
 package com.undercontroll.infrastructure.messaging.producers;
 
-import com.undercontroll.application.port.NotificationPort;
-import com.undercontroll.domain.events.AnnouncementCreatedEvent;
-import com.undercontroll.domain.events.UserCreatedEvent;
+import com.undercontroll.infrastructure.service.NotificationService;
+import com.undercontroll.infrastructure.events.AnnouncementCreatedEvent;
+import com.undercontroll.infrastructure.events.UserCreatedEvent;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class NotificationProducer implements NotificationPort {
+public class NotificationProducer implements NotificationService {
 
     private final RabbitTemplate rabbitTemplate;
 

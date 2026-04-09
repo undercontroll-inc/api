@@ -4,8 +4,9 @@ import com.undercontroll.domain.exception.ComponentNotFoundException;
 import com.undercontroll.domain.exception.InsuficientComponentException;
 import com.undercontroll.domain.model.ComponentPart;
 import com.undercontroll.infrastructure.persistence.entity.ComponentPartJpaEntity;
-import com.undercontroll.infrastructure.persistence.repository.impl.StockManagementAdapter;
-import com.undercontroll.infrastructure.persistence.repository.jpa.ComponentJpaRepository;
+import com.undercontroll.infrastructure.gateway.StockManagementGatewayImpl;
+import com.undercontroll.infrastructure.mapper.ComponentPartMapper;
+import com.undercontroll.infrastructure.persistence.repository.ComponentJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,8 +28,11 @@ class StockManagementAdapterTest {
     @Mock
     private ComponentJpaRepository componentJpaRepository;
 
+    @Mock
+    private ComponentPartMapper componentPartMapper;
+
     @InjectMocks
-    private StockManagementAdapter stockManagementAdapter;
+    private StockManagementGatewayImpl stockManagementAdapter;
 
     private ComponentPart component;
     private ComponentPartJpaEntity componentJpaEntity;
@@ -40,7 +44,29 @@ class StockManagementAdapterTest {
         component.setName("Resistor 10K");
         component.setQuantity(100L);
 
-        componentJpaEntity = ComponentPartJpaEntity.fromDomain(component);
+        componentJpaEntity = ComponentPartJpaEntity.builder()
+                .id(component.getId())
+                .name(component.getName())
+                .quantity(component.getQuantity())
+                .build();
+
+        lenient().when(componentPartMapper.toDomain(any(ComponentPartJpaEntity.class))).thenAnswer(invocation -> {
+            ComponentPartJpaEntity entity = invocation.getArgument(0);
+            ComponentPart mapped = new ComponentPart();
+            mapped.setId(entity.getId());
+            mapped.setName(entity.getName());
+            mapped.setQuantity(entity.getQuantity());
+            return mapped;
+        });
+
+        lenient().when(componentPartMapper.toEntityWithId(any(ComponentPart.class))).thenAnswer(invocation -> {
+            ComponentPart domain = invocation.getArgument(0);
+            return ComponentPartJpaEntity.builder()
+                    .id(domain.getId())
+                    .name(domain.getName())
+                    .quantity(domain.getQuantity())
+                    .build();
+        });
     }
 
     @Test

@@ -6,7 +6,7 @@ import com.undercontroll.application.dto.ExportOrderRequest;
 import com.undercontroll.domain.exception.PdfGenerationException;
 import com.undercontroll.domain.exception.TempFileException;
 import com.undercontroll.domain.exception.TemplateLoadException;
-import com.undercontroll.application.port.PdfExportPort;
+import com.undercontroll.infrastructure.service.PdfExportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class PdfBoxAdapter implements PdfExportPort {
+public class PdfBoxAdapter implements PdfExportService {
 
     private static final String TEMP_FILE_PREFIX = "os_";
     private static final String HTML_EXTENSION = ".html";

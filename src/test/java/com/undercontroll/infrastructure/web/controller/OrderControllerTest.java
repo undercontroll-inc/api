@@ -2,16 +2,15 @@ package com.undercontroll.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.application.dto.*;
-import com.undercontroll.application.usecase.order.*;
-import com.undercontroll.application.usecase.order.GetOrdersByUserIdPort;
 import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.enums.UserType;
-import com.undercontroll.application.port.TokenPort;
+import com.undercontroll.infrastructure.service.TokenServce;
+import com.undercontroll.domain.usecase.order.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.presentation.dto.CreateOrderRequest;
-import com.undercontroll.presentation.dto.UpdateOrderRequest;
-import com.undercontroll.presentation.controller.impl.OrderController;
+import com.undercontroll.application.dto.CreateOrderRequest;
+import com.undercontroll.application.dto.UpdateOrderRequest;
+import com.undercontroll.application.controller.impl.OrderController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ class OrderControllerTest {
 
     // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
-    private TokenPort tokenPort;
+    private TokenServce tokenServce;
 
     @Test
     @DisplayName("POST /v1/api/orders - ADMINISTRATOR should create order and return 201")
@@ -87,20 +86,23 @@ class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/api/orders - CUSTOMER should be forbidden and return 403")
-    void customerShouldBeForbiddenToCreateOrder() throws Exception {
+    @DisplayName("POST /v1/api/orders - CUSTOMER should create order and return 201")
+    void customerShouldCreateOrderSuccessfully() throws Exception {
         CreateOrderRequest request = new CreateOrderRequest(
                 1, List.of(), List.of(), 0.0, "20/11/2025", "25/11/2025",
                 "Service description", "Notes", "PENDING", false, true, "NF123"
         );
 
+        when(createOrderPort.execute(any(CreateOrderPort.Input.class)))
+                .thenReturn(new CreateOrderPort.Output(1, 1, "PENDING", 0.0));
+
         mockMvc.perform(post("/v1/api/orders")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
+                        .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
 
-        verify(createOrderPort, never()).execute(any(CreateOrderPort.Input.class));
+        verify(createOrderPort, times(1)).execute(any(CreateOrderPort.Input.class));
     }
 
     @Test
@@ -151,7 +153,7 @@ class OrderControllerTest {
     @DisplayName("GET /v1/api/orders - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToGetAllOrders() throws Exception {
         mockMvc.perform(get("/v1/api/orders")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
+                        .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
         verify(getOrdersPort, never()).execute(any(GetOrdersPort.Input.class));
@@ -176,7 +178,7 @@ class OrderControllerTest {
                 .thenReturn(new GetOrderByIdPort.Output(response));
 
         mockMvc.perform(get("/v1/api/orders/1")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
+                        .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.status").value("PENDING"));
@@ -201,7 +203,7 @@ class OrderControllerTest {
     @DisplayName("DELETE /v1/api/orders/{orderId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteOrder() throws Exception {
         mockMvc.perform(delete("/v1/api/orders/1")
-                        .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
+                        .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
         verify(deleteOrderPort, never()).execute(any(DeleteOrderPort.Input.class));
@@ -226,7 +228,7 @@ class OrderControllerTest {
                 .thenReturn(new GetOrdersByUserIdPort.Output(response));
 
         mockMvc.perform(get("/v1/api/orders/filter")
-                        .with(user("1").roles("SCOPE_CUSTOMER"))
+                        .with(user("1").roles("CUSTOMER"))
                         .param("userId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1))

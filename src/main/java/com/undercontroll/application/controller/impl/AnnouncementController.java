@@ -1,0 +1,101 @@
+package com.undercontroll.application.controller.impl;
+
+import com.undercontroll.domain.usecase.announcement.CreateAnnouncementPort;
+import com.undercontroll.domain.usecase.announcement.DeleteAnnouncementPort;
+import com.undercontroll.domain.usecase.announcement.GetAnnouncementsPort;
+import com.undercontroll.domain.usecase.announcement.GetLastAnnouncementPort;
+import com.undercontroll.domain.usecase.announcement.UpdateAnnouncementPort;
+import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.controller.AnnouncementApi;
+import com.undercontroll.application.dto.CreateAnnouncementRequest;
+import com.undercontroll.application.dto.CreateAnnouncementResponse;
+import com.undercontroll.application.dto.UpdateAnnouncementRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RequiredArgsConstructor
+@RequestMapping(value = "/v1/api/announcements")
+@RestController
+public class AnnouncementController implements AnnouncementApi {
+
+    private final CreateAnnouncementPort createAnnouncement;
+    private final GetAnnouncementsPort getAnnouncements;
+    private final UpdateAnnouncementPort updateAnnouncement;
+    private final DeleteAnnouncementPort deleteAnnouncement;
+    private final GetLastAnnouncementPort getLastAnnouncement;
+
+    @Override
+    @PostMapping
+    public ResponseEntity<CreateAnnouncementResponse> createAnnouncement(
+            @Valid @RequestBody CreateAnnouncementRequest request,
+            @RequestHeader("Authorization") String auth
+    ) {
+        String token = auth.split("Bearer ")[1];
+
+        CreateAnnouncementPort.Output output = createAnnouncement.execute(
+                new CreateAnnouncementPort.Input(request.title(), request.description(), token, request.type())
+        );
+        return ResponseEntity.status(201).body(
+                new CreateAnnouncementResponse(
+                        output.id(),
+                        output.title(),
+                        output.content(),
+                        output.type(),
+                        output.publishedAt(),
+                        output.updatedAt()
+                )
+        );
+    }
+
+    @Override
+    @GetMapping
+    public ResponseEntity<List<AnnouncementDto>> getAllAnnouncements(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size
+    ) {
+        List<AnnouncementDto> announcements = getAnnouncements
+                .execute(new GetAnnouncementsPort.Input(page, size))
+                .announcements();
+        return announcements.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(announcements);
+    }
+
+    @Override
+    @PutMapping(value = "/{announcementId}")
+    public ResponseEntity<AnnouncementDto> updateAnnouncement(
+            @Valid @RequestBody UpdateAnnouncementRequest request,
+            @PathVariable Integer announcementId
+    ) {
+        UpdateAnnouncementPort.Output output = updateAnnouncement.execute(
+                new UpdateAnnouncementPort.Input(announcementId, request.title(), request.content(), request.type())
+        );
+        return ResponseEntity.ok(
+                new AnnouncementDto(
+                        output.id(),
+                        output.title(),
+                        output.content(),
+                        output.type(),
+                        output.publishedAt(),
+                        output.updatedAt()
+                )
+        );
+    }
+
+    @Override
+    @DeleteMapping("/{announcementId}")
+    public ResponseEntity<Void> deleteAnnouncement(@PathVariable Integer announcementId) {
+        deleteAnnouncement.execute(new DeleteAnnouncementPort.Input(announcementId));
+        return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @GetMapping("/last")
+    public ResponseEntity<AnnouncementDto> getLastAnnouncement() {
+        return getLastAnnouncement.execute()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+}

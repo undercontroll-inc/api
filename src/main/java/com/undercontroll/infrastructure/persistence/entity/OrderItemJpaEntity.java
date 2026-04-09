@@ -1,6 +1,5 @@
 package com.undercontroll.infrastructure.persistence.entity;
 
-import com.undercontroll.domain.model.OrderItem;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,35 +30,5 @@ public class OrderItemJpaEntity {
     private Double laborValue;
 
     private LocalDateTime completedAt;
-
-    public OrderItem toDomain() {
-        return OrderItem.builder()
-                .id(id)
-                .imageUrl(imageUrl)
-                .observation(observation)
-                .volt(volt)
-                .series(series)
-                .type(type)
-                .brand(brand)
-                .model(model)
-                .laborValue(laborValue)
-                .completedAt(completedAt)
-                .build();
-    }
-
-    public static OrderItemJpaEntity fromDomain(OrderItem orderItem) {
-        if (orderItem == null) return null;
-        return OrderItemJpaEntity.builder()
-                .imageUrl(orderItem.getImageUrl())
-                .observation(orderItem.getObservation())
-                .volt(orderItem.getVolt())
-                .series(orderItem.getSeries())
-                .type(orderItem.getType())
-                .brand(orderItem.getBrand())
-                .model(orderItem.getModel())
-                .laborValue(orderItem.getLaborValue())
-                .completedAt(orderItem.getCompletedAt())
-                .build();
-    }
 
 }

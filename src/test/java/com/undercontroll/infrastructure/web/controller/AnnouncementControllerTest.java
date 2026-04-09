@@ -4,14 +4,14 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.application.dto.AnnouncementDto;
-import com.undercontroll.application.usecase.announcement.*;
 import com.undercontroll.domain.enums.AnnouncementType;
-import com.undercontroll.application.port.TokenPort;
+import com.undercontroll.infrastructure.service.TokenServce;
+import com.undercontroll.domain.usecase.announcement.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.presentation.dto.CreateAnnouncementRequest;
-import com.undercontroll.presentation.dto.UpdateAnnouncementRequest;
-import com.undercontroll.presentation.controller.impl.AnnouncementController;
+import com.undercontroll.application.dto.CreateAnnouncementRequest;
+import com.undercontroll.application.dto.UpdateAnnouncementRequest;
+import com.undercontroll.application.controller.impl.AnnouncementController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +59,7 @@ class AnnouncementControllerTest {
 
     // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
-    private TokenPort tokenPort;
+    private TokenServce tokenServce;
 
     private void mockTokenPortWithRole(String role) {
         Claim claim = mock(Claim.class);
@@ -67,7 +67,7 @@ class AnnouncementControllerTest {
         DecodedJWT decoded = mock(DecodedJWT.class);
         when(decoded.getSubject()).thenReturn("user@example.com");
         when(decoded.getClaim("roles")).thenReturn(claim);
-        when(tokenPort.validateToken(anyString())).thenReturn(decoded);
+        when(tokenServce.validateToken(anyString())).thenReturn(decoded);
     }
 
     // createAnnouncement requires @RequestHeader("Authorization") so the filter runs.

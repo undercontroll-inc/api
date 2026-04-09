@@ -1,13 +1,13 @@
 package com.undercontroll.application.usecase;
 
-import com.undercontroll.application.usecase.order.impl.UpdateOrderImpl;
+import com.undercontroll.domain.usecase.order.impl.UpdateOrderImpl;
 import com.undercontroll.domain.exception.InvalidUpdateOrderException;
 import com.undercontroll.domain.exception.OrderNotFoundException;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.application.usecase.order.UpdateOrderPort;
-import com.undercontroll.application.port.MetricsPort;
-import com.undercontroll.domain.repository.OrderRepositoryPort;
+import com.undercontroll.domain.usecase.order.UpdateOrderPort;
+import com.undercontroll.infrastructure.service.MetricsService;
+import com.undercontroll.domain.gateway.OrderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,10 +27,10 @@ import static org.mockito.Mockito.*;
 class UpdateOrderImplTest {
 
     @Mock
-    private OrderRepositoryPort orderRepositoryPort;
+    private OrderGateway orderGateway;
 
     @Mock
-    private MetricsPort metricsPort;
+    private MetricsService metricsService;
 
     @InjectMocks
     private UpdateOrderImpl updateOrderImpl;
@@ -51,8 +51,8 @@ class UpdateOrderImplTest {
     @Test
     @DisplayName("Should update order status successfully")
     void testUpdateOrder_ShouldUpdateSuccessfully() {
-        when(orderRepositoryPort.findById(1)).thenReturn(Optional.of(existingOrder));
-        when(orderRepositoryPort.save(any(Order.class))).thenReturn(existingOrder);
+        when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
+        when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
 
         UpdateOrderPort.Input input = new UpdateOrderPort.Input(
                 1, OrderStatus.IN_ANALYSIS, List.of(), List.of(), "Updated description"
@@ -64,16 +64,16 @@ class UpdateOrderImplTest {
         assertTrue(output.success());
         assertEquals("Order updated successfully", output.message());
 
-        verify(orderRepositoryPort, times(1)).findById(1);
-        verify(orderRepositoryPort, times(1)).save(any(Order.class));
+        verify(orderGateway, times(1)).findById(1);
+        verify(orderGateway, times(1)).save(any(Order.class));
     }
 
     @Test
     @DisplayName("Should increment completed metric when status is COMPLETED")
     void testUpdateOrder_ShouldIncrementCompletedMetric_WhenStatusIsCompleted() {
-        when(orderRepositoryPort.findById(1)).thenReturn(Optional.of(existingOrder));
-        when(orderRepositoryPort.save(any(Order.class))).thenReturn(existingOrder);
-        doNothing().when(metricsPort).incrementOrderCompleted();
+        when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
+        when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
+        doNothing().when(metricsService).incrementOrderCompleted();
 
         UpdateOrderPort.Input input = new UpdateOrderPort.Input(
                 1, OrderStatus.COMPLETED, List.of(), List.of(), null
@@ -81,14 +81,14 @@ class UpdateOrderImplTest {
 
         updateOrderImpl.execute(input);
 
-        verify(metricsPort, times(1)).incrementOrderCompleted();
+        verify(metricsService, times(1)).incrementOrderCompleted();
     }
 
     @Test
     @DisplayName("Should throw OrderNotFoundException when order not found")
     void testUpdateOrder_ShouldThrowException_WhenOrderNotFound() {
-        when(orderRepositoryPort.findById(999)).thenReturn(Optional.empty());
-        doNothing().when(metricsPort).incrementOrderUpdateFailed();
+        when(orderGateway.findById(999)).thenReturn(Optional.empty());
+        doNothing().when(metricsService).incrementOrderUpdateFailed();
 
         UpdateOrderPort.Input input = new UpdateOrderPort.Input(
                 999, OrderStatus.COMPLETED, List.of(), List.of(), null
@@ -96,9 +96,9 @@ class UpdateOrderImplTest {
 
         assertThrows(OrderNotFoundException.class, () -> updateOrderImpl.execute(input));
 
-        verify(orderRepositoryPort, times(1)).findById(999);
-        verify(orderRepositoryPort, never()).save(any());
-        verify(metricsPort, times(1)).incrementOrderUpdateFailed();
+        verify(orderGateway, times(1)).findById(999);
+        verify(orderGateway, never()).save(any());
+        verify(metricsService, times(1)).incrementOrderUpdateFailed();
     }
 
     @Test
@@ -110,7 +110,7 @@ class UpdateOrderImplTest {
 
         assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(input));
 
-        verify(orderRepositoryPort, never()).findById(any());
+        verify(orderGateway, never()).findById(any());
     }
 
     @Test
@@ -122,14 +122,14 @@ class UpdateOrderImplTest {
 
         assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(input));
 
-        verify(orderRepositoryPort, never()).findById(any());
+        verify(orderGateway, never()).findById(any());
     }
 
     @Test
     @DisplayName("Should not change status when input status is null")
     void testUpdateOrder_WithNullStatus_ShouldNotChangeStatus() {
-        when(orderRepositoryPort.findById(1)).thenReturn(Optional.of(existingOrder));
-        when(orderRepositoryPort.save(any(Order.class))).thenReturn(existingOrder);
+        when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
+        when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
 
         UpdateOrderPort.Input input = new UpdateOrderPort.Input(
                 1, null, List.of(), List.of(), "New description"
@@ -138,7 +138,7 @@ class UpdateOrderImplTest {
         updateOrderImpl.execute(input);
 
         assertEquals(OrderStatus.PENDING, existingOrder.getStatus());
-        verify(metricsPort, never()).incrementOrderCompleted();
-        verify(orderRepositoryPort, times(1)).save(existingOrder);
+        verify(metricsService, never()).incrementOrderCompleted();
+        verify(orderGateway, times(1)).save(existingOrder);
     }
 }

@@ -2,9 +2,9 @@ package com.undercontroll.infrastructure.auth;
 
 import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.domain.enums.UserType;
-import com.undercontroll.application.port.RefreshTokenPort;
+import com.undercontroll.infrastructure.service.RefreshTokenService;
 import com.undercontroll.infrastructure.persistence.entity.RefreshTokenJpaEntity;
-import com.undercontroll.infrastructure.persistence.repository.jpa.RefreshTokenRepository;
+import com.undercontroll.infrastructure.persistence.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import java.util.Base64;
 
 @Component
 @RequiredArgsConstructor
-public class RefreshTokenAdapter implements RefreshTokenPort {
+public class RefreshTokenAdapter implements RefreshTokenService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
