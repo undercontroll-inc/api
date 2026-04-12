@@ -88,9 +88,9 @@ rate-limit:
   # Max requests per minute per IP for all other endpoints
   general-requests-per-minute: ${RATE_LIMIT_GENERAL_RPM:100}
 aws:
-  accessKeyId: ${ACCESS_KEY_ID}
-  secretAccessKey: ${SECRET_ACCESS_KEY}
-  sessionToken: ${SESSION_TOKEN}
+  accessKeyId: ${ACCESS_KEY_ID:example}
+  secretAccessKey: ${SECRET_ACCESS_KEY:example}
+  sessionToken: ${SESSION_TOKEN:example}
   region: us-east-1
   s3:
     # TODO: Mudar para ser dinamico
