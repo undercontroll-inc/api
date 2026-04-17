@@ -9,6 +9,7 @@ import com.undercontroll.infrastructure.service.PdfExportService;
 import com.undercontroll.application.dto.ExportOrderRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -23,6 +24,9 @@ public class ExportOrderImpl implements ExportOrderPort {
     private final OrderGateway orderGateway;
     private final PdfExportService pdfExportService;
     private final StorageService storageService;
+
+    @Value("${aws.s3.export-bucket}")
+    private String pdfBucket;
 
     @Override
     public Output execute(Input input) {
@@ -50,23 +54,26 @@ public class ExportOrderImpl implements ExportOrderPort {
                 ))
                 .toList();
 
+        final var receivedAt = order.getReceived_at() != null ? dtf.format(order.getReceived_at()) : null;
+        final var completedAt = order.getCompletedTime() != null ? dtf.format(order.getCompletedTime()) : null;
+
         ExportOrderRequest exportRequest = new ExportOrderRequest(
                 order.getId().toString(),
                 order.getId().toString(),
                 order.getNf(),
-                dtf.format(order.getReceived_at()),
+                receivedAt,
                 "Loja",
                 produtos,
                 order.getUser().getEmail(),
                 order.getUser().getAddress(),
                 order.getUser().getPhone(),
-                dtf.format(order.getReceived_at()),
+                receivedAt,
                 pecas,
                 String.format("R$ %.2f", order.calculateTotal()),
-                dtf.format(order.getCompletedTime()),
+                completedAt,
                 "Técnico",
                 order.isFabricGuarantee(),
-                false, // orcamento - você pode adicionar este campo ao Order se necessário
+                null, // orcamento - adicionar este campo ao Order se necessário
                 order.isReturnGuarantee()
         );
 
@@ -74,7 +81,7 @@ public class ExportOrderImpl implements ExportOrderPort {
 
         final var key = String.format(order.getId().toString(), order.getNf(), ".pdf");
 
-        storageService.putObject("dev-main-bucket", key, pdfData, Optional.of("application/pdf"));
+        storageService.putObject(pdfBucket, key, pdfData, Optional.of("application/pdf"));
 
         return new Output(pdfData);
     }
