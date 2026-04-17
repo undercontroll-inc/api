@@ -1,0 +1,19 @@
+meta {
+  name: Get orders by status
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/charts/orders-by-status?period=ALL
+  body: none
+  auth: bearer
+}
+
+params:query {
+  period: ALL
+}
+
+auth:bearer {
+  token: {{token}}
+}

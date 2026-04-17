@@ -1,0 +1,20 @@
+meta {
+  name: Get Users
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/v1/api/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6ImFkbWluQHVuZGVyY29udHJvbGwuY29tIiwidXNlclR5cGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoxNzY1MjMxNTg2LCJpYXQiOjE3NjUyMjc5ODZ9.iMO6DSjZLQGKOnj6hTthccg3NZOrq-jGgn1pB4VIZcy5vFHAjKPL6Rwxe0CCMSfKhS4NDHJYbRCUGYO4vAEnT0amAKVn508PWIgQxXN_wZrxTUNVNLY9xF0AHPXHBVYZ1mnDM7wokWAkt_SSs0tvPyoek9i1cMHanAv-aXDjfolCFzRHFZ7iNXrH5kl70fl0Uq2DfevACuJjh7ec8gT8LLGuoIZe2TcKDfTiR5K75VVHEodXqvEIJqRIS3kuew3tnx1U8oPh9YlLTFjStOhmnV4_gz1Dy7gZIQptZKbmiAA30yQDecMaiDDHtilGoi2lnWk9wujbvx3xE2G4MfnzbQ
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

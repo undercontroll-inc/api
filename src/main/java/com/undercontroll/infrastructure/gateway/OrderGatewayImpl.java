@@ -98,7 +98,10 @@ public class OrderGatewayImpl implements OrderGateway {
 
     @Override
     public Double calculateAverageRepairTimeFiltered(LocalDate startDate, List<String> statuses) {
-        return orderJpaRepository.calculateAverageRepairTimeFiltered(startDate, statuses);
+        List<OrderStatus> orderStatuses = statuses.stream()
+                .map(OrderStatus::valueOf)
+                .toList();
+        return orderJpaRepository.calculateAverageRepairTimeFiltered(startDate, orderStatuses);
     }
 
     @Override

@@ -23,7 +23,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     // Query responsavel por retornar o total de todos os componentes de todos os items relacionados a um pedido
     @Query(value = """
     SELECT COALESCE(SUM(c.price * d.quantity), 0.0)
-    FROM `order` o
+    FROM `orders` o
     INNER JOIN demand d ON o.id = d.order_id
     INNER JOIN component c ON d.component_id = c.id
     WHERE o.id = :orderId
@@ -41,7 +41,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         c.supplier,
         c.category,
         d.quantity
-    FROM `order` o
+    FROM `orders` o
     INNER JOIN demand d ON o.id = d.order_id
     INNER JOIN component c ON d.component_id = c.id
     WHERE o.id = :orderId
@@ -60,7 +60,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     // Calculate total parts cost with filters
     @Query(value = """
     SELECT COALESCE(SUM(c.price * d.quantity), 0.0)
-    FROM `order` o
+    FROM `orders` o
     INNER JOIN demand d ON o.id = d.order_id
     INNER JOIN component c ON d.component_id = c.id
     WHERE (:startDate IS NULL OR o.received_at >= :startDate)
@@ -86,10 +86,11 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
             @Param("startDate") LocalDate startDate,
             @Param("statuses") List<OrderStatus> statuses);
 
-    // Calculate average repair time with filters
+    // Calculate average repair time with filters - Compatible with MySQL and H2
+    // Uses MySQL TIMESTAMPDIFF syntax which H2 also supports
     @Query(value = """
     SELECT COALESCE(AVG(TIMESTAMPDIFF(HOUR, received_at, completed_time)), 0.0)
-    FROM `ORDER`
+    FROM `orders`
     WHERE (:startDate IS NULL OR received_at >= :startDate)
       AND status IN :statuses
       AND received_at IS NOT NULL
@@ -97,7 +98,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     """, nativeQuery = true)
     Double calculateAverageRepairTimeFiltered(
             @Param("startDate") LocalDate startDate,
-            @Param("statuses") List<String> statuses);
+            @Param("statuses") List<OrderStatus> statuses);
 
 
     // Revenue Evolution - Daily aggregation
@@ -107,7 +108,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         COALESCE(SUM(o.total), 0.0) as revenue,
         COALESCE(SUM(o.total) - SUM(COALESCE(parts_cost, 0)), 0.0) as profit,
         COUNT(o.id) as order_count
-    FROM `order` o
+    FROM `orders` o
     LEFT JOIN (
         SELECT d.order_id, SUM(c.price * d.quantity) as parts_cost
         FROM demand d
@@ -130,7 +131,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         o.received_at as date,
         COUNT(DISTINCT CASE WHEN u.already_recurrent = true THEN u.id END) as recurrent_customers,
         COUNT(DISTINCT CASE WHEN u.already_recurrent = false THEN u.id END) as new_customers
-    FROM `order` o
+    FROM `orders` o
     INNER JOIN user u ON o.user_id = u.id
     WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
@@ -147,7 +148,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     SELECT
         o.status,
         COUNT(o.id) as count
-    FROM `order` o
+    FROM `orders` o
     WHERE (:startDate IS NULL OR o.received_at >= :startDate)
     GROUP BY o.status
     ORDER BY count DESC
@@ -160,7 +161,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         oi.type,
         oi.brand,
         COUNT(oi.id) as count
-    FROM `order` o
+    FROM `orders` o
     INNER JOIN order_item oi ON oi.order_id = o.id
     WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
@@ -183,7 +184,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         SUM(d.quantity) as total_quantity
     FROM demand d
     INNER JOIN component c ON d.component_id = c.id
-    INNER JOIN `order` o ON d.order_id = o.id
+    INNER JOIN `orders` o ON d.order_id = o.id
     WHERE (:startDate IS NULL OR o.received_at >= :startDate)
       AND o.status IN :statuses
     GROUP BY c.id, c.name, c.brand, c.category

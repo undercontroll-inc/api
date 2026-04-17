@@ -55,6 +55,14 @@ public class Order {
         this.orderItems.remove(orderItem);
     }
 
+    public void addDemand(Demand demand) {
+        this.demands.add(demand);
+    }
+
+    public void removeDemand(Demand demand) {
+        this.demands.remove(demand);
+    }
+
     public Double calculateLaborTotal() {
         return this.getOrderItems().stream()
                 .mapToDouble(OrderItem::getLaborValue)

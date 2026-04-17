@@ -52,11 +52,11 @@ public class CreateOrderImpl implements CreateOrderPort {
         double partsTotal = 0.0;
 
         for (PartDto part : input.parts()) {
-            ComponentPart component = stockManagementGateway.findComponentById(part.id())
+            ComponentPart component = stockManagementGateway.findComponentById(part.componentId())
                     .orElseThrow(() -> new RuntimeException("Component not found"));
             stockManagementGateway.validateStockAvailability(component, part.quantity());
 
-            validatedComponents.put(part.id(), component);
+            validatedComponents.put(part.componentId(), component);
             partsTotal += part.quantity() * component.getPrice();
         }
 
@@ -113,7 +113,7 @@ public class CreateOrderImpl implements CreateOrderPort {
         log.info("Order {} created successfully", savedOrder.getId());
 
         for (PartDto part : input.parts()) {
-            ComponentPart component = validatedComponents.get(part.id());
+            ComponentPart component = validatedComponents.get(part.componentId());
 
             createDemandPort.execute(new CreateDemandPort.Input(
                     component.getId(),

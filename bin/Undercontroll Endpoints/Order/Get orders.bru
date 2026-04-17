@@ -1,0 +1,20 @@
+meta {
+  name: Get orders
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:8080/v1/api/orders
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1bmRlcmNvbnRyb2xsLWluYyIsInN1YiI6Imx1Y2FzQGdtYWlsLmNvbSIsInVzZXJUeXBlIjoiQ1VTVE9NRVIiLCJleHAiOjE3NjM2NTE5NzUsImlhdCI6MTc2MzY0ODM3NX0.Pybhab2dZLsi6whBC9OQldXvvYrZlolb8lHMmr24lxnd8Yq-w_0JkIvWh8yMDpr4C4V7tyQHK2KnY1AiO4t8ZCwOtgSji5gsAP8e9Rze6BKGljkqoHFysALtHzmddlhbmWVw_pkxmnUFOu8DuWC1seffpcnB0lIpjflH2bGelGKkGGOWkoROGaM34WCrh9aHcieJpiA4BTSHyDyhakEZSjYPugPvUb88ahK9xhPuhWSDWY0StkV3rUHSfekid4F1pljzvCYgK-P6AP_hM-mvHKRdbpsnJC10cEbLvPbGob_t3REVQsrc8z1KBpeCYSqp0UINvI3mTTzDQfhMwZVUtQ
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

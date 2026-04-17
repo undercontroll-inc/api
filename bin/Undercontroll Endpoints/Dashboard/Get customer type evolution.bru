@@ -1,0 +1,17 @@
+meta {
+  name: Get customer type evolution
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/charts/customer-type?period=THIRTY_DAYS&status=ALL
+  body: none
+  auth: bearer
+}
+
+params:query {
+  period: THIRTY_DAYS
+  status: ALL
+}
+

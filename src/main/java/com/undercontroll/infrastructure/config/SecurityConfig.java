@@ -45,8 +45,8 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer<HttpSecurity>::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // H2 console: localhost only (dev profile)
-                                .requestMatchers("/h2-console/**").access((authentication, context) -> {
+                            // H2 console: localhost only (dev profile)
+                            .requestMatchers("/h2-console/**").access((authentication, context) -> {
                             String remoteAddr = context.getRequest().getRemoteAddr();
                             boolean isLocalhost = LOCALHOST_IPV4.matches(remoteAddr)
                                     || LOCALHOST_IPV6.matches(remoteAddr);
@@ -74,7 +74,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/dashboard/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/users").hasRole("ADMINISTRATOR")
-                            .requestMatchers(HttpMethod.DELETE, "/v1/api/users/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/api/users/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PUT, "/v1/api/orders/**").hasRole("ADMINISTRATOR")

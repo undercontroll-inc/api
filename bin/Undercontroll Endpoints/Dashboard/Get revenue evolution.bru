@@ -1,0 +1,17 @@
+meta {
+  name: Get revenue evolution
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/charts/revenue-evolution?period=THIRTY_DAYS&status=ALL
+  body: none
+  auth: bearer
+}
+
+params:query {
+  period: THIRTY_DAYS
+  status: ALL
+}
+

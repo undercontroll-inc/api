@@ -1,0 +1,15 @@
+meta {
+  name: Get components by name
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8080/v1/api/components/name/Peça
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
