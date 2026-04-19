@@ -45,6 +45,14 @@ jobs:
             ghcr.io/undercontroll-inc/core-api:latest
             ghcr.io/undercontroll-inc/core-api:${{ env.IMAGE_TAG }}
 
+      - name: Make package public
+        run: |
+          gh api --method PATCH \
+            /orgs/${{ github.repository_owner }}/packages/container/core-api \
+            -f visibility=public
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+
   deploy:
     name: Deploy to EC2 (via bastion)
     needs: publish
@@ -58,8 +66,6 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-          GH_OWNER: ${{ github.repository_owner }}
           DB_HOST: ${{ vars.DB_HOST != '' && vars.DB_HOST || secrets.DB_HOST }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -75,17 +81,15 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         with:
-          host: ${{ vars.BACKEND_EC2_HOST }}
+          host: ${{ vars.BACKEND_EC2_HOST_1 }},${{ vars.BACKEND_EC2_HOST_2 }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           proxy_host: ${{ vars.BASTION_HOST }}
           proxy_username: ${{ secrets.EC2_USERNAME }}
           proxy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          envs: IMAGE_TAG,GH_PAT,GH_OWNER,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
+          envs: IMAGE_TAG,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
           script: |
             set -euo pipefail
-
-            echo "$GH_PAT" | docker login ghcr.io -u "$GH_OWNER" --password-stdin
 
             mkdir -p /opt/app
             cat > /opt/app/.env <<EOF
@@ -122,7 +126,7 @@ jobs:
       - name: Smoke test
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ vars.BACKEND_EC2_HOST }}
+          host: ${{ vars.BACKEND_EC2_HOST_1 }},${{ vars.BACKEND_EC2_HOST_2 }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           proxy_host: ${{ vars.BASTION_HOST }}
