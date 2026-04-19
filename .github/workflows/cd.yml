@@ -66,6 +66,7 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          GH_PAT: ${{ secrets.GH_PAT }}
           DB_HOST: ${{ vars.DB_HOST != '' && vars.DB_HOST || secrets.DB_HOST }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -87,7 +88,7 @@ jobs:
           proxy_host: ${{ vars.BASTION_HOST }}
           proxy_username: ${{ secrets.EC2_USERNAME }}
           proxy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          envs: IMAGE_TAG,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
+          envs: IMAGE_TAG,GH_PAT,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
           script: |
             set -euo pipefail
 
