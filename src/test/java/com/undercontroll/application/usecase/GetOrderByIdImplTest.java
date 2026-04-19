@@ -1,5 +1,7 @@
 package com.undercontroll.application.usecase;
 
+import com.undercontroll.application.dto.OrderEnrichedDto;
+import com.undercontroll.application.mapper.OrderDtoMapper;
 import com.undercontroll.domain.usecase.order.impl.GetOrderByIdImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
@@ -24,6 +26,9 @@ class GetOrderByIdImplTest {
     @Mock
     private OrderGateway orderGateway;
 
+    @Mock
+    private OrderDtoMapper orderMapper;
+
     @InjectMocks
     private GetOrderByIdImpl getOrderByIdImpl;
 
@@ -46,6 +51,8 @@ class GetOrderByIdImplTest {
     @DisplayName("Should return order when it exists")
     void testGetOrderById_ShouldReturnOrder_WhenExists() {
         when(orderGateway.findById(1)).thenReturn(Optional.of(order));
+        when(orderMapper.toEnrichedDto(order)).thenReturn(
+                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
 
         GetOrderByIdPort.Input input = new GetOrderByIdPort.Input(1, null);
         GetOrderByIdPort.Output output = getOrderByIdImpl.execute(input);

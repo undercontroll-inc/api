@@ -8,6 +8,7 @@ import com.undercontroll.domain.gateway.OrderGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,6 +21,12 @@ public class GetOrdersByUserIdImpl implements GetOrdersByUserIdPort {
     @Override
     public Output execute(Input input) {
         List<Order> orders = orderGateway.findByUserId(input.userId());
+
+        if (orders.isEmpty()) {
+            return new Output(new GetOrdersByUserIdResponse(
+                    new ArrayList<>()
+            ));
+        }
 
         List<OrderEnrichedDto> orderDtos = orders.stream()
                 .map(orderMapper::toEnrichedDto)

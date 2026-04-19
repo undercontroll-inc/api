@@ -1,5 +1,7 @@
 package com.undercontroll.application.usecase;
 
+import com.undercontroll.application.dto.OrderEnrichedDto;
+import com.undercontroll.application.mapper.OrderDtoMapper;
 import com.undercontroll.domain.usecase.order.impl.GetOrdersByUserIdImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
@@ -24,6 +26,9 @@ class GetOrdersByUserIdImplTest {
     @Mock
     private OrderGateway orderGateway;
 
+    @Mock
+    private OrderDtoMapper orderMapper;
+
     @InjectMocks
     private GetOrdersByUserIdImpl getOrdersByUserIdImpl;
 
@@ -43,6 +48,8 @@ class GetOrdersByUserIdImplTest {
     @DisplayName("Should return orders for the given userId")
     void testGetOrdersByUserId_ShouldReturnUserOrders() {
         when(orderGateway.findByUserId(1)).thenReturn(List.of(order));
+        when(orderMapper.toEnrichedDto(order)).thenReturn(
+                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
 
         GetOrdersByUserIdPort.Input input = new GetOrdersByUserIdPort.Input(1);
         GetOrdersByUserIdPort.Output output = getOrdersByUserIdImpl.execute(input);

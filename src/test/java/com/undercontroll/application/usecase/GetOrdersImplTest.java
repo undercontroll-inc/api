@@ -1,6 +1,7 @@
 package com.undercontroll.application.usecase;
 
 import com.undercontroll.application.dto.OrderEnrichedDto;
+import com.undercontroll.application.mapper.OrderDtoMapper;
 import com.undercontroll.domain.usecase.order.impl.GetOrdersImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +27,9 @@ class GetOrdersImplTest {
 
     @Mock
     private OrderGateway orderGateway;
+
+    @Mock
+    private OrderDtoMapper orderMapper;
 
     @InjectMocks
     private GetOrdersImpl getOrdersImpl;
@@ -50,7 +53,8 @@ class GetOrdersImplTest {
     @DisplayName("Should return all orders successfully")
     void testGetOrders_ShouldReturnAllOrders() {
         when(orderGateway.findAll()).thenReturn(List.of(order));
-        when(orderGateway.calculatePartsTotalByOrderId(1)).thenReturn(5.0);
+        when(orderMapper.toEnrichedDto(order)).thenReturn(
+                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
 
         GetOrdersPort.Output output = getOrdersImpl.execute(new GetOrdersPort.Input());
 
@@ -63,7 +67,6 @@ class GetOrdersImplTest {
         assertEquals(OrderStatus.PENDING, dto.status());
 
         verify(orderGateway, times(1)).findAll();
-        verify(orderGateway, times(1)).calculatePartsTotalByOrderId(1);
     }
 
     @Test
@@ -77,6 +80,5 @@ class GetOrdersImplTest {
         assertTrue(output.orders().isEmpty());
 
         verify(orderGateway, times(1)).findAll();
-        verify(orderGateway, never()).calculatePartsTotalByOrderId(anyInt());
     }
 }

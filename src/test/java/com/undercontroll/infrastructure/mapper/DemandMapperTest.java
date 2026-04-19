@@ -4,22 +4,22 @@ import com.undercontroll.domain.model.Demand;
 import com.undercontroll.infrastructure.persistence.entity.ComponentPartJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.DemandJpaEntity;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {DemandMapperImpl.class, ComponentPartMapperImpl.class})
 class DemandMapperTest {
 
+    @Autowired
     private DemandMapper demandMapper;
-
-    @BeforeEach
-    void setUp() {
-        demandMapper = Mappers.getMapper(DemandMapper.class);
-    }
 
     @Test
     @DisplayName("Should map order id from entity to domain")
