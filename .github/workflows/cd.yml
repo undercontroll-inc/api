@@ -49,9 +49,9 @@ jobs:
         run: |
           gh api --method PATCH \
             /orgs/${{ github.repository_owner }}/packages/container/core-api \
-            -f visibility=public
+            -f visibility=public || true
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # token automático do GitHub Actions, sempre disponível
 
   deploy:
     name: Deploy to EC2 (via bastion)
