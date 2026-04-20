@@ -60,6 +60,8 @@ services:
       SESSION_TOKEN: test
     ports:
       - "8080:8080"
+    volumes:
+      - ./src/main/resources/firebase-service-account.json:/opt/app/firebase-service-account.json:ro
   notification:
     build:
       context: ../notification-api

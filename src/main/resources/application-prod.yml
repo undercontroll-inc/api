@@ -32,6 +32,10 @@ spring:
       settings:
         web-allow-others: false
 
+firebase:
+  config:
+    path: file:/opt/app/firebase-service-account.json
+
 logging:
   level:
     root: WARN

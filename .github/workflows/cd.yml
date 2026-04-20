@@ -76,6 +76,7 @@ jobs:
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          FIREBASE_SA_B64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_B64 }}
         with:
           host: ${{ vars.BACKEND_EC2_HOST_1 }},${{ vars.BACKEND_EC2_HOST_2 }}
           username: ${{ secrets.EC2_USERNAME }}
@@ -83,7 +84,7 @@ jobs:
           proxy_host: ${{ vars.BASTION_HOST }}
           proxy_username: ${{ secrets.EC2_USERNAME }}
           proxy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          envs: IMAGE_TAG,GH_TOKEN,GH_OWNER,GH_PAT,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
+          envs: IMAGE_TAG,GH_TOKEN,GH_OWNER,GH_PAT,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN,FIREBASE_SA_B64
           script: |
             set -euo pipefail
 
@@ -91,6 +92,9 @@ jobs:
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_OWNER" --password-stdin
 
             mkdir -p /opt/app
+            echo "${FIREBASE_SA_B64}" | base64 -d > /opt/app/firebase-service-account.json
+            chmod 600 /opt/app/firebase-service-account.json
+
             cat > /opt/app/.env <<EOF
             DB_HOST=${DB_HOST}
             DB_USERNAME=${DB_USERNAME}
