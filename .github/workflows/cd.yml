@@ -92,8 +92,9 @@ jobs:
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_OWNER" --password-stdin
 
             mkdir -p /opt/app
+            rm -f /opt/app/firebase-service-account.json
             echo "${FIREBASE_SA_B64}" | base64 -d > /opt/app/firebase-service-account.json
-            chmod 600 /opt/app/firebase-service-account.json
+            chmod 644 /opt/app/firebase-service-account.json
 
             cat > /opt/app/.env <<EOF
             DB_HOST=${DB_HOST}
