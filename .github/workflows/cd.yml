@@ -45,14 +45,6 @@ jobs:
             ghcr.io/undercontroll-inc/core-api:latest
             ghcr.io/undercontroll-inc/core-api:${{ env.IMAGE_TAG }}
 
-      - name: Make package public
-        run: |
-          gh api --method PATCH \
-            /orgs/${{ github.repository_owner }}/packages/container/core-api \
-            -f visibility=public || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # token automático do GitHub Actions, sempre disponível
-
   deploy:
     name: Deploy to EC2 (via bastion)
     needs: publish
@@ -61,11 +53,14 @@ jobs:
       IMAGE_TAG: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
     permissions:
       contents: read
+      packages: read
     steps:
       - name: Deploy via SSH jump
         uses: appleboy/ssh-action@v1.2.0
         env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_OWNER: ${{ github.repository_owner }}
           GH_PAT: ${{ secrets.GH_PAT }}
           DB_HOST: ${{ vars.DB_HOST != '' && vars.DB_HOST || secrets.DB_HOST }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
@@ -88,9 +83,12 @@ jobs:
           proxy_host: ${{ vars.BASTION_HOST }}
           proxy_username: ${{ secrets.EC2_USERNAME }}
           proxy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          envs: IMAGE_TAG,GH_PAT,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
+          envs: IMAGE_TAG,GH_TOKEN,GH_OWNER,GH_PAT,DB_HOST,DB_USERNAME,DB_PASSWORD,RABBITMQ_HOST,RABBITMQ_USER,RABBITMQ_PASSWORD,JWT_SECRET,MAIL_HOST,MAIL_PORT,MAIL_USERNAME,MAIL_PASSWORD,ACCESS_KEY_ID,SECRET_ACCESS_KEY,SESSION_TOKEN
           script: |
             set -euo pipefail
+
+            docker logout ghcr.io || true
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_OWNER" --password-stdin
 
             mkdir -p /opt/app
             cat > /opt/app/.env <<EOF
@@ -120,8 +118,8 @@ jobs:
             sed -i "s|ghcr.io/undercontroll-inc/core-api:latest|ghcr.io/undercontroll-inc/core-api:${IMAGE_TAG}|g" \
               /opt/app/docker-compose.yml
 
-            docker compose --env-file /opt/app/.env -f /opt/app/docker-compose.yml pull main-service nginx
-            docker compose --env-file /opt/app/.env -f /opt/app/docker-compose.yml up -d main-service nginx
+            docker compose --env-file /opt/app/.env -f /opt/app/docker-compose.yml pull main-service
+            docker compose --env-file /opt/app/.env -f /opt/app/docker-compose.yml up -d main-service
             docker image prune -f
 
       - name: Smoke test
@@ -135,10 +133,10 @@ jobs:
           proxy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           script: |
             set -euo pipefail
-            for i in $(seq 1 10); do
-              if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
-                echo "main-service healthy"; exit 0
-              fi
-              echo "attempt $i: not ready, sleeping 5s"; sleep 5
+            for i in $(seq 1 20); do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' main-service 2>/dev/null || echo "missing")
+              if [ "$STATUS" = "healthy" ]; then echo "main-service healthy"; exit 0; fi
+              echo "attempt $i: status=${STATUS}, sleeping 5s"; sleep 5
             done
-            echo "main-service did not become healthy after 50s" >&2; exit 1
+            docker logs --tail 100 main-service || true
+            echo "main-service not healthy after 100s" >&2; exit 1
