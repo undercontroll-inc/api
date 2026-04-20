@@ -1,27 +1,88 @@
 services:
-  mysql:
-      image: mysql:latest
-      container_name: undercontroll-mysql
-      restart: always
-      hostname: localhost
-      environment:
-        MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      volumes:
-        - mysql_data:/var/lib/mysql
-      ports:
-        - "3306:3306"
-  rabbitmq:
-    image: rabbitmq:management-alpine
-    container_name: undercontroll-rabbitmq
+  postgres:
+    image: postgres:16-alpine
+    container_name: undercontroll-test-db
+    environment:
+      POSTGRES_DB: undercontroll
+      POSTGRES_USER: undercontroll
+      POSTGRES_PASSWORD: undercontroll
+    volumes:
+      - postgres-data:/var/lib/postgresql
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U undercontroll"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: undercontroll-test-rabbit
     environment:
       RABBITMQ_DEFAULT_USER: rabbitmq
       RABBITMQ_DEFAULT_PASS: rabbitmq
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq/mnesia/
+    ports:
+      - "5672:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: undercontroll-test-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/undercontroll
+      DB_DRIVER: org.postgresql.Driver
+      DB_USERNAME: undercontroll
+      DB_PASSWORD: undercontroll
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: rabbitmq
+      RABBITMQ_PASSWORD: rabbitmq
+      JWT_SECRET: test-secret-only-for-local-migration-testing
+      MAIL_HOST: localhost
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: test
+      MAIL_PASSWORD: test
+      ACCESS_KEY_ID: test
+      SECRET_ACCESS_KEY: test
+      SESSION_TOKEN: test
+    ports:
+      - "8080:8080"
+  notification:
+    build:
+      context: ../notification-api
+      dockerfile: Dockerfile
+    container_name: undercontroll-test-notification
+    depends_on:
+      app:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: rabbitmq
+      RABBITMQ_PASSWORD: rabbitmq
+      MAIN_SERVICE_HOST: app
+      MAIL_HOST: localhost
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: test
+      MAIL_PASSWORD: test
+    ports:
+      - "8081:8081"
 
 volumes:
-  mysql_data:
-  rabbitmq_data:
+  postgres-data:
