@@ -1,21 +1,46 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
 import com.undercontroll.application.dto.TopAppliancesResponse;
+import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.gateway.OrderGateway;
+import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.dashboard.GetTopAppliancesPort;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.time.LocalDate;
+import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GetTopAppliancesImpl implements GetTopAppliancesPort {
 
+    private final OrderGateway orderGateway;
+
     @Override
     public Output execute(Input input) {
-        log.info("Getting top appliances for period {} and status {}", input.period(), input.status());
-        return new Output(new TopAppliancesResponse(Collections.emptyList()));
+        LocalDate startDate = DashboardDateFilter.from(input.period());
+        List<String> statuses = input.status().getStatuses().stream()
+                .map(OrderStatus::name)
+                .toList();
+
+        List<Object[]> rows = orderGateway.getTopAppliances(startDate, statuses);
+
+        List<TopAppliancesResponse.ApplianceCount> appliances = rows.stream()
+                .map(row -> new TopAppliancesResponse.ApplianceCount(
+                        (String) row[0],
+                        (String) row[1],
+                        toLong(row[2])
+                ))
+                .toList();
+
+        return new Output(new TopAppliancesResponse(appliances));
+    }
+
+    private Long toLong(Object value) {
+        if (value == null) return 0L;
+        if (value instanceof Long l) return l;
+        if (value instanceof Number n) return n.longValue();
+        return 0L;
     }
 }
