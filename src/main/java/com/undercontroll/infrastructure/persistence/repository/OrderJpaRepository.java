@@ -93,7 +93,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     """, nativeQuery = true)
     Double calculateAverageRepairTimeFiltered(
             @Param("startDate") LocalDate startDate,
-            @Param("statuses") List<OrderStatus> statuses);
+            @Param("statuses") List<String> statuses);
 
     @Query(value = """
     SELECT
