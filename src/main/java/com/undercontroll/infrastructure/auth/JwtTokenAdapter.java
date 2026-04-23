@@ -44,6 +44,11 @@ public class JwtTokenAdapter implements TokenServce {
     @Override
     public DecodedJWT validateToken(String token) {
         try {
+
+            if (token == null || token.isBlank()) {
+                throw new InvalidTokenException("Invalid token");
+            }
+
             Algorithm algorithm = Algorithm.HMAC256(secret);
 
             return JWT.require(algorithm)

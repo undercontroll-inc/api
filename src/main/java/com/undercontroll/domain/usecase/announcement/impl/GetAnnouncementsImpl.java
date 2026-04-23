@@ -1,5 +1,6 @@
 package com.undercontroll.domain.usecase.announcement.impl;
 
+import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.usecase.announcement.GetAnnouncementsPort;
 import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
@@ -17,15 +18,20 @@ public class GetAnnouncementsImpl implements GetAnnouncementsPort {
     private final AnnouncementGateway announcementGateway;
 
     @Override
-    @Cacheable(value = "announcements", key = "#input.page() + '-' + #input.size()")
+    @Cacheable(value = "announcements", key = "#input.page() + '-' + #input.size() + '-' + #input.type()")
     public Output execute(Input input) {
-        List<AnnouncementDto> announcements = announcementGateway
-                .findAllPaginated(input.page(), input.size())
-                .stream()
+        PaginatedResult<Announcement> result = announcementGateway
+                .findAllPaginated(input.page(), input.size(), input.type());
+
+        List<AnnouncementDto> announcements = result.content().stream()
                 .map(this::mapToDto)
                 .toList();
 
-        return new Output(announcements);
+        int totalPages = input.size() > 0
+                ? (int) Math.ceil((double) result.totalElements() / input.size())
+                : 0;
+
+        return new Output(announcements, result.totalElements(), totalPages);
     }
 
     private AnnouncementDto mapToDto(Announcement announcement) {

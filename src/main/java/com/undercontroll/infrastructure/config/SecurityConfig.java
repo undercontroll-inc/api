@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
 
                         // Public announcement endpoints
-                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements", "/v1/api/announcements/last").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements/**", "/v1/api/announcements/last").permitAll()
                         
                         // Customer and Admin shared endpoints
                         .requestMatchers(HttpMethod.POST, "/v1/api/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")

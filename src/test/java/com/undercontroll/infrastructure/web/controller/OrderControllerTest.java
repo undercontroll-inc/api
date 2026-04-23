@@ -138,13 +138,17 @@ class OrderControllerTest {
         );
 
         when(getOrdersPort.execute(any(GetOrdersPort.Input.class)))
-                .thenReturn(new GetOrdersPort.Output(List.of(order)));
+                .thenReturn(new GetOrdersPort.Output(List.of(order), 1L, 1));
 
         mockMvc.perform(get("/v1/api/orders")
-                        .with(user("admin@example.com").roles("ADMINISTRATOR")))
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1))
-                .andExpect(jsonPath("$.data[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.data[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
         verify(getOrdersPort, times(1)).execute(any(GetOrdersPort.Input.class));
     }

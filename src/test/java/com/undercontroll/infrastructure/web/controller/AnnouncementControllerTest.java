@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
 import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.announcement.*;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -57,7 +59,6 @@ class AnnouncementControllerTest {
     @MockitoBean
     private GetLastAnnouncementPort getLastAnnouncement;
 
-    // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
     private TokenServce tokenServce;
 
@@ -70,9 +71,9 @@ class AnnouncementControllerTest {
         when(tokenServce.validateToken(anyString())).thenReturn(decoded);
     }
 
-    // createAnnouncement requires @RequestHeader("Authorization") so the filter runs.
-    // For all other tests, user() post-processor sets auth without an Authorization header,
-    // so the filter passes through without calling tokenPort.
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /v1/api/announcements
+    // ─────────────────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("POST /v1/api/announcements - ADMINISTRATOR should create announcement and return 201")
@@ -120,78 +121,162 @@ class AnnouncementControllerTest {
         verify(createAnnouncement, never()).execute(any(CreateAnnouncementPort.Input.class));
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /v1/api/announcements
+    // ─────────────────────────────────────────────────────────────────────────
+
     @Test
-    @DisplayName("GET /v1/api/announcements - ADMINISTRATOR should get announcements paginated and return 200")
+    @DisplayName("GET /v1/api/announcements - should return 200 with paginated response")
     void administratorShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
         AnnouncementDto announcement1 = new AnnouncementDto(
                 1, "Title 1", "Content 1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
         AnnouncementDto announcement2 = new AnnouncementDto(
-                2, "Title 2", "Content 2", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                2, "Title 2", "Content 2", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement1, announcement2)));
+                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement1, announcement2), 2L, 1));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Title 1"))
-                .andExpect(jsonPath("$[1].title").value("Title 2"))
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.announcements[0].title").value("Title 1"))
+                .andExpect(jsonPath("$.announcements[1].title").value("Title 2"))
+                .andExpect(jsonPath("$.announcements.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10));
 
         verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
     }
 
     @Test
-    @DisplayName("GET /v1/api/announcements - Should return 204 when no announcements found")
-    void shouldReturn204WhenNoAnnouncementsFound() throws Exception {
+    @DisplayName("GET /v1/api/announcements - should return 200 with empty list when no announcements found")
+    void shouldReturn200WithEmptyListWhenNoAnnouncementsFound() throws Exception {
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of()));
+                .thenReturn(new GetAnnouncementsPort.Output(List.of(), 0L, 0));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .param("page", "0")
                         .param("size", "10"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.announcements").isArray())
+                .andExpect(jsonPath("$.announcements.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
 
         verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
     }
 
     @Test
-    @DisplayName("GET /v1/api/announcements - Should use default pagination when params not provided")
+    @DisplayName("GET /v1/api/announcements - should use default pagination values when params not provided")
     void shouldUseDefaultPaginationWhenParamsNotProvided() throws Exception {
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of()));
+                .thenReturn(new GetAnnouncementsPort.Output(List.of(), 0L, 0));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10));
 
         verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+    }
+
+    @Test
+    @DisplayName("GET /v1/api/announcements - should filter by type when type param is provided")
+    void shouldFilterByTypeWhenTypeParamIsProvided() throws Exception {
+        AnnouncementDto announcement = new AnnouncementDto(
+                1, "Promoção", "50% off", AnnouncementType.PROMOTIONS, LocalDateTime.now(), LocalDateTime.now()
+        );
+
+        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
+                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement), 1L, 1));
+
+        mockMvc.perform(get("/v1/api/announcements")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("type", "PROMOTIONS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.announcements[0].type").value("PROMOTIONS"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        verify(getAnnouncements, times(1)).execute(argThat(input ->
+                input.type() == AnnouncementType.PROMOTIONS
+        ));
+    }
+
+    @Test
+    @DisplayName("GET /v1/api/announcements - should pass null type when type param is not provided")
+    void shouldPassNullTypeWhenTypeParamNotProvided() throws Exception {
+        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
+                .thenReturn(new GetAnnouncementsPort.Output(List.of(), 0L, 0));
+
+        mockMvc.perform(get("/v1/api/announcements")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR")))
+                .andExpect(status().isOk());
+
+        verify(getAnnouncements, times(1)).execute(argThat(input ->
+                input.type() == null
+        ));
     }
 
     @Test
     @DisplayName("GET /v1/api/announcements - CUSTOMER should be able to get announcements and return 200")
     void customerShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
-        AnnouncementDto announcement1 = new AnnouncementDto(
+        AnnouncementDto announcement = new AnnouncementDto(
                 1, "Title 1", "Content 1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement1)));
+                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement), 1L, 1));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Title 1"));
+                .andExpect(jsonPath("$.announcements[0].title").value("Title 1"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
         verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
     }
+
+    @Test
+    @DisplayName("GET /v1/api/announcements - should return correct totalPages for multi-page result")
+    void shouldReturnCorrectTotalPagesForMultiPageResult() throws Exception {
+        List<AnnouncementDto> pageContent = List.of(
+                new AnnouncementDto(1, "T1", "C1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
+                new AnnouncementDto(2, "T2", "C2", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
+                new AnnouncementDto(3, "T3", "C3", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now())
+        );
+
+        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
+                .thenReturn(new GetAnnouncementsPort.Output(pageContent, 9L, 3));
+
+        mockMvc.perform(get("/v1/api/announcements")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
+                        .param("page", "0")
+                        .param("size", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.announcements.length()").value(3))
+                .andExpect(jsonPath("$.totalElements").value(9))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.size").value(3));
+
+        verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUT /v1/api/announcements/{announcementId}
+    // ─────────────────────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("PUT /v1/api/announcements/{announcementId} - ADMINISTRATOR should update announcement and return 200")
@@ -235,6 +320,10 @@ class AnnouncementControllerTest {
         verify(updateAnnouncement, never()).execute(any(UpdateAnnouncementPort.Input.class));
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // DELETE /v1/api/announcements/{announcementId}
+    // ─────────────────────────────────────────────────────────────────────────
+
     @Test
     @DisplayName("DELETE /v1/api/announcements/{announcementId} - ADMINISTRATOR should delete announcement and return 200")
     void administratorShouldDeleteAnnouncementSuccessfully() throws Exception {
@@ -255,5 +344,40 @@ class AnnouncementControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(deleteAnnouncement, never()).execute(any(DeleteAnnouncementPort.Input.class));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /v1/api/announcements/last
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("GET /v1/api/announcements/last - should return 200 with last announcement")
+    void shouldReturnLastAnnouncementSuccessfully() throws Exception {
+        AnnouncementDto last = new AnnouncementDto(
+                5, "Last", "Last content", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
+        );
+
+        when(getLastAnnouncement.execute()).thenReturn(Optional.of(last));
+
+        mockMvc.perform(get("/v1/api/announcements/last")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5))
+                .andExpect(jsonPath("$.title").value("Last"))
+                .andExpect(jsonPath("$.type").value("UPDATES"));
+
+        verify(getLastAnnouncement, times(1)).execute();
+    }
+
+    @Test
+    @DisplayName("GET /v1/api/announcements/last - should return 204 when no announcement exists")
+    void shouldReturn204WhenNoLastAnnouncementExists() throws Exception {
+        when(getLastAnnouncement.execute()).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/v1/api/announcements/last")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR")))
+                .andExpect(status().isNoContent());
+
+        verify(getLastAnnouncement, times(1)).execute();
     }
 }

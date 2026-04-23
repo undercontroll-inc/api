@@ -4,15 +4,15 @@ import com.undercontroll.infrastructure.config.ApiResponseDocumentation.*;
 import com.undercontroll.application.dto.*;
 import com.undercontroll.application.dto.CreateAnnouncementRequest;
 import com.undercontroll.application.dto.CreateAnnouncementResponse;
+import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
 import com.undercontroll.application.dto.UpdateAnnouncementRequest;
+import com.undercontroll.domain.enums.AnnouncementType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
-
-import java.util.List;
 
 @Tag(name = "Announcements", description = "APIs para gerenciamento de anúncios e comunicados")
 @SecurityRequirement(name = "Bearer Authentication")
@@ -27,7 +27,11 @@ public interface AnnouncementApi {
 
     @Operation(summary = "Listar anúncios paginados")
     @GetApiResponses
-    ResponseEntity<List<AnnouncementDto>> getAllAnnouncements(@Parameter(example = "0") Integer page, @Parameter(example = "10") Integer size);
+    ResponseEntity<GetPaginatedAnnouncementResponse> getAllAnnouncements(
+            @Parameter(example = "0") Integer page,
+            @Parameter(example = "10") Integer size,
+            @Parameter(description = "Filtrar por tipo de anúncio") AnnouncementType type
+    );
 
     @Operation(summary = "Atualizar anúncio")
     @PutApiResponses
@@ -41,4 +45,3 @@ public interface AnnouncementApi {
     @GetApiResponses
     ResponseEntity<AnnouncementDto> getLastAnnouncement();
 }
-

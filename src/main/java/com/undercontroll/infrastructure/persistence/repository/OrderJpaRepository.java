@@ -2,6 +2,8 @@ package com.undercontroll.infrastructure.persistence.repository;
 
 import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,8 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
 
     List<OrderJpaEntity> findByUser_id(Integer userId);
 
+    @Query("SELECT o FROM OrderJpaEntity o")
+    Page<OrderJpaEntity> findAllPaginated(Pageable pageable);
 
     @Query("SELECT o FROM OrderJpaEntity o JOIN o.orderItems oi WHERE oi.id = :orderItemId")
     Optional<OrderJpaEntity> findOrderByOrderItemId(@Param("orderItemId") Integer orderItemId);

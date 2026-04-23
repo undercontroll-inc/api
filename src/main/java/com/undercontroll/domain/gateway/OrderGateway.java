@@ -1,6 +1,7 @@
 package com.undercontroll.domain.gateway;
 
 import com.undercontroll.domain.model.Order;
+import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.enums.OrderStatus;
 
 import java.time.LocalDate;
@@ -16,6 +17,8 @@ public interface OrderGateway {
     Optional<Order> findById(Integer id);
 
     List<Order> findAll();
+
+    PaginatedResult<Order> findAllPaginated(Integer offset, Integer limit);
 
     List<Order> findByUserId(Integer userId);
 

@@ -9,13 +9,13 @@ import com.undercontroll.application.dto.AnnouncementDto;
 import com.undercontroll.application.controller.AnnouncementApi;
 import com.undercontroll.application.dto.CreateAnnouncementRequest;
 import com.undercontroll.application.dto.CreateAnnouncementResponse;
+import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
 import com.undercontroll.application.dto.UpdateAnnouncementRequest;
+import com.undercontroll.domain.enums.AnnouncementType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping(value = "/v1/api/announcements")
@@ -53,14 +53,23 @@ public class AnnouncementController implements AnnouncementApi {
 
     @Override
     @GetMapping
-    public ResponseEntity<List<AnnouncementDto>> getAllAnnouncements(
+    public ResponseEntity<GetPaginatedAnnouncementResponse> getAllAnnouncements(
             @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) AnnouncementType type
     ) {
-        List<AnnouncementDto> announcements = getAnnouncements
-                .execute(new GetAnnouncementsPort.Input(page, size))
-                .announcements();
-        return announcements.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(announcements);
+        GetAnnouncementsPort.Output output = getAnnouncements.execute(
+                new GetAnnouncementsPort.Input(page, size, type)
+        );
+        return ResponseEntity.ok(
+                new GetPaginatedAnnouncementResponse(
+                        output.announcements(),
+                        output.totalElements(),
+                        output.totalPages(),
+                        page,
+                        size
+                )
+        );
     }
 
     @Override

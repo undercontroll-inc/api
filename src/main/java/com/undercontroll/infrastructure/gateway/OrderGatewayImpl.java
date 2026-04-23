@@ -1,12 +1,15 @@
 package com.undercontroll.infrastructure.gateway;
 
 import com.undercontroll.domain.model.Order;
+import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.infrastructure.mapper.OrderMapper;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
 import com.undercontroll.infrastructure.persistence.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +48,15 @@ public class OrderGatewayImpl implements OrderGateway {
         return orderJpaRepository.findAll().stream()
                 .map(orderMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public PaginatedResult<Order> findAllPaginated(Integer offset, Integer limit) {
+        Page<OrderJpaEntity> pageResult = orderJpaRepository.findAllPaginated(PageRequest.of(offset, limit));
+        List<Order> content = pageResult.getContent().stream()
+                .map(orderMapper::toDomain)
+                .toList();
+        return new PaginatedResult<>(content, pageResult.getTotalElements());
     }
 
     @Override
