@@ -20,6 +20,8 @@ public class Announcement {
 
     private String content;
 
+    private String imageUrl;
+
     private AnnouncementType type;
 
     private LocalDateTime publishedAt;

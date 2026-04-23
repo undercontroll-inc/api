@@ -31,6 +31,10 @@ public class UpdateAnnouncementImpl implements UpdateAnnouncementPort {
             announcement.setContent(input.content());
         }
 
+        if (input.imageUrl() != null) {
+            announcement.setImageUrl(input.imageUrl());
+        }
+
         if (input.type() != null) {
             announcement.setType(input.type());
         }
@@ -41,6 +45,7 @@ public class UpdateAnnouncementImpl implements UpdateAnnouncementPort {
                 saved.getId(),
                 saved.getTitle(),
                 saved.getContent(),
+                saved.getImageUrl(),
                 saved.getType(),
                 saved.getPublishedAt(),
                 saved.getUpdatedAt()

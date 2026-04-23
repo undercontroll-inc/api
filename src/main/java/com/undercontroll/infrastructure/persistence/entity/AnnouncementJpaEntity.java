@@ -27,6 +27,8 @@ public class AnnouncementJpaEntity {
 
     private String content;
 
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     private AnnouncementType type;
 

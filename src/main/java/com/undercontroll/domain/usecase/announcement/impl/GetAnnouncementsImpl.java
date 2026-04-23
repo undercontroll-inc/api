@@ -33,6 +33,7 @@ public class GetAnnouncementsImpl implements GetAnnouncementsPort {
                 announcement.getId(),
                 announcement.getTitle(),
                 announcement.getContent(),
+                announcement.getImageUrl(),
                 announcement.getType(),
                 announcement.getPublishedAt(),
                 announcement.getUpdatedAt()

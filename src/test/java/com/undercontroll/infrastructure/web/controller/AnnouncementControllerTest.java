@@ -80,11 +80,11 @@ class AnnouncementControllerTest {
         mockTokenPortWithRole("ADMINISTRATOR");
 
         CreateAnnouncementRequest request = new CreateAnnouncementRequest(
-                "New Feature", "We have a new feature available!", AnnouncementType.HOLIDAY
+                "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY
         );
 
         CreateAnnouncementPort.Output output = new CreateAnnouncementPort.Output(
-                1, "New Feature", "We have a new feature available!", AnnouncementType.HOLIDAY,
+                1, "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
@@ -108,7 +108,7 @@ class AnnouncementControllerTest {
         mockTokenPortWithRole("SCOPE_CUSTOMER");
 
         CreateAnnouncementRequest request = new CreateAnnouncementRequest(
-                "New Feature", "We have a new feature available!", AnnouncementType.HOLIDAY
+                "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY
         );
 
         mockMvc.perform(post("/v1/api/announcements")
@@ -124,10 +124,10 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - ADMINISTRATOR should get announcements paginated and return 200")
     void administratorShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
         AnnouncementDto announcement1 = new AnnouncementDto(
-                1, "Title 1", "Content 1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                1, "Title 1", "Content 1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
         AnnouncementDto announcement2 = new AnnouncementDto(
-                2, "Title 2", "Content 2", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                2, "Title 2", "Content 2", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -177,7 +177,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - CUSTOMER should be able to get announcements and return 200")
     void customerShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
         AnnouncementDto announcement1 = new AnnouncementDto(
-                1, "Title 1", "Content 1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                1, "Title 1", "Content 1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -197,11 +197,11 @@ class AnnouncementControllerTest {
     @DisplayName("PUT /v1/api/announcements/{announcementId} - ADMINISTRATOR should update announcement and return 200")
     void administratorShouldUpdateAnnouncementSuccessfully() throws Exception {
         UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated Title", "Updated Content", AnnouncementType.HOLIDAY
+                "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY
         );
 
         UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
-                1, "Updated Title", "Updated Content", AnnouncementType.HOLIDAY,
+                1, "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
@@ -223,7 +223,7 @@ class AnnouncementControllerTest {
     @DisplayName("PUT /v1/api/announcements/{announcementId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToUpdateAnnouncement() throws Exception {
         UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated Title", "Updated Content", AnnouncementType.HOLIDAY
+                "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY
         );
 
         mockMvc.perform(put("/v1/api/announcements/1")

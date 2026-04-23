@@ -24,6 +24,7 @@ public class CreateAnnouncementImpl implements CreateAnnouncementPort {
         Announcement announcement = Announcement.builder()
                 .title(input.title())
                 .content(input.description())
+                .imageUrl(input.imageUrl())
                 .type(input.type())
                 .build();
 
@@ -37,6 +38,7 @@ public class CreateAnnouncementImpl implements CreateAnnouncementPort {
                 announcementCreated.getId(),
                 announcementCreated.getTitle(),
                 announcementCreated.getContent(),
+                announcementCreated.getImageUrl(),
                 announcementCreated.getType(),
                 announcementCreated.getPublishedAt(),
                 announcementCreated.getUpdatedAt()
