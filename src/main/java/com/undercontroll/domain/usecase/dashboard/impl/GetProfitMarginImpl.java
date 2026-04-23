@@ -19,14 +19,10 @@ public class GetProfitMarginImpl implements GetProfitMarginPort {
     @Cacheable(value = "dashboardMetrics", key = "#input.period().toString() + '-' + #input.status().toString() + '-profitMargin'")
     public Output execute(Input input) {
         LocalDate startDate = DashboardDateFilter.from(input.period());
-        var statuses = input.status().getStatuses();
-
-        var statusStrings = statuses.stream()
-                .map(Enum::name)
-                .toList();
+        var statuses = input.status().getStatuses().stream().map(Enum::name).toList();
 
         Double totalRevenue = orderGateway.calculateTotalRevenueFiltered(startDate, statuses);
-        Double totalPartsCost = orderGateway.calculateTotalPartsCostFiltered(startDate, statusStrings);
+        Double totalPartsCost = orderGateway.calculateTotalPartsCostFiltered(startDate, statuses);
         Double profitMargin = totalRevenue - totalPartsCost;
 
         return new Output(profitMargin);

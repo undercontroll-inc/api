@@ -1,6 +1,5 @@
 package com.undercontroll.infrastructure.persistence.repository;
 
-import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,12 +49,15 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     """, nativeQuery = true)
     List<Object[]> findAllPartsByOrderIdNative(@Param("orderId") Integer orderId);
 
-    @Query("SELECT COALESCE(SUM(o.total), 0.0) FROM OrderJpaEntity o " +
-           "WHERE (:startDate IS NULL OR o.received_at >= :startDate) " +
-           "AND o.status IN :statuses")
+    @Query(value = """
+    SELECT COALESCE(SUM(o.total), 0.0)
+    FROM orders o
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
+      AND o.status IN :statuses
+    """, nativeQuery = true)
     Double calculateTotalRevenueFiltered(
             @Param("startDate") LocalDate startDate,
-            @Param("statuses") List<OrderStatus> statuses);
+            @Param("statuses") List<String> statuses);
 
     @Query(value = """
     SELECT COALESCE(SUM(c.price * d.quantity), 0.0)
@@ -69,19 +71,25 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
             @Param("startDate") LocalDate startDate,
             @Param("statuses") List<String> statuses);
 
-    @Query("SELECT COALESCE(AVG(o.total), 0.0) FROM OrderJpaEntity o " +
-           "WHERE (:startDate IS NULL OR o.received_at >= :startDate) " +
-           "AND o.status IN :statuses")
+    @Query(value = """
+    SELECT COALESCE(AVG(o.total), 0.0)
+    FROM orders o
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
+      AND o.status IN :statuses
+    """, nativeQuery = true)
     Double calculateAverageOrderPriceFiltered(
             @Param("startDate") LocalDate startDate,
-            @Param("statuses") List<OrderStatus> statuses);
+            @Param("statuses") List<String> statuses);
 
-    @Query("SELECT COUNT(o) FROM OrderJpaEntity o " +
-           "WHERE (:startDate IS NULL OR o.received_at >= :startDate) " +
-           "AND o.status IN :statuses")
+    @Query(value = """
+    SELECT COUNT(o.id)
+    FROM orders o
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
+      AND o.status IN :statuses
+    """, nativeQuery = true)
     Long countOngoingOrdersFiltered(
             @Param("startDate") LocalDate startDate,
-            @Param("statuses") List<OrderStatus> statuses);
+            @Param("statuses") List<String> statuses);
 
     @Query(value = """
     SELECT COALESCE(AVG((completed_time - received_at) * 24), 0.0)

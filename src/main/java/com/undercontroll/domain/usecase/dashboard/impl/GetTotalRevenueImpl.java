@@ -19,7 +19,7 @@ public class GetTotalRevenueImpl implements GetTotalRevenuePort {
     @Cacheable(value = "dashboardMetrics", key = "#input.period().toString() + '-' + #input.status().toString() + '-totalRevenue'")
     public Output execute(Input input) {
         LocalDate startDate = DashboardDateFilter.from(input.period());
-        var statuses = input.status().getStatuses();
+        var statuses = input.status().getStatuses().stream().map(Enum::name).toList();
 
         Double totalRevenue = orderGateway.calculateTotalRevenueFiltered(startDate, statuses);
 

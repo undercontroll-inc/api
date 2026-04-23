@@ -2,8 +2,6 @@ package com.undercontroll.domain.gateway;
 
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.PaginatedResult;
-import com.undercontroll.domain.enums.OrderStatus;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +26,7 @@ public interface OrderGateway {
 
     List<Object[]> findAllPartsByOrderIdNative(Integer orderId);
 
-    Double calculateTotalRevenueFiltered(LocalDate startDate, List<OrderStatus> statuses);
+    Double calculateTotalRevenueFiltered(LocalDate startDate, List<String> statuses);
 
     Double calculateTotalPartsCostFiltered(LocalDate startDate, List<String> statuses);
 

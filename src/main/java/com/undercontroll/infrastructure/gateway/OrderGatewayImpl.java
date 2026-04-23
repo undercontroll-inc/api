@@ -2,7 +2,6 @@ package com.undercontroll.infrastructure.gateway;
 
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.PaginatedResult;
-import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.infrastructure.mapper.OrderMapper;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
@@ -83,7 +82,7 @@ public class OrderGatewayImpl implements OrderGateway {
     }
 
     @Override
-    public Double calculateTotalRevenueFiltered(LocalDate startDate, List<OrderStatus> statuses) {
+    public Double calculateTotalRevenueFiltered(LocalDate startDate, List<String> statuses) {
         return orderJpaRepository.calculateTotalRevenueFiltered(startDate, statuses);
     }
 
@@ -94,18 +93,12 @@ public class OrderGatewayImpl implements OrderGateway {
 
     @Override
     public Double calculateAverageOrderPriceFiltered(LocalDate startDate, List<String> statuses) {
-        List<OrderStatus> orderStatuses = statuses.stream()
-                .map(OrderStatus::valueOf)
-                .toList();
-        return orderJpaRepository.calculateAverageOrderPriceFiltered(startDate, orderStatuses);
+        return orderJpaRepository.calculateAverageOrderPriceFiltered(startDate, statuses);
     }
 
     @Override
     public Long countOngoingOrdersFiltered(LocalDate startDate, List<String> statuses) {
-        List<OrderStatus> orderStatuses = statuses.stream()
-                .map(OrderStatus::valueOf)
-                .toList();
-        return orderJpaRepository.countOngoingOrdersFiltered(startDate, orderStatuses);
+        return orderJpaRepository.countOngoingOrdersFiltered(startDate, statuses);
     }
 
     @Override
