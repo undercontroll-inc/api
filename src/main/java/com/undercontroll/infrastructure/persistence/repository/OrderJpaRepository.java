@@ -62,7 +62,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     FROM orders o
     INNER JOIN demand d ON o.id = d.order_id
     INNER JOIN component c ON d.component_id = c.id
-    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
       AND o.status IN :statuses
     """, nativeQuery = true)
     Double calculateTotalPartsCostFiltered(
@@ -86,7 +86,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     @Query(value = """
     SELECT COALESCE(AVG((completed_time - received_at) * 24), 0.0)
     FROM orders
-    WHERE (:startDate IS NULL OR received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR received_at >= CAST(:startDate AS DATE))
       AND status IN :statuses
       AND received_at IS NOT NULL
       AND completed_time IS NOT NULL
@@ -108,7 +108,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         INNER JOIN component c ON d.component_id = c.id
         GROUP BY d.order_id
     ) parts ON o.id = parts.order_id
-    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
       AND o.status IN :statuses
       AND o.received_at IS NOT NULL
     GROUP BY o.received_at
@@ -125,7 +125,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         COUNT(DISTINCT CASE WHEN u.already_recurrent = false THEN u.id END) AS new_customers
     FROM orders o
     INNER JOIN "user" u ON o.user_id = u.id
-    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
       AND o.status IN :statuses
       AND o.received_at IS NOT NULL
     GROUP BY o.received_at
@@ -140,7 +140,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         o.status,
         COUNT(o.id) AS status_count
     FROM orders o
-    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
     GROUP BY o.status
     ORDER BY 2 DESC
     """, nativeQuery = true)
@@ -153,7 +153,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
         COUNT(oi.id) AS appliance_count
     FROM orders o
     INNER JOIN order_item oi ON oi.order_id = o.id
-    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
       AND o.status IN :statuses
       AND oi.type IS NOT NULL
     GROUP BY oi.type, oi.brand
@@ -174,7 +174,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     FROM demand d
     INNER JOIN component c ON d.component_id = c.id
     INNER JOIN orders o ON d.order_id = o.id
-    WHERE (:startDate IS NULL OR o.received_at >= :startDate)
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
       AND o.status IN :statuses
     GROUP BY c.id, c.name, c.brand, c.category
     ORDER BY total_quantity DESC
