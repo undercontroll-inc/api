@@ -84,8 +84,8 @@ jobs:
           REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST != '' && vars.RABBITMQ_HOST || secrets.RABBITMQ_HOST }}
-          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
-          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          RABBITMQ_USER: ${{ secrets.RABBIT_USERNAME }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBIT_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MAIL_HOST: ${{ secrets.MAIL_HOST }}
           MAIL_PORT: ${{ secrets.MAIL_PORT }}
