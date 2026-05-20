@@ -18,9 +18,7 @@ spring:
     open-in-view: false
 
   cache:
-    type: caffeine
-    caffeine:
-      spec: maximumSize=1000,expireAfterWrite=1h
+    type: redis
 
   mail:
     host: ${MAIL_HOST:localhost}
