@@ -29,6 +29,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+  redis:
+    image: redis:7-alpine
+    container_name: undercontroll-test-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
@@ -40,12 +54,16 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/undercontroll
       DB_DRIVER: org.postgresql.Driver
       DB_USERNAME: undercontroll
       DB_PASSWORD: undercontroll
+      REDIS_HOST: redis
+      REDIS_PASSWORD: redis
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"
       RABBITMQ_USER: rabbitmq
@@ -88,3 +106,4 @@ services:
 
 volumes:
   postgres-data:
+  redis_data:

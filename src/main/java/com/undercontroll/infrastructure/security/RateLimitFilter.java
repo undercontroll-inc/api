@@ -35,8 +35,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private CaffeineProxyManager<String> authManager;
     private CaffeineProxyManager<String> generalManager;
-    private BucketConfiguration          authConfig;
-    private BucketConfiguration          generalConfig;
+    private BucketConfiguration authConfig;
+    private BucketConfiguration generalConfig;
 
     @PostConstruct
     void init() {
@@ -72,8 +72,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             FilterChain chain
     ) throws ServletException, IOException {
 
-        String ip      = resolveClientIp(request);
-        String path    = request.getServletPath();
+        String ip = resolveClientIp(request);
+        String path = request.getServletPath();
         boolean isAuth = isAuthEndpoint(request.getMethod(), path);
 
         BucketProxy bucket = isAuth

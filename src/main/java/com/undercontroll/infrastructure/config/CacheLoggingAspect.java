@@ -1,6 +1,7 @@
 package com.undercontroll.infrastructure.config;
 
 import com.undercontroll.infrastructure.service.MetricsService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -10,22 +11,19 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
 @Slf4j
 @Aspect
+@RequiredArgsConstructor
 @Component
 public class CacheLoggingAspect {
 
-    private final CacheManager cacheManager;
+    private final RedisCacheManager cacheManager;
     private final MetricsService metricsService;
-
-    public CacheLoggingAspect(CacheManager cacheManager, MetricsService metricsService) {
-        this.cacheManager = cacheManager;
-        this.metricsService = metricsService;
-    }
 
     @Around("@annotation(org.springframework.cache.annotation.Cacheable)")
     public Object logCacheableOperation(ProceedingJoinPoint joinPoint) throws Throwable {
