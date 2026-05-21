@@ -37,13 +37,14 @@ public class AnnouncementController implements AnnouncementApi {
         String token = auth.split("Bearer ")[1];
 
         CreateAnnouncementPort.Output output = createAnnouncement.execute(
-                new CreateAnnouncementPort.Input(request.title(), request.description(), token, request.type())
+                new CreateAnnouncementPort.Input(request.title(), request.description(), request.imageUrl(), token, request.type())
         );
         return ResponseEntity.status(201).body(
                 new CreateAnnouncementResponse(
                         output.id(),
                         output.title(),
                         output.content(),
+                        output.imageUrl(),
                         output.type(),
                         output.publishedAt(),
                         output.updatedAt()
@@ -79,13 +80,14 @@ public class AnnouncementController implements AnnouncementApi {
             @PathVariable Integer announcementId
     ) {
         UpdateAnnouncementPort.Output output = updateAnnouncement.execute(
-                new UpdateAnnouncementPort.Input(announcementId, request.title(), request.content(), request.type())
+                new UpdateAnnouncementPort.Input(announcementId, request.title(), request.content(), request.imageUrl(), request.type())
         );
         return ResponseEntity.ok(
                 new AnnouncementDto(
                         output.id(),
                         output.title(),
                         output.content(),
+                        output.imageUrl(),
                         output.type(),
                         output.publishedAt(),
                         output.updatedAt()

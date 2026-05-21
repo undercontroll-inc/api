@@ -12,6 +12,8 @@ public record CreateAnnouncementRequest(
         @NotBlank
         String description,
 
+        String imageUrl,
+
         @NotNull
         AnnouncementType type
 ) {

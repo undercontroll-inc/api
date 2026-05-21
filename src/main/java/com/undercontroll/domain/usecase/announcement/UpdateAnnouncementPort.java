@@ -9,6 +9,7 @@ public interface UpdateAnnouncementPort {
             Integer id,
             String title,
             String content,
+            String imageUrl,
             AnnouncementType type
     ) {}
 
@@ -16,6 +17,7 @@ public interface UpdateAnnouncementPort {
             Integer id,
             String title,
             String content,
+            String imageUrl,
             AnnouncementType type,
             LocalDateTime publishedAt,
             LocalDateTime updatedAt

@@ -8,6 +8,7 @@ public interface CreateAnnouncementPort {
     record Input(
             String title,
             String description,
+            String imageUrl,
             String token,
             AnnouncementType type
     ) {}
@@ -16,6 +17,7 @@ public interface CreateAnnouncementPort {
             Integer id,
             String title,
             String content,
+            String imageUrl,
             AnnouncementType type,
             LocalDateTime publishedAt,
             LocalDateTime updatedAt

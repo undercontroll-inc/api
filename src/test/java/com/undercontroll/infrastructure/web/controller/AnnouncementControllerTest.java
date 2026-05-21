@@ -81,11 +81,11 @@ class AnnouncementControllerTest {
         mockTokenPortWithRole("ADMINISTRATOR");
 
         CreateAnnouncementRequest request = new CreateAnnouncementRequest(
-                "New Feature", "We have a new feature available!", AnnouncementType.HOLIDAY
+                "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY
         );
 
         CreateAnnouncementPort.Output output = new CreateAnnouncementPort.Output(
-                1, "New Feature", "We have a new feature available!", AnnouncementType.HOLIDAY,
+                1, "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
@@ -109,7 +109,7 @@ class AnnouncementControllerTest {
         mockTokenPortWithRole("SCOPE_CUSTOMER");
 
         CreateAnnouncementRequest request = new CreateAnnouncementRequest(
-                "New Feature", "We have a new feature available!", AnnouncementType.HOLIDAY
+                "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY
         );
 
         mockMvc.perform(post("/v1/api/announcements")
@@ -129,10 +129,10 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - should return 200 with paginated response")
     void administratorShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
         AnnouncementDto announcement1 = new AnnouncementDto(
-                1, "Title 1", "Content 1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                1, "Title 1", "Content 1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
         AnnouncementDto announcement2 = new AnnouncementDto(
-                2, "Title 2", "Content 2", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
+                2, "Title 2", "Content 2", null, AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -192,7 +192,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - should filter by type when type param is provided")
     void shouldFilterByTypeWhenTypeParamIsProvided() throws Exception {
         AnnouncementDto announcement = new AnnouncementDto(
-                1, "Promoção", "50% off", AnnouncementType.PROMOTIONS, LocalDateTime.now(), LocalDateTime.now()
+                1, "Promoção", "50% off", null, AnnouncementType.PROMOTIONS, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -231,7 +231,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - CUSTOMER should be able to get announcements and return 200")
     void customerShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
         AnnouncementDto announcement = new AnnouncementDto(
-                1, "Title 1", "Content 1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                1, "Title 1", "Content 1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -253,9 +253,9 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - should return correct totalPages for multi-page result")
     void shouldReturnCorrectTotalPagesForMultiPageResult() throws Exception {
         List<AnnouncementDto> pageContent = List.of(
-                new AnnouncementDto(1, "T1", "C1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
-                new AnnouncementDto(2, "T2", "C2", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
-                new AnnouncementDto(3, "T3", "C3", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now())
+                new AnnouncementDto(1, "T1", "C1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
+                new AnnouncementDto(2, "T2", "C2", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
+                new AnnouncementDto(3, "T3", "C3", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now())
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -282,11 +282,11 @@ class AnnouncementControllerTest {
     @DisplayName("PUT /v1/api/announcements/{announcementId} - ADMINISTRATOR should update announcement and return 200")
     void administratorShouldUpdateAnnouncementSuccessfully() throws Exception {
         UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated Title", "Updated Content", AnnouncementType.HOLIDAY
+                "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY
         );
 
         UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
-                1, "Updated Title", "Updated Content", AnnouncementType.HOLIDAY,
+                1, "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
@@ -308,7 +308,7 @@ class AnnouncementControllerTest {
     @DisplayName("PUT /v1/api/announcements/{announcementId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToUpdateAnnouncement() throws Exception {
         UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated Title", "Updated Content", AnnouncementType.HOLIDAY
+                "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY
         );
 
         mockMvc.perform(put("/v1/api/announcements/1")
@@ -354,7 +354,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements/last - should return 200 with last announcement")
     void shouldReturnLastAnnouncementSuccessfully() throws Exception {
         AnnouncementDto last = new AnnouncementDto(
-                5, "Last", "Last content", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
+                5, "Last", "Last content", null, AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getLastAnnouncement.execute()).thenReturn(Optional.of(last));

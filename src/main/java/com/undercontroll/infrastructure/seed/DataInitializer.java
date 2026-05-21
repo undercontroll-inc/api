@@ -151,6 +151,7 @@ public class DataInitializer {
         announcementGateway.save(Announcement.builder()
                 .title("Bem-vindo!")
                 .content("Bem-vindo ao sistema UnderControl. Utilize suas credenciais para acessar.")
+                .imageUrl(null)
                 .type(AnnouncementType.UPDATES)
                 .publishedAt(LocalDateTime.now())
                 .build());

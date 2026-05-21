@@ -28,6 +28,7 @@ public class GetLastAnnouncementImpl implements GetLastAnnouncementPort {
                 announcement.getId(),
                 announcement.getTitle(),
                 announcement.getContent(),
+                announcement.getImageUrl(),
                 announcement.getType(),
                 announcement.getPublishedAt(),
                 announcement.getUpdatedAt()
