@@ -1,11 +1,14 @@
 package com.undercontroll.infrastructure.gateway;
 
+import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.domain.model.Announcement;
+import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
 import com.undercontroll.infrastructure.mapper.AnnouncementMapper;
 import com.undercontroll.infrastructure.persistence.entity.AnnouncementJpaEntity;
 import com.undercontroll.infrastructure.persistence.repository.AnnouncementRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
@@ -44,10 +47,13 @@ public class AnnouncementGatewayImpl implements AnnouncementGateway {
     }
 
     @Override
-    public List<Announcement> findAllPaginated(int page, int size) {
-        return announcementRepository.findAllPaginated(PageRequest.of(page, size)).stream()
+    public PaginatedResult<Announcement> findAllPaginated(int page, int size, AnnouncementType type) {
+        Page<AnnouncementJpaEntity> pageResult = announcementRepository
+                .findAllPaginated(PageRequest.of(page, size), type);
+        List<Announcement> content = pageResult.getContent().stream()
                 .map(announcementMapper::toDomain)
                 .toList();
+        return new PaginatedResult<>(content, pageResult.getTotalElements());
     }
 
     @Override

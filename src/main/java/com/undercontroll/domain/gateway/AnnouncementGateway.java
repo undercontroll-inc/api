@@ -1,6 +1,8 @@
 package com.undercontroll.domain.gateway;
 
+import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.domain.model.Announcement;
+import com.undercontroll.domain.model.PaginatedResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +17,7 @@ public interface AnnouncementGateway {
 
     List<Announcement> findAll();
 
-    List<Announcement> findAllPaginated(int page, int size);
+    PaginatedResult<Announcement> findAllPaginated(int page, int size, AnnouncementType type);
 
     Optional<Announcement> findLastAnnouncement();
 

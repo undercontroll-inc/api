@@ -1,6 +1,11 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis
   rabbitmq:
-    host: localhost
+    host: rabbitmq
     port: 5672
     username: rabbitmq
     password: rabbitmq

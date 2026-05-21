@@ -65,7 +65,7 @@ public class DashboardController {
             @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
             @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
         var output = getAverageRepairTimePort.execute(new GetAverageRepairTimePort.Input(period, status));
-        return ResponseEntity.ok(output.response() != null ? output.response() : new DashboardMetricsResponse(null));
+        return ResponseEntity.ok(output.response());
     }
 
     @GetMapping("/charts/revenue-evolution")

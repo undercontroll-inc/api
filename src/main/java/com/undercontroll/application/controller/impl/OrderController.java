@@ -61,9 +61,18 @@ public class OrderController implements OrderApi {
 
     @Override
     @GetMapping
-    public ResponseEntity<GetAllOrdersResponse> getOrders() {
-        var output = getOrdersPort.execute(new GetOrdersPort.Input());
-        return ResponseEntity.ok(new GetAllOrdersResponse(output.orders()));
+    public ResponseEntity<GetAllOrdersResponse> getOrders(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size
+    ) {
+        var output = getOrdersPort.execute(new GetOrdersPort.Input(page, size));
+        return ResponseEntity.ok(new GetAllOrdersResponse(
+                output.orders(),
+                output.totalElements(),
+                output.totalPages(),
+                page,
+                size
+        ));
     }
 
     @Override

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "Orders", description = "APIs para gerenciamento de pedidos e ordens de serviço")
 @SecurityRequirement(name = "Bearer Authentication")
@@ -23,9 +24,12 @@ public interface OrderApi {
     @PutApiResponses
     ResponseEntity<Void> updateOrder(@Parameter(example = "1") Integer id, UpdateOrderRequest request);
 
-    @Operation(summary = "Listar todos os pedidos")
+    @Operation(summary = "Listar todos os pedidos usando paginacao")
     @GetApiResponses
-    ResponseEntity<GetAllOrdersResponse> getOrders();
+    ResponseEntity<GetAllOrdersResponse> getOrders(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size
+    );
 
     @Operation(summary = "Buscar pedido por ID")
     @GetApiResponses
@@ -39,4 +43,3 @@ public interface OrderApi {
     @GetApiResponses
     ResponseEntity<GetOrdersByUserIdResponse> getOrdersByUserId(@Parameter(example = "1") Integer userId);
 }
-
