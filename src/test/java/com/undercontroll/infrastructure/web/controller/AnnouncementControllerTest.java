@@ -192,7 +192,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - should filter by type when type param is provided")
     void shouldFilterByTypeWhenTypeParamIsProvided() throws Exception {
         AnnouncementDto announcement = new AnnouncementDto(
-                1, "Promoção", "50% off", AnnouncementType.PROMOTIONS, LocalDateTime.now(), LocalDateTime.now()
+                1, "Promoção", "50% off", null, AnnouncementType.PROMOTIONS, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -253,9 +253,9 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - should return correct totalPages for multi-page result")
     void shouldReturnCorrectTotalPagesForMultiPageResult() throws Exception {
         List<AnnouncementDto> pageContent = List.of(
-                new AnnouncementDto(1, "T1", "C1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
-                new AnnouncementDto(2, "T2", "C2", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
-                new AnnouncementDto(3, "T3", "C3", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now())
+                new AnnouncementDto(1, "T1", "C1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
+                new AnnouncementDto(2, "T2", "C2", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()),
+                new AnnouncementDto(3, "T3", "C3", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now())
         );
 
         when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
@@ -354,7 +354,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements/last - should return 200 with last announcement")
     void shouldReturnLastAnnouncementSuccessfully() throws Exception {
         AnnouncementDto last = new AnnouncementDto(
-                5, "Last", "Last content", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
+                5, "Last", "Last content", null, AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getLastAnnouncement.execute()).thenReturn(Optional.of(last));
