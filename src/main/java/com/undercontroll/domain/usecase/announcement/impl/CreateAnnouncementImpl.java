@@ -85,6 +85,10 @@ public class CreateAnnouncementImpl implements CreateAnnouncementPort {
             return extension;
         }
 
+        if (contentType == null || contentType.isBlank()) {
+            return "bin";
+        }
+
         return switch (contentType.toLowerCase(Locale.ROOT)) {
             case "image/jpeg", "image/jpg" -> "jpg";
             case "image/png" -> "png";
@@ -95,6 +99,10 @@ public class CreateAnnouncementImpl implements CreateAnnouncementPort {
     }
 
     private String extensionFromName(String originalName) {
+        if (originalName == null || originalName.isBlank()) {
+            return "";
+        }
+
         int dotIndex = originalName.lastIndexOf('.');
 
         if (dotIndex < 0 || dotIndex == originalName.length() - 1) {
