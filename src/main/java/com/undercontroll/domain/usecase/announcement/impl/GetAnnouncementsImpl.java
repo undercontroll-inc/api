@@ -5,8 +5,9 @@ import com.undercontroll.domain.usecase.announcement.GetAnnouncementsPort;
 import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
 import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,9 +17,15 @@ import java.util.List;
 public class GetAnnouncementsImpl implements GetAnnouncementsPort {
 
     private final AnnouncementGateway announcementGateway;
+    private final StorageService storageService;
+
+    @Value("${aws.s3.upload-bucket}")
+    private String bucket;
+
+    @Value("${aws.s3.read-expiration-minutes:1440}")
+    private Long readExpirationMinutes;
 
     @Override
-    @Cacheable(value = "announcements", key = "#input.page() + '-' + #input.size() + '-' + #input.type()")
     public Output execute(Input input) {
         PaginatedResult<Announcement> result = announcementGateway
                 .findAllPaginated(input.page(), input.size(), input.type());
@@ -39,10 +46,18 @@ public class GetAnnouncementsImpl implements GetAnnouncementsPort {
                 announcement.getId(),
                 announcement.getTitle(),
                 announcement.getContent(),
-                announcement.getImageUrl(),
+                resolveImageUrl(announcement),
                 announcement.getType(),
                 announcement.getPublishedAt(),
                 announcement.getUpdatedAt()
         );
+    }
+
+    private String resolveImageUrl(Announcement announcement) {
+        if (announcement.getImageKey() == null || announcement.getImageKey().isBlank()) {
+            return null;
+        }
+
+        return storageService.generateReadPresignedUrl(bucket, announcement.getImageKey(), readExpirationMinutes);
     }
 }

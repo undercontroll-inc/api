@@ -47,8 +47,6 @@ public class DataInitializer {
 
         String defaultPassword = encoder.encode("123");
 
-        // ── Users ─────────────────────────────────────────────────────────────
-
         User admin = User.builder()
                 .name("Admin").lastName("Sistema")
                 .email("admin@undercontroll.com").password(defaultPassword)
@@ -109,8 +107,6 @@ public class DataInitializer {
                 .build();
         ana = userGateway.save(ana);
 
-        // ── Components ────────────────────────────────────────────────────────
-
         ComponentPart placaPrincipal = componentGateway.save(ComponentPart.builder()
                 .name("Placa Principal").description("Placa principal modelo X")
                 .brand("Electrolux").price(150.00).supplier("TechParts").category("Placas").quantity(10L)
@@ -146,23 +142,16 @@ public class DataInitializer {
                 .brand("Bosch").price(35.00).supplier("SensorBras").category("Sensores").quantity(40L)
                 .build());
 
-        // ── Announcement ─────────────────────────────────────────────────────
-
         announcementGateway.save(Announcement.builder()
                 .title("Bem-vindo!")
                 .content("Bem-vindo ao sistema UnderControl. Utilize suas credenciais para acessar.")
-                .imageUrl(null)
+                .imageKey(null)
                 .type(AnnouncementType.UPDATES)
                 .publishedAt(LocalDateTime.now())
                 .build());
 
-        // ── Orders ────────────────────────────────────────────────────────────
-        // Spread across different periods so all dashboard filters return data.
-        // received_at drives period filters; completedTime enables repair time calc.
 
         LocalDate today = LocalDate.now();
-
-        // Last 7 days ─────────────────────────────────────────────────────────
 
         saveOrder(joao, OrderStatus.COMPLETED,
                 today.minusDays(2), today.minusDays(1), 520.00,
@@ -183,8 +172,6 @@ public class DataInitializer {
                 today.minusDays(1), null, 95.00,
                 "Fogão", "Consul", "CF4GB", "220V",
                 List.of(entry(resistencia, 2L)));
-
-        // Last 30 days ────────────────────────────────────────────────────────
 
         saveOrder(ana, OrderStatus.DELIVERED,
                 today.minusDays(10), today.minusDays(7), 760.00,
@@ -216,8 +203,6 @@ public class DataInitializer {
                 "Fogão", "Brastemp", "BF4GB", "220V",
                 List.of(entry(resistencia, 2L), entry(sensor, 1L)));
 
-        // Last 90 days ────────────────────────────────────────────────────────
-
         saveOrder(joao, OrderStatus.DELIVERED,
                 today.minusDays(35), today.minusDays(30), 890.00,
                 "Ar-condicionado", "LG", "TS-Q122", "220V",
@@ -247,8 +232,6 @@ public class DataInitializer {
                 today.minusDays(70), today.minusDays(65), 255.00,
                 "Microondas", "Brastemp", "BMG45", "110V",
                 List.of(entry(placaControle, 1L)));
-
-        // Older (this year / previous year) ───────────────────────────────────
 
         saveOrder(maria, OrderStatus.DELIVERED,
                 today.minusDays(120), today.minusDays(115), 730.00,

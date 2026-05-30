@@ -11,6 +11,7 @@ import com.undercontroll.application.dto.CreateAnnouncementRequest;
 import com.undercontroll.application.dto.CreateAnnouncementResponse;
 import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
 import com.undercontroll.application.dto.UpdateAnnouncementRequest;
+import com.undercontroll.application.dto.UpdateAnnouncementResponse;
 import com.undercontroll.domain.enums.AnnouncementType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,14 +38,14 @@ public class AnnouncementController implements AnnouncementApi {
         String token = auth.split("Bearer ")[1];
 
         CreateAnnouncementPort.Output output = createAnnouncement.execute(
-                new CreateAnnouncementPort.Input(request.title(), request.description(), request.imageUrl(), token, request.type())
+                new CreateAnnouncementPort.Input(request.title(), request.description(), token, request.imageUpload(), request.type())
         );
         return ResponseEntity.status(201).body(
                 new CreateAnnouncementResponse(
                         output.id(),
                         output.title(),
                         output.content(),
-                        output.imageUrl(),
+                        output.imageUpload(),
                         output.type(),
                         output.publishedAt(),
                         output.updatedAt()
@@ -75,19 +76,27 @@ public class AnnouncementController implements AnnouncementApi {
 
     @Override
     @PutMapping(value = "/{announcementId}")
-    public ResponseEntity<AnnouncementDto> updateAnnouncement(
+    public ResponseEntity<UpdateAnnouncementResponse> updateAnnouncement(
             @Valid @RequestBody UpdateAnnouncementRequest request,
             @PathVariable Integer announcementId
     ) {
         UpdateAnnouncementPort.Output output = updateAnnouncement.execute(
-                new UpdateAnnouncementPort.Input(announcementId, request.title(), request.content(), request.imageUrl(), request.type())
+                new UpdateAnnouncementPort.Input(
+                        announcementId,
+                        request.title(),
+                        request.content(),
+                        request.imageUpload(),
+                        request.removeImage(),
+                        request.type()
+                )
         );
         return ResponseEntity.ok(
-                new AnnouncementDto(
+                new UpdateAnnouncementResponse(
                         output.id(),
                         output.title(),
                         output.content(),
                         output.imageUrl(),
+                        output.imageUpload(),
                         output.type(),
                         output.publishedAt(),
                         output.updatedAt()

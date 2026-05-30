@@ -4,8 +4,9 @@ import com.undercontroll.domain.usecase.announcement.GetLastAnnouncementPort;
 import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
 import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,9 +16,15 @@ import java.util.Optional;
 public class GetLastAnnouncementImpl implements GetLastAnnouncementPort {
 
     private final AnnouncementGateway announcementGateway;
+    private final StorageService storageService;
+
+    @Value("${aws.s3.upload-bucket}")
+    private String bucket;
+
+    @Value("${aws.s3.read-expiration-minutes:1440}")
+    private Long readExpirationMinutes;
 
     @Override
-    @Cacheable(value = "lastAnnouncement")
     public Optional<AnnouncementDto> execute() {
         return announcementGateway.findLastAnnouncement()
                 .map(this::mapToDto);
@@ -28,10 +35,18 @@ public class GetLastAnnouncementImpl implements GetLastAnnouncementPort {
                 announcement.getId(),
                 announcement.getTitle(),
                 announcement.getContent(),
-                announcement.getImageUrl(),
+                resolveImageUrl(announcement),
                 announcement.getType(),
                 announcement.getPublishedAt(),
                 announcement.getUpdatedAt()
         );
+    }
+
+    private String resolveImageUrl(Announcement announcement) {
+        if (announcement.getImageKey() == null || announcement.getImageKey().isBlank()) {
+            return null;
+        }
+
+        return storageService.generateReadPresignedUrl(bucket, announcement.getImageKey(), readExpirationMinutes);
     }
 }

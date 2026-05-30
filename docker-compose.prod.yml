@@ -26,6 +26,9 @@ services:
       ACCESS_KEY_ID: ${ACCESS_KEY_ID}
       SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
       SESSION_TOKEN: ${SESSION_TOKEN}
+      S3_EXPORT_BUCKET: ${S3_EXPORT_BUCKET}
+      S3_UPLOAD_BUCKET: ${S3_UPLOAD_BUCKET}
+      S3_READ_EXPIRATION_MINUTES: ${S3_READ_EXPIRATION_MINUTES:-1440}
     volumes:
       - /opt/app/firebase-service-account.json:/opt/app/firebase-service-account.json:ro
     healthcheck:
