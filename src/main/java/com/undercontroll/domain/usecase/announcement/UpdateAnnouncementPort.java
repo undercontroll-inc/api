@@ -1,5 +1,7 @@
 package com.undercontroll.domain.usecase.announcement;
 
+import com.undercontroll.application.dto.AnnouncementImageUploadDto;
+import com.undercontroll.application.dto.GenerateUploadUrlResponse;
 import com.undercontroll.domain.enums.AnnouncementType;
 
 import java.time.LocalDateTime;
@@ -9,7 +11,8 @@ public interface UpdateAnnouncementPort {
             Integer id,
             String title,
             String content,
-            String imageUrl,
+            AnnouncementImageUploadDto imageUpload,
+            Boolean removeImage,
             AnnouncementType type
     ) {}
 
@@ -18,6 +21,7 @@ public interface UpdateAnnouncementPort {
             String title,
             String content,
             String imageUrl,
+            GenerateUploadUrlResponse imageUpload,
             AnnouncementType type,
             LocalDateTime publishedAt,
             LocalDateTime updatedAt

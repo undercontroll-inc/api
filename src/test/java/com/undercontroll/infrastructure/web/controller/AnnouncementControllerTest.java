@@ -4,7 +4,10 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.dto.AnnouncementImageUploadDto;
+import com.undercontroll.application.dto.GenerateUploadUrlResponse;
 import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
+import com.undercontroll.domain.exception.InvalidAnnouncementException;
 import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.announcement.*;
@@ -104,6 +107,44 @@ class AnnouncementControllerTest {
     }
 
     @Test
+    @DisplayName("POST /v1/api/announcements - ADMINISTRATOR should create announcement with upload url and return 201")
+    void administratorShouldCreateAnnouncementWithUploadUrlSuccessfully() throws Exception {
+        mockTokenPortWithRole("ADMINISTRATOR");
+
+        AnnouncementImageUploadDto imageUpload = new AnnouncementImageUploadDto("cover.png", "image/png", 1024L);
+        GenerateUploadUrlResponse uploadResponse = new GenerateUploadUrlResponse(
+                "https://s3.example/upload",
+                "announcements/1/cover.png",
+                123L
+        );
+        CreateAnnouncementRequest request = new CreateAnnouncementRequest(
+                "New Feature", "We have a new feature available!", imageUpload, AnnouncementType.HOLIDAY
+        );
+
+        CreateAnnouncementPort.Output output = new CreateAnnouncementPort.Output(
+                1, "New Feature", "We have a new feature available!", uploadResponse, AnnouncementType.HOLIDAY,
+                LocalDateTime.now(), LocalDateTime.now()
+        );
+
+        when(createAnnouncement.execute(any(CreateAnnouncementPort.Input.class))).thenReturn(output);
+
+        mockMvc.perform(post("/v1/api/announcements")
+                        .header("Authorization", "Bearer admin-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.imageUpload.presigned_url").value("https://s3.example/upload"))
+                .andExpect(jsonPath("$.imageUpload.file_key").value("announcements/1/cover.png"));
+
+        verify(createAnnouncement, times(1)).execute(argThat(input ->
+                input.imageUpload() != null
+                        && input.imageUpload().originalName().equals("cover.png")
+                        && input.imageUpload().contentType().equals("image/png")
+        ));
+    }
+
+    @Test
     @DisplayName("POST /v1/api/announcements - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToCreateAnnouncement() throws Exception {
         mockTokenPortWithRole("SCOPE_CUSTOMER");
@@ -129,7 +170,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements - should return 200 with paginated response")
     void administratorShouldGetAnnouncementsPaginatedSuccessfully() throws Exception {
         AnnouncementDto announcement1 = new AnnouncementDto(
-                1, "Title 1", "Content 1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
+                1, "Title 1", "Content 1", "https://s3.example/read-1", AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
         AnnouncementDto announcement2 = new AnnouncementDto(
                 2, "Title 2", "Content 2", null, AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
@@ -144,6 +185,7 @@ class AnnouncementControllerTest {
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.announcements[0].title").value("Title 1"))
+                .andExpect(jsonPath("$.announcements[0].imageUrl").value("https://s3.example/read-1"))
                 .andExpect(jsonPath("$.announcements[1].title").value("Title 2"))
                 .andExpect(jsonPath("$.announcements.length()").value(2))
                 .andExpect(jsonPath("$.totalElements").value(2))
@@ -282,11 +324,11 @@ class AnnouncementControllerTest {
     @DisplayName("PUT /v1/api/announcements/{announcementId} - ADMINISTRATOR should update announcement and return 200")
     void administratorShouldUpdateAnnouncementSuccessfully() throws Exception {
         UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY
+                "Updated Title", "Updated Content", null, false, AnnouncementType.HOLIDAY
         );
 
         UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
-                1, "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY,
+                1, "Updated Title", "Updated Content", null, null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
@@ -305,10 +347,105 @@ class AnnouncementControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /v1/api/announcements/{announcementId} - ADMINISTRATOR should update image and return upload url")
+    void administratorShouldUpdateAnnouncementImageSuccessfully() throws Exception {
+        AnnouncementImageUploadDto imageUpload = new AnnouncementImageUploadDto("new-cover.webp", "image/webp", 2048L);
+        UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
+                "Updated Title", "Updated Content", imageUpload, false, AnnouncementType.HOLIDAY
+        );
+        GenerateUploadUrlResponse uploadResponse = new GenerateUploadUrlResponse(
+                "https://s3.example/update",
+                "announcements/1/new-cover.webp",
+                456L
+        );
+
+        UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
+                1,
+                "Updated Title",
+                "Updated Content",
+                "https://s3.example/read",
+                uploadResponse,
+                AnnouncementType.HOLIDAY,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class))).thenReturn(output);
+
+        mockMvc.perform(put("/v1/api/announcements/1")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.imageUrl").value("https://s3.example/read"))
+                .andExpect(jsonPath("$.imageUpload.presigned_url").value("https://s3.example/update"))
+                .andExpect(jsonPath("$.imageUpload.file_key").value("announcements/1/new-cover.webp"));
+
+        verify(updateAnnouncement, times(1)).execute(argThat(input ->
+                input.imageUpload() != null
+                        && input.imageUpload().originalName().equals("new-cover.webp")
+                        && !Boolean.TRUE.equals(input.removeImage())
+        ));
+    }
+
+    @Test
+    @DisplayName("PUT /v1/api/announcements/{announcementId} - ADMINISTRATOR should remove image")
+    void administratorShouldRemoveAnnouncementImageSuccessfully() throws Exception {
+        UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
+                "Updated Title", "Updated Content", null, true, AnnouncementType.HOLIDAY
+        );
+
+        UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
+                1,
+                "Updated Title",
+                "Updated Content",
+                null,
+                null,
+                AnnouncementType.HOLIDAY,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class))).thenReturn(output);
+
+        mockMvc.perform(put("/v1/api/announcements/1")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.imageUrl").doesNotExist())
+                .andExpect(jsonPath("$.imageUpload").doesNotExist());
+
+        verify(updateAnnouncement, times(1)).execute(argThat(input ->
+                Boolean.TRUE.equals(input.removeImage()) && input.imageUpload() == null
+        ));
+    }
+
+    @Test
+    @DisplayName("PUT /v1/api/announcements/{announcementId} - should return 400 when uploading and removing image")
+    void shouldReturn400WhenUploadingAndRemovingAnnouncementImage() throws Exception {
+        AnnouncementImageUploadDto imageUpload = new AnnouncementImageUploadDto("cover.png", "image/png", 1024L);
+        UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
+                "Updated Title", "Updated Content", imageUpload, true, AnnouncementType.HOLIDAY
+        );
+
+        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class)))
+                .thenThrow(new InvalidAnnouncementException("Cannot upload and remove an image at the same time"));
+
+        mockMvc.perform(put("/v1/api/announcements/1")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(updateAnnouncement, times(1)).execute(any(UpdateAnnouncementPort.Input.class));
+    }
+
+    @Test
     @DisplayName("PUT /v1/api/announcements/{announcementId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToUpdateAnnouncement() throws Exception {
         UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated Title", "Updated Content", null, AnnouncementType.HOLIDAY
+                "Updated Title", "Updated Content", null, false, AnnouncementType.HOLIDAY
         );
 
         mockMvc.perform(put("/v1/api/announcements/1")
@@ -354,7 +491,7 @@ class AnnouncementControllerTest {
     @DisplayName("GET /v1/api/announcements/last - should return 200 with last announcement")
     void shouldReturnLastAnnouncementSuccessfully() throws Exception {
         AnnouncementDto last = new AnnouncementDto(
-                5, "Last", "Last content", null, AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
+                5, "Last", "Last content", "https://s3.example/last", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
         );
 
         when(getLastAnnouncement.execute()).thenReturn(Optional.of(last));
@@ -364,6 +501,7 @@ class AnnouncementControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.title").value("Last"))
+                .andExpect(jsonPath("$.imageUrl").value("https://s3.example/last"))
                 .andExpect(jsonPath("$.type").value("UPDATES"));
 
         verify(getLastAnnouncement, times(1)).execute();

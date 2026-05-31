@@ -52,7 +52,7 @@ public class SecurityConfig {
                                     || LOCALHOST_IPV6.matches(remoteAddr);
                             return new org.springframework.security.authorization.AuthorizationDecision(isLocalhost);
                         })
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**", "/actuator/health/**", "/actuator/prometheus").permitAll()
                         
                         // Public auth endpoints

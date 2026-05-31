@@ -2,6 +2,7 @@ package com.undercontroll.infrastructure.handler;
 
 import com.undercontroll.domain.exception.AnnouncementNotFoundException;
 import com.undercontroll.application.dto.ExceptionHandlerResponse;
+import com.undercontroll.domain.exception.InvalidAnnouncementException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,5 +20,12 @@ public class AnnouncementExceptionHandler extends GenericExceptionHandler {
         return this.buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
-}
+    @ExceptionHandler(InvalidAnnouncementException.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleInvalidAnnouncementException(
+            InvalidAnnouncementException ex, HttpServletRequest request
+    ) {
 
+        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+}

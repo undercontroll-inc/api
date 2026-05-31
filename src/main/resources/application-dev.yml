@@ -21,10 +21,13 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
-
   h2:
     console:
       enabled: true
       path: /h2-console
       settings:
         web-allow-others: false
+aws:
+  s3:
+    upload-bucket: "undercontroll-dev-announcement-image-upload"
+    read-expiration-minutes: 1440
