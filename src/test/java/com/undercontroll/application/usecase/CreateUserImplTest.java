@@ -1,13 +1,17 @@
 package com.undercontroll.application.usecase;
 
+import com.undercontroll.application.dto.auth.CreatePasswordEventRequest;
+import com.undercontroll.application.dto.user.CreateUserRequest;
+import com.undercontroll.application.dto.user.CreateUserResponse;
+import com.undercontroll.application.mapper.UserDtoMapper;
 import com.undercontroll.infrastructure.service.MetricsService;
 import com.undercontroll.infrastructure.service.NotificationService;
 import com.undercontroll.domain.usecase.auth.CreatePasswordEventPort;
-import com.undercontroll.domain.usecase.user.CreateUserPort;
 import com.undercontroll.domain.usecase.user.impl.CreateUserImpl;
 import com.undercontroll.domain.enums.PasswordEventType;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.infrastructure.events.UserCreatedEvent;
+import com.undercontroll.domain.model.PasswordEvent;
 import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.gateway.UserGateway;
 import org.junit.jupiter.api.Test;
@@ -43,12 +47,15 @@ class CreateUserImplTest {
     @Mock
     private NotificationService notificationService;
 
+    @Mock
+    private UserDtoMapper userDtoMapper;
+
     @InjectMocks
     private CreateUserImpl useCase;
 
     @Test
     void execute_shouldPublishUserCreatedEvent_whenUserTypeIsCustomer() {
-        CreateUserPort.Input input = new CreateUserPort.Input(
+        CreateUserRequest request = new CreateUserRequest(
                 "Maria",
                 "maria@teste.com",
                 "11999999999",
@@ -64,23 +71,30 @@ class CreateUserImplTest {
                 "03143000"
         );
 
-        when(userGateway.findByEmail(input.email())).thenReturn(Optional.empty());
-        when(userGateway.findByPhone(input.phone())).thenReturn(Optional.empty());
-        when(userGateway.findByCpf(input.cpf())).thenReturn(Optional.empty());
-        when(createPasswordEventPort.execute(any(CreatePasswordEventPort.Input.class)))
-                .thenReturn(new CreatePasswordEventPort.Output("id", PasswordEventType.CREATE, "generated-pass", input.phone()));
+        when(userGateway.findByEmail(request.email())).thenReturn(Optional.empty());
+        when(userGateway.findByPhone(request.phone())).thenReturn(Optional.empty());
+        when(userGateway.findByCpf(request.cpf())).thenReturn(Optional.empty());
+        when(createPasswordEventPort.execute(any(CreatePasswordEventRequest.class)))
+                .thenReturn(PasswordEvent.builder()
+                        .type(PasswordEventType.CREATE)
+                        .value("generated-pass")
+                        .userPhone(request.phone())
+                        .build());
         when(passwordEncoder.encode("generated-pass")).thenReturn("encoded-generated-pass");
 
         LocalDateTime createdAt = LocalDateTime.of(2026, 3, 30, 10, 30);
         User savedUser = User.builder()
-                .name(input.name())
-                .email(input.email())
+                .name(request.name())
+                .email(request.email())
                 .userType(UserType.CUSTOMER)
                 .createdAt(createdAt)
                 .build();
         when(userGateway.save(any(User.class))).thenReturn(savedUser);
+        when(userDtoMapper.toCreateUserResponse(savedUser)).thenReturn(new CreateUserResponse(
+                savedUser.getName(), savedUser.getEmail(), null, null, null, null, null, null, UserType.CUSTOMER
+        ));
 
-        useCase.execute(input);
+        useCase.execute(request);
 
         ArgumentCaptor<UserCreatedEvent> eventCaptor = ArgumentCaptor.forClass(UserCreatedEvent.class);
         verify(notificationService).handleUserCreated(eventCaptor.capture());
@@ -93,7 +107,7 @@ class CreateUserImplTest {
 
     @Test
     void execute_shouldNotPublishUserCreatedEvent_whenUserTypeIsAdministrator() {
-        CreateUserPort.Input input = new CreateUserPort.Input(
+        CreateUserRequest request = new CreateUserRequest(
                 "Admin",
                 "admin@teste.com",
                 "11888888888",
@@ -109,18 +123,22 @@ class CreateUserImplTest {
                 "03143000"
         );
 
-        when(userGateway.findByEmail(input.email())).thenReturn(Optional.empty());
-        when(userGateway.findByPhone(input.phone())).thenReturn(Optional.empty());
-        when(userGateway.findByCpf(input.cpf())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(input.password())).thenReturn("encoded-admin-pass");
-        when(userGateway.save(any(User.class))).thenReturn(User.builder()
-                .name(input.name())
-                .email(input.email())
+        when(userGateway.findByEmail(request.email())).thenReturn(Optional.empty());
+        when(userGateway.findByPhone(request.phone())).thenReturn(Optional.empty());
+        when(userGateway.findByCpf(request.cpf())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(request.password())).thenReturn("encoded-admin-pass");
+        User savedUser = User.builder()
+                .name(request.name())
+                .email(request.email())
                 .userType(UserType.ADMINISTRATOR)
                 .createdAt(LocalDateTime.now())
-                .build());
+                .build();
+        when(userGateway.save(any(User.class))).thenReturn(savedUser);
+        when(userDtoMapper.toCreateUserResponse(savedUser)).thenReturn(new CreateUserResponse(
+                savedUser.getName(), savedUser.getEmail(), null, null, null, null, null, null, UserType.ADMINISTRATOR
+        ));
 
-        useCase.execute(input);
+        useCase.execute(request);
 
         verify(notificationService, never()).handleUserCreated(any(UserCreatedEvent.class));
     }

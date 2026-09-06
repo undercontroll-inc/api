@@ -1,7 +1,8 @@
 package com.undercontroll.domain.usecase.order.impl;
 
-import com.undercontroll.application.dto.OrdersByStatusResponse;
+import com.undercontroll.application.dto.dashboard.OrdersByStatusResponse;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.enums.PeriodFilter;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.order.GetOrdersByStatusPort;
@@ -20,8 +21,8 @@ public class GetOrdersByStatusImpl implements GetOrdersByStatusPort {
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
+    public OrdersByStatusResponse execute(PeriodFilter period) {
+        LocalDate startDate = DashboardDateFilter.from(period);
 
         List<Object[]> rows = orderGateway.getOrdersByStatus(startDate);
 
@@ -32,7 +33,7 @@ public class GetOrdersByStatusImpl implements GetOrdersByStatusPort {
                 ))
                 .toList();
 
-        return new Output(new OrdersByStatusResponse(statusCounts));
+        return new OrdersByStatusResponse(statusCounts);
     }
 
     private Long toLong(Object value) {

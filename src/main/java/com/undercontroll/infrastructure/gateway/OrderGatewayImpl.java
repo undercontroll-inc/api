@@ -1,18 +1,24 @@
 package com.undercontroll.infrastructure.gateway;
 
+import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.gateway.OrderGateway;
+import com.undercontroll.domain.model.Demand;
+import com.undercontroll.infrastructure.mapper.DemandMapper;
 import com.undercontroll.infrastructure.mapper.OrderMapper;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
+import com.undercontroll.infrastructure.persistence.repository.DemandRepository;
 import com.undercontroll.infrastructure.persistence.repository.OrderJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +28,9 @@ import java.util.Optional;
 public class OrderGatewayImpl implements OrderGateway {
 
     private final OrderJpaRepository orderJpaRepository;
+    private final DemandRepository demandRepository;
     private final OrderMapper orderMapper;
+    private final DemandMapper demandMapper;
 
     @Override
     @Transactional
@@ -43,9 +51,57 @@ public class OrderGatewayImpl implements OrderGateway {
     }
 
     @Override
+    public Optional<Order> findDetailById(Integer id) {
+        return orderJpaRepository.findDetailById(id).map(entity -> {
+            Order order = orderMapper.toDomainWithoutDemands(entity);
+            List<Demand> demands = demandRepository.findByOrder(entity).stream()
+                    .map(demandMapper::toDomain)
+                    .toList();
+            order.setDemands(new ArrayList<>(demands));
+            return order;
+        });
+    }
+
+    @Override
     public List<Order> findAll() {
         return orderJpaRepository.findAll().stream()
                 .map(orderMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findRecent(OrderStatus status, int limit) {
+        var pageable = PageRequest.of(0, Math.max(1, limit), Sort.by(Sort.Direction.DESC, "id"));
+        List<OrderJpaEntity> entities = status == null
+                ? orderJpaRepository.findRecentWithUserAndItems(pageable)
+                : orderJpaRepository.findByStatus(status, pageable);
+        return entities.stream().map(orderMapper::toDomainWithoutDemands).toList();
+    }
+
+    @Override
+    public List<Order> findOpenRepairs(int limit) {
+        var pageable = PageRequest.of(
+                0,
+                Math.max(1, limit),
+                Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by(Sort.Direction.ASC, "id"))
+        );
+        return orderJpaRepository.findByStatusIn(
+                        List.of(OrderStatus.PENDING, OrderStatus.IN_ANALYSIS),
+                        pageable
+                ).stream()
+                .map(orderMapper::toDomainWithoutDemands)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findReadyForPickup(int limit) {
+        var pageable = PageRequest.of(
+                0,
+                Math.max(1, limit),
+                Sort.by(Sort.Direction.DESC, "completedTime").and(Sort.by(Sort.Direction.DESC, "id"))
+        );
+        return orderJpaRepository.findByStatus(OrderStatus.COMPLETED, pageable).stream()
+                .map(orderMapper::toDomainWithoutDemands)
                 .toList();
     }
 
@@ -129,6 +185,11 @@ public class OrderGatewayImpl implements OrderGateway {
     @Override
     public List<Object[]> getTopComponents(LocalDate startDate, List<String> statuses) {
         return orderJpaRepository.getTopComponents(startDate, statuses);
+    }
+
+    @Override
+    public List<Object[]> getRepairCatalog(LocalDate startDate) {
+        return orderJpaRepository.getRepairCatalog(startDate);
     }
 
 }

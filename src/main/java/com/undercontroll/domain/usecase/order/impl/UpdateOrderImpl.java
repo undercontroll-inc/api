@@ -1,7 +1,10 @@
 package com.undercontroll.domain.usecase.order.impl;
 
-import com.undercontroll.application.dto.PartDto;
-import com.undercontroll.application.dto.UpdateOrderItemDto;
+import com.undercontroll.application.dto.demand.CreateDemandRequest;
+import com.undercontroll.application.dto.order.PartDto;
+import com.undercontroll.application.dto.order.UpdateOrderRequest;
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemDto;
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemRequest;
 import com.undercontroll.domain.model.Demand;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.OrderItem;
@@ -20,6 +23,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -36,87 +40,94 @@ public class UpdateOrderImpl implements UpdateOrderPort {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
-    public Output execute(Input input) {
+    public void execute(Integer orderId, UpdateOrderRequest request) {
         try {
-            log.info("Updating order {}", input.orderId());
+            log.info("Updating order {}", orderId);
 
-            validateUpdateOrder(input.orderId());
+            validateUpdateOrder(orderId);
 
-            Order order = orderGateway.findById(input.orderId())
+            Order order = orderGateway.findById(orderId)
                     .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
 
-            if (input.status() != null) {
-                order.setStatus(input.status());
-                log.info("Order {} status updated to {}", input.orderId(), input.status());
-                if (input.status() == OrderStatus.COMPLETED) {
-                    metricsService.incrementOrderCompleted();
-                }
+            applyStatus(order, orderId, request.status());
+            if (request.serviceDescription() != null) {
+                order.setDescription(request.serviceDescription());
             }
-
-            if (input.serviceDescription() != null) {
-                order.setDescription(input.serviceDescription());
-            }
-
-            if (input.appliances() != null) {
-                for (UpdateOrderItemDto dto : input.appliances()) {
-                    if (dto.id() != null) {
-                        updateOrderItemPort.execute(new UpdateOrderItemPort.Input(
-                                dto.id(),
-                                null,
-                                dto.laborValue(),
-                                dto.customerNote(),
-                                dto.volt(),
-                                dto.series(),
-                                dto.type(),
-                                dto.brand(),
-                                dto.model(),
-                                null
-                        ));
-                    } else {
-                        OrderItem novo = OrderItem.builder()
-                                .type(dto.type())
-                                .brand(dto.brand())
-                                .model(dto.model())
-                                .volt(dto.volt())
-                                .series(dto.series())
-                                .observation(dto.customerNote())
-                                .laborValue(dto.laborValue() != null ? dto.laborValue() : 0.0)
-                                .build();
-                        order.addOrderItem(novo);
-                    }
-                }
-            }
-
-            if (input.parts() != null) {
-                for (PartDto p : input.parts()) {
-                    if (p.componentId() == null) continue;
-                    Optional<Demand> existing = demandGateway.findByOrderAndComponentId(order, p.componentId());
-                    boolean keep = p.quantity() != null && p.quantity() > 0;
-                    if (existing.isPresent()) {
-                        if (keep) {
-                            Demand d = existing.get();
-                            d.setQuantity(p.quantity().longValue());
-                            demandGateway.save(d);
-                        } else {
-                            demandGateway.deleteById(existing.get().getId());
-                        }
-                    } else if (keep) {
-                        createDemandPort.execute(new CreateDemandPort.Input(
-                                p.componentId(),
-                                p.quantity().longValue(),
-                                order.getId()
-                        ));
-                    }
-                }
-            }
+            applyAppliances(order, orderId, request.appliances());
+            applyParts(order, request.parts());
 
             orderGateway.save(order);
-            log.info("Order {} updated successfully", input.orderId());
-
-            return new Output(true, "Order updated successfully");
+            log.info("Order {} updated successfully", orderId);
         } catch (Exception e) {
             metricsService.incrementOrderUpdateFailed();
             throw e;
+        }
+    }
+
+    private void applyStatus(Order order, Integer orderId, OrderStatus status) {
+        if (status == null) {
+            return;
+        }
+        order.setStatus(status);
+        log.info("Order {} status updated to {}", orderId, status);
+        if (status == OrderStatus.COMPLETED) {
+            metricsService.incrementOrderCompleted();
+        }
+    }
+
+    private void applyAppliances(Order order, Integer orderId, List<UpdateOrderItemDto> appliances) {
+        if (appliances == null) {
+            return;
+        }
+        for (UpdateOrderItemDto dto : appliances) {
+            if (dto.id() != null) {
+                updateOrderItemPort.execute(orderId, dto.id(), new UpdateOrderItemRequest(
+                        null,
+                        dto.laborValue(),
+                        dto.customerNote(),
+                        dto.volt(),
+                        dto.series(),
+                        dto.type(),
+                        dto.brand(),
+                        dto.model(),
+                        null
+                ));
+            } else {
+                order.addOrderItem(OrderItem.builder()
+                        .type(dto.type())
+                        .brand(dto.brand())
+                        .model(dto.model())
+                        .volt(dto.volt())
+                        .series(dto.series())
+                        .observation(dto.customerNote())
+                        .laborValue(dto.laborValue() != null ? dto.laborValue() : 0.0)
+                        .build());
+            }
+        }
+    }
+
+    private void applyParts(Order order, List<PartDto> parts) {
+        if (parts == null) {
+            return;
+        }
+        for (PartDto part : parts) {
+            if (part.componentId() == null) {
+                continue;
+            }
+            Optional<Demand> existing = demandGateway.findByOrderAndComponentId(order, part.componentId());
+            boolean keep = part.quantity() != null && part.quantity() > 0;
+            if (existing.isPresent() && keep) {
+                Demand demand = existing.get();
+                demand.setQuantity(part.quantity().longValue());
+                demandGateway.save(demand);
+            } else if (existing.isPresent()) {
+                demandGateway.deleteById(existing.get().getId());
+            } else if (keep) {
+                createDemandPort.execute(order.getId(), new CreateDemandRequest(
+                        part.componentId(),
+                        part.quantity().longValue()
+                ));
+            }
         }
     }
 

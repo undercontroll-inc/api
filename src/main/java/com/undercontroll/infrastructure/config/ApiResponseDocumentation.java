@@ -19,7 +19,7 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "200",
-            description = "Requisição processada com sucesso"
+            description = "Request processed successfully"
     )
     public @interface SuccessResponse {
     }
@@ -29,7 +29,7 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "201",
-            description = "Recurso criado com sucesso"
+            description = "Resource created successfully"
     )
     public @interface CreatedResponse {
     }
@@ -39,7 +39,7 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "204",
-            description = "Requisição processada com sucesso, mas sem conteúdo para retornar"
+            description = "Request processed successfully with no content to return"
     )
     public @interface NoContentResponse {
     }
@@ -49,19 +49,23 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "400",
-            description = "Requisição inválida - Dados fornecidos estão incorretos ou incompletos",
+            description = "Bad request - the provided data is incorrect or incomplete",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(
-                            name = "Exemplo de erro de validação",
+                            name = "Validation error example",
                             value = """
                                     {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 400,
                                         "error": "Bad Request",
-                                        "message": "Dados de requisição inválidos",
-                                        "path": "/v1/api/components"
+                                        "message": "Request validation failed",
+                                        "path": "/v1/api/components",
+                                        "code": "VALIDATION_ERROR",
+                                        "errors": [
+                                            { "field": "item", "message": "must not be blank" }
+                                        ]
                                     }
                                     """
                     )
@@ -75,19 +79,20 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "401",
-            description = "Não autorizado - Token JWT inválido, expirado ou não fornecido",
+            description = "Unauthorized - JWT token is invalid, expired, or missing",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(
-                            name = "Exemplo de erro de autenticação",
+                            name = "Authentication error example",
                             value = """
                                     {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 401,
                                         "error": "Unauthorized",
-                                        "message": "Token JWT inválido ou expirado",
-                                        "path": "/v1/api/components"
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/v1/api/components",
+                                        "code": "INVALID_TOKEN"
                                     }
                                     """
                     )
@@ -100,19 +105,20 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "403",
-            description = "Acesso negado - Usuário não possui permissão para acessar este recurso",
+            description = "Forbidden - the user does not have permission to access this resource",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(
-                            name = "Exemplo de erro de autorização",
+                            name = "Authorization error example",
                             value = """
                                     {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 403,
                                         "error": "Forbidden",
-                                        "message": "Usuário não possui permissão para acessar este recurso",
-                                        "path": "/v1/api/components"
+                                        "message": "The user does not have permission to access this resource",
+                                        "path": "/v1/api/components",
+                                        "code": "ORDER_UNAUTHORIZED"
                                     }
                                     """
                     )
@@ -126,19 +132,20 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "404",
-            description = "Recurso não encontrado - O recurso solicitado não existe",
+            description = "Not found - the requested resource does not exist",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(
-                            name = "Exemplo de recurso não encontrado",
+                            name = "Resource not found example",
                             value = """
                                     {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 404,
                                         "error": "Not Found",
-                                        "message": "Componente com ID 123 não encontrado",
-                                        "path": "/v1/api/components/123"
+                                        "message": "Component with id 123 was not found",
+                                        "path": "/v1/api/components/123",
+                                        "code": "COMPONENT_NOT_FOUND"
                                     }
                                     """
                     )
@@ -152,19 +159,20 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "409",
-            description = "Conflito - Recurso já existe ou há conflito de dados",
+            description = "Conflict - the resource already exists or there is a data conflict",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(
-                            name = "Exemplo de conflito",
+                            name = "Conflict example",
                             value = """
                                     {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 409,
                                         "error": "Conflict",
-                                        "message": "Componente com este nome já existe",
-                                        "path": "/v1/api/components"
+                                        "message": "A component with this name already exists",
+                                        "path": "/v1/api/components",
+                                        "code": "COMPONENT_CREATE_INVALID"
                                     }
                                     """
                     )
@@ -178,19 +186,20 @@ public class ApiResponseDocumentation {
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponse(
             responseCode = "500",
-            description = "Erro interno do servidor - Ocorreu um erro inesperado",
+            description = "Internal server error - an unexpected error occurred",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(
-                            name = "Exemplo de erro interno",
+                            name = "Internal error example",
                             value = """
                                     {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 500,
                                         "error": "Internal Server Error",
-                                        "message": "Ocorreu um erro inesperado ao processar a requisição",
-                                        "path": "/v1/api/components"
+                                        "message": "An unexpected error occurred while processing the request",
+                                        "path": "/v1/api/components",
+                                        "code": "INTERNAL_SERVER_ERROR"
                                     }
                                     """
                     )
@@ -202,10 +211,10 @@ public class ApiResponseDocumentation {
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Requisição processada com sucesso"),
+            @ApiResponse(responseCode = "200", description = "Request processed successfully"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Requisição inválida",
+                    description = "Bad request",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -213,7 +222,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Não autorizado - Token inválido ou expirado",
+                    description = "Unauthorized - invalid or expired token",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -221,7 +230,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acesso negado - Permissões insuficientes",
+                    description = "Forbidden - insufficient permissions",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -229,7 +238,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Erro interno do servidor",
+                    description = "Internal server error",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -242,11 +251,10 @@ public class ApiResponseDocumentation {
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Requisição processada com sucesso"),
-            @ApiResponse(responseCode = "204", description = "Sem conteúdo para retornar"),
+            @ApiResponse(responseCode = "200", description = "Request processed successfully"),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Não autorizado",
+                    description = "Unauthorized",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -254,7 +262,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acesso negado",
+                    description = "Forbidden",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -262,7 +270,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Recurso não encontrado",
+                    description = "Resource not found",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -276,10 +284,10 @@ public class ApiResponseDocumentation {
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Recurso criado com sucesso"),
+            @ApiResponse(responseCode = "201", description = "Resource created successfully"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Requisição inválida",
+                    description = "Bad request",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -287,7 +295,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Não autorizado",
+                    description = "Unauthorized",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -295,7 +303,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acesso negado",
+                    description = "Forbidden",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -303,7 +311,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Conflito - Recurso já existe",
+                    description = "Conflict - the resource already exists",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -317,10 +325,10 @@ public class ApiResponseDocumentation {
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Recurso atualizado com sucesso"),
+            @ApiResponse(responseCode = "200", description = "Resource updated successfully"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Requisição inválida",
+                    description = "Bad request",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -328,7 +336,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Não autorizado",
+                    description = "Unauthorized",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -336,7 +344,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acesso negado",
+                    description = "Forbidden",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -344,7 +352,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Recurso não encontrado",
+                    description = "Resource not found",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -358,11 +366,18 @@ public class ApiResponseDocumentation {
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Recurso deletado com sucesso"),
-            @ApiResponse(responseCode = "204", description = "Recurso deletado com sucesso (sem conteúdo)"),
+            @ApiResponse(responseCode = "200", description = "Resource updated successfully"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad request",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Não autorizado",
+                    description = "Unauthorized",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -370,7 +385,7 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Acesso negado",
+                    description = "Forbidden",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -378,7 +393,40 @@ public class ApiResponseDocumentation {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Recurso não encontrado",
+                    description = "Resource not found",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    public @interface PatchApiResponses {
+    }
+
+
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Resource deleted successfully"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Resource not found",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
@@ -389,22 +437,36 @@ public class ApiResponseDocumentation {
     }
 
 
-    @Schema(description = "Estrutura padrão de resposta de erro")
+    @Schema(description = "Standard error response body")
     public static class ErrorResponse {
-        @Schema(description = "Timestamp do erro", example = "2025-11-23T14:30:00")
+        @Schema(description = "Error timestamp", example = "2025-11-23T14:30:00")
         private String timestamp;
 
-        @Schema(description = "Código de status HTTP", example = "400")
+        @Schema(description = "HTTP status code", example = "400")
         private Integer status;
 
-        @Schema(description = "Tipo de erro", example = "Bad Request")
+        @Schema(description = "HTTP reason phrase", example = "Bad Request")
         private String error;
 
-        @Schema(description = "Mensagem descritiva do erro", example = "Dados de requisição inválidos")
+        @Schema(description = "Human-readable error message", example = "Request validation failed")
         private String message;
 
-        @Schema(description = "Caminho da requisição que gerou o erro", example = "/v1/api/components")
+        @Schema(description = "Request path that caused the error", example = "/v1/api/components")
         private String path;
+
+        @Schema(description = "Stable machine-readable error code", example = "VALIDATION_ERROR")
+        private String code;
+
+        @Schema(description = "Field-level validation errors, present only for validation failures")
+        private java.util.List<FieldError> errors;
+
+        @Schema(description = "Field-level validation error")
+        public static class FieldError {
+            @Schema(description = "Invalid field name", example = "item")
+            private String field;
+
+            @Schema(description = "Validation message", example = "must not be blank")
+            private String message;
+        }
     }
 }
-

@@ -1,5 +1,7 @@
 package com.undercontroll.domain.usecase.auth.impl;
 
+import com.undercontroll.application.dto.auth.ResetPasswordRequest;
+import com.undercontroll.domain.exception.InvalidPasswordResetException;
 import com.undercontroll.domain.usecase.auth.ResetPasswordPort;
 import com.undercontroll.domain.gateway.UserGateway;
 import lombok.RequiredArgsConstructor;
@@ -14,21 +16,19 @@ public class ResetPasswordImpl implements ResetPasswordPort {
     private final UserGateway userGateway;
 
     @Override
-    public Output execute(Input input) {
-        log.info("Resetting password for user {}", input.userId());
-        
-        if (input.userId() == null || input.userId() <= 0) {
-            return new Output(false, "Invalid user ID");
+    public void execute(Integer userId, ResetPasswordRequest request, String token) {
+        log.info("Resetting password for user {}", userId);
+
+        if (userId == null || userId <= 0) {
+            throw new InvalidPasswordResetException("Invalid user ID");
         }
-        
-        if (input.newPassword() == null || input.newPassword().isEmpty()) {
-            return new Output(false, "Password cannot be empty");
+
+        if (request.newPassword() == null || request.newPassword().isEmpty()) {
+            throw new InvalidPasswordResetException("Password cannot be empty");
         }
-        
-        if (input.token() == null || input.token().isEmpty()) {
-            return new Output(false, "Token cannot be empty");
+
+        if (token == null || token.isEmpty()) {
+            throw new InvalidPasswordResetException("Token cannot be empty");
         }
-        
-        return new Output(true, "Password reset successfully");
     }
 }

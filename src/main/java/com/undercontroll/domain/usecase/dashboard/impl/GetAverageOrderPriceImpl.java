@@ -1,5 +1,8 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
+import com.undercontroll.application.dto.dashboard.DashboardMetricsResponse;
+import com.undercontroll.domain.enums.PeriodFilter;
+import com.undercontroll.domain.enums.StatusFilter;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.dashboard.GetAverageOrderPricePort;
 import com.undercontroll.domain.gateway.OrderGateway;
@@ -16,15 +19,15 @@ public class GetAverageOrderPriceImpl implements GetAverageOrderPricePort {
     private final OrderGateway orderGateway;
 
     @Override
-    @Cacheable(value = "dashboardMetrics", key = "#input.period().toString() + '-' + #input.status().toString() + '-averageOrderPrice'")
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
-        var statusStrings = input.status().getStatuses().stream()
+    @Cacheable(value = "dashboardMetrics", key = "#period.toString() + '-' + #status.toString() + '-averageOrderPrice'")
+    public DashboardMetricsResponse execute(PeriodFilter period, StatusFilter status) {
+        LocalDate startDate = DashboardDateFilter.from(period);
+        var statusStrings = status.getStatuses().stream()
                 .map(Enum::name)
                 .toList();
 
         Double averagePrice = orderGateway.calculateAverageOrderPriceFiltered(startDate, statusStrings);
 
-        return new Output(averagePrice);
+        return new DashboardMetricsResponse(averagePrice);
     }
 }

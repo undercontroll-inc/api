@@ -1,176 +1,64 @@
 package com.undercontroll.application.controller.impl;
 
-import com.undercontroll.domain.usecase.auth.AuthUserPort;
-import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
-import com.undercontroll.domain.usecase.auth.ResetPasswordPort;
-import com.undercontroll.application.dto.*;
-import com.undercontroll.domain.usecase.user.*;
 import com.undercontroll.application.controller.UserApi;
+import com.undercontroll.application.dto.auth.ResetPasswordRequest;
+import com.undercontroll.application.dto.user.CreateUserRequest;
+import com.undercontroll.application.dto.user.CreateUserResponse;
+import com.undercontroll.application.dto.user.UpdateUserRequest;
+import com.undercontroll.application.dto.user.UserDto;
+import com.undercontroll.domain.enums.UserType;
+import com.undercontroll.domain.usecase.auth.ResetPasswordPort;
+import com.undercontroll.domain.usecase.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/v1/api/users")
 @RequiredArgsConstructor
 public class UserController implements UserApi {
 
     private final CreateUserPort createUserPort;
-    private final AuthUserPort authUserPort;
     private final UpdateUserPort updateUserPort;
     private final GetUsersPort getUsersPort;
-    private final GetCustomersPort getCustomersPort;
-    private final GetCustomerByIdPort getCustomerByIdPort;
-    private final GetCustomersWithEmailPort getCustomersWithEmailPort;
     private final GetUserPort getUserPort;
     private final DeleteUserPort deleteUserPort;
     private final ResetPasswordPort resetPasswordPort;
-    private final RefreshTokenPort refreshTokenPort;
 
     @Override
-    @PostMapping
-    public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest request) {
-        var output = createUserPort.execute(new CreateUserPort.Input(
-                request.name(),
-                request.email(),
-                request.phone(),
-                request.lastName(),
-                request.password(),
-                request.address(),
-                request.cpf(),
-                request.avatarUrl(),
-                request.userType(),
-                request.hasWhatsApp(),
-                request.alreadyRecurrent(),
-                request.inFirstLogin(),
-                request.CEP()
-        ));
-        return ResponseEntity.status(201).body(new CreateUserResponse(
-                output.name(),
-                output.email(),
-                output.lastName(),
-                output.address(),
-                output.cpf(),
-                output.CEP(),
-                output.phone(),
-                output.avatarUrl(),
-                output.userType()
-        ));
+    public ResponseEntity<CreateUserResponse> createUser(CreateUserRequest request) {
+        return ResponseEntity.status(201).body(createUserPort.execute(request));
     }
 
     @Override
-    @PostMapping(value = "/auth")
-    public ResponseEntity<AuthUserResponse> auth(@RequestBody AuthUserRequest request) {
-        var output = authUserPort.execute(new AuthUserPort.Input(request.email(), request.password()));
-        return ResponseEntity.ok(new AuthUserResponse(output.token(), output.refreshToken(), output.user()));
-    }
-
-    @Override
-    @PostMapping(value = "/auth/google")
-    public ResponseEntity<AuthUserResponse> authGoogle(@RequestBody AuthGoogleRequest request) {
-        var output = authUserPort.execute(new AuthUserPort.Input(request.email(), null));
-        return ResponseEntity.ok(new AuthUserResponse(output.token(), output.refreshToken(), output.user()));
-    }
-
-    @PostMapping(value = "/auth/refresh")
-    public ResponseEntity<RefreshTokenResponse> refresh(@RequestBody RefreshTokenRequest request) {
-        var output = refreshTokenPort.execute(new RefreshTokenPort.Input(request.refreshToken()));
-        return ResponseEntity.ok(new RefreshTokenResponse(output.accessToken(), output.refreshToken()));
-    }
-
-    @Override
-    @PutMapping(value = "/{userId}")
-    public ResponseEntity<Void> updateUser(@RequestBody UpdateUserRequest request, @PathVariable Integer userId) {
-        updateUserPort.execute(new UpdateUserPort.Input(
-                userId,
-                request.name(),
-                request.lastName(),
-                request.address(),
-                request.cpf(),
-                request.password(),
-                request.hasWhatsApp(),
-                request.CEP(),
-                request.alreadyRecurrent(),
-                request.inFirstLogin(),
-                request.phone(),
-                request.avatarUrl(),
-                request.userType()
-        ));
+    public ResponseEntity<Void> updateUser(UpdateUserRequest request, Integer userId) {
+        updateUserPort.execute(userId, request);
         return ResponseEntity.ok().build();
     }
 
     @Override
-    @GetMapping
-    public ResponseEntity<List<UserDto>> getUsers() {
-        var output = getUsersPort.execute(new GetUsersPort.Input());
-        return output.users().isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(output.users());
+    public ResponseEntity<List<UserDto>> getUsers(UserType type, Boolean hasEmail) {
+        return ResponseEntity.ok(getUsersPort.execute(type, hasEmail));
     }
 
     @Override
-    @GetMapping("/customers")
-    public ResponseEntity<List<UserDto>> getCostumers() {
-        var output = getCustomersPort.execute(new GetCustomersPort.Input());
-        return output.customers().isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(output.customers());
+    public ResponseEntity<UserDto> getUserById(Integer userId) {
+        return getUserPort.execute(userId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Override
-    @GetMapping("/customers/{customerId}")
-    public ResponseEntity<UserDto> getCostumerById(@PathVariable Integer customerId) {
-        var output = getCustomerByIdPort.execute(new GetCustomerByIdPort.Input(customerId));
-        return output.customer() != null ? ResponseEntity.ok(output.customer()) : ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deleteUser(Integer userId) {
+        deleteUserPort.execute(userId);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
-    @GetMapping("/customers/emails")
-    public ResponseEntity<List<UserDto>> getCustomersThatHaveEmail() {
-        var output = getCustomersWithEmailPort.execute(new GetCustomersWithEmailPort.Input());
-        return output.customers().isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(output.customers());
-    }
-
-    @Override
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Integer userId) {
-        var output = getUserPort.execute(new GetUserPort.Input(userId));
-        if (output.user() == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(new UserDto(
-                output.user().getId(),
-                output.user().getName(),
-                output.user().getEmail(),
-                output.user().getLastName(),
-                output.user().getAddress(),
-                output.user().getCpf(),
-                output.user().getCEP(),
-                output.user().getPhone(),
-                output.user().getAvatarUrl(),
-                output.user().getHasWhatsApp(),
-                output.user().getAlreadyRecurrent(),
-                output.user().getInFirstLogin(),
-                output.user().getUserType()
-        ));
-    }
-
-    @Override
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer userId) {
-        deleteUserPort.execute(new DeleteUserPort.Input(userId));
-        return ResponseEntity.ok().build();
-    }
-
-    @Override
-    @PatchMapping("/reset-password/{userId}")
-    public ResponseEntity<Void> resetPassword(
-            @RequestBody ResetPasswordRequest request,
-            @PathVariable Integer userId,
-            @RequestHeader("Authorization") String authHeader
-    ) {
+    public ResponseEntity<Void> changePassword(ResetPasswordRequest request, Integer userId, String authHeader) {
         String token = authHeader.substring(7);
-        resetPasswordPort.execute(new ResetPasswordPort.Input(userId, request.newPassword(), token));
+        resetPasswordPort.execute(userId, request, token);
         return ResponseEntity.ok().build();
     }
-
 }

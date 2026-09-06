@@ -18,6 +18,8 @@ public interface DemandGateway {
 
     List<Demand> findAll();
 
+    List<Demand> findRecent(int limit);
+
     List<Demand> findByOrder(Order order);
 
     Optional<Demand> findByOrderAndComponentId(Order order, Integer componentId);

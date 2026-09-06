@@ -2,17 +2,16 @@ package com.undercontroll.application.controller.impl;
 
 import com.undercontroll.domain.usecase.order_item.*;
 import com.undercontroll.application.controller.OrderItemApi;
-import com.undercontroll.application.dto.CreateOrderItemRequest;
-import com.undercontroll.application.dto.OrderItemDto;
-import com.undercontroll.application.dto.UpdateOrderItemRequest;
+import com.undercontroll.application.dto.orderitem.CreateOrderItemRequest;
+import com.undercontroll.application.dto.orderitem.OrderItemDto;
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/v1/api/order-items")
 @RequiredArgsConstructor
 public class OrderItemController implements OrderItemApi {
 
@@ -23,68 +22,31 @@ public class OrderItemController implements OrderItemApi {
     private final DeleteOrderItemPort deleteOrderItemPort;
 
     @Override
-    @PostMapping
-    public ResponseEntity<OrderItemDto> createOrderItem(@RequestBody CreateOrderItemRequest request) {
-        var output = createOrderItemPort.execute(new CreateOrderItemPort.Input(
-                request.brand(),
-                request.model(),
-                request.type(),
-                request.imageUrl(),
-                request.observation(),
-                request.volt(),
-                request.series(),
-                request.laborValue()
-        ));
-        return ResponseEntity.status(201).body(new OrderItemDto(
-                output.id(),
-                null,
-                output.model(),
-                output.type(),
-                output.brand(),
-                null,
-                null,
-                null,
-                output.laborValue(),
-                null
-        ));
+    public ResponseEntity<OrderItemDto> createOrderItem(Integer orderId, CreateOrderItemRequest request) {
+        return ResponseEntity.status(201).body(createOrderItemPort.execute(orderId, request));
     }
 
     @Override
-    @PutMapping
-    public ResponseEntity<Void> updateOrderItem(@RequestBody UpdateOrderItemRequest request) {
-        updateOrderItemPort.execute(new UpdateOrderItemPort.Input(
-                request.id(),
-                request.imageUrl(),
-                request.labor(),
-                request.observation(),
-                request.volt(),
-                request.series(),
-                request.type(),
-                request.brand(),
-                request.model(),
-                request.completedAt()
-        ));
+    public ResponseEntity<Void> updateOrderItem(Integer orderId, Integer orderItemId, UpdateOrderItemRequest request) {
+        updateOrderItemPort.execute(orderId, orderItemId, request);
         return ResponseEntity.ok().build();
     }
 
     @Override
-    @GetMapping
-    public ResponseEntity<List<OrderItemDto>> getOrderItems() {
-        var output = getOrderItemsPort.execute(new GetOrderItemsPort.Input());
-        return output.orderItems().isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(output.orderItems());
+    public ResponseEntity<List<OrderItemDto>> getOrderItems(Integer orderId) {
+        return ResponseEntity.ok(getOrderItemsPort.execute(orderId));
     }
 
     @Override
-    @GetMapping("/{orderItemId}")
-    public ResponseEntity<OrderItemDto> getOrderItemById(@PathVariable Integer orderItemId) {
-        var output = getOrderItemByIdPort.execute(new GetOrderItemByIdPort.Input(orderItemId));
-        return output.orderItem() != null ? ResponseEntity.ok(output.orderItem()) : ResponseEntity.notFound().build();
+    public ResponseEntity<OrderItemDto> getOrderItemById(Integer orderId, Integer orderItemId) {
+        return getOrderItemByIdPort.execute(orderId, orderItemId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Override
-    @DeleteMapping("/{orderItemId}")
-    public ResponseEntity<Void> deleteOrderItem(@PathVariable Integer orderItemId) {
-        deleteOrderItemPort.execute(new DeleteOrderItemPort.Input(orderItemId));
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> deleteOrderItem(Integer orderId, Integer orderItemId) {
+        deleteOrderItemPort.execute(orderId, orderItemId);
+        return ResponseEntity.noContent().build();
     }
 }

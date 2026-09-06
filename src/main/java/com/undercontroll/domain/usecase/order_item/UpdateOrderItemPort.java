@@ -1,25 +1,7 @@
 package com.undercontroll.domain.usecase.order_item;
 
-import java.time.LocalDateTime;
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemRequest;
 
 public interface UpdateOrderItemPort {
-    record Input(
-            Integer orderItemId,
-            String imageUrl,
-            Double labor,
-            String observation,
-            String volt,
-            String series,
-            String type,
-            String brand,
-            String model,
-            LocalDateTime completedAt
-    ) {}
-
-    record Output(
-            Boolean success,
-            String message
-    ) {}
-
-    Output execute(Input input);
+    void execute(Integer orderId, Integer orderItemId, UpdateOrderItemRequest request);
 }

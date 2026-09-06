@@ -1,24 +1,7 @@
 package com.undercontroll.domain.usecase.order;
 
-import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.application.dto.PartDto;
-import com.undercontroll.application.dto.UpdateOrderItemDto;
-
-import java.util.List;
+import com.undercontroll.application.dto.order.UpdateOrderRequest;
 
 public interface UpdateOrderPort {
-    record Input(
-            Integer orderId,
-            OrderStatus status,
-            List<PartDto> parts,
-            List<UpdateOrderItemDto> appliances,
-            String serviceDescription
-    ) {}
-
-    record Output(
-            Boolean success,
-            String message
-    ) {}
-
-    Output execute(Input input);
+    void execute(Integer orderId, UpdateOrderRequest request);
 }

@@ -1,16 +1,9 @@
 package com.undercontroll.domain.usecase.order;
 
-import com.undercontroll.application.dto.GetOrderByIdResponse;
+import com.undercontroll.application.dto.order.GetOrderByIdResponse;
+
+import java.util.Optional;
 
 public interface GetOrderByIdPort {
-    record Input(
-            Integer orderId,
-            String userEmail
-    ) {}
-
-    record Output(
-            GetOrderByIdResponse order
-    ) {}
-
-    Output execute(Input input);
+    Optional<GetOrderByIdResponse> execute(Integer orderId);
 }

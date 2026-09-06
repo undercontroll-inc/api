@@ -1,6 +1,6 @@
 package com.undercontroll.infrastructure.service;
 
-import com.undercontroll.application.dto.GenerateUploadUrlResponse;
+import com.undercontroll.application.dto.announcement.GenerateUploadUrlResponse;
 import java.util.Optional;
 
 public interface StorageService {

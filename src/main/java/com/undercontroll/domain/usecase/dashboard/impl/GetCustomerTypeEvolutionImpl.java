@@ -1,7 +1,9 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
-import com.undercontroll.application.dto.CustomerTypeResponse;
+import com.undercontroll.application.dto.dashboard.CustomerTypeResponse;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.enums.PeriodFilter;
+import com.undercontroll.domain.enums.StatusFilter;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.dashboard.GetCustomerTypeEvolutionPort;
@@ -19,9 +21,9 @@ public class GetCustomerTypeEvolutionImpl implements GetCustomerTypeEvolutionPor
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
-        List<String> statuses = input.status().getStatuses().stream()
+    public CustomerTypeResponse execute(PeriodFilter period, StatusFilter status) {
+        LocalDate startDate = DashboardDateFilter.from(period);
+        List<String> statuses = status.getStatuses().stream()
                 .map(OrderStatus::name)
                 .toList();
 
@@ -35,7 +37,7 @@ public class GetCustomerTypeEvolutionImpl implements GetCustomerTypeEvolutionPor
                 ))
                 .toList();
 
-        return new Output(new CustomerTypeResponse(dataPoints));
+        return new CustomerTypeResponse(dataPoints);
     }
 
     private LocalDate toLocalDate(Object value) {

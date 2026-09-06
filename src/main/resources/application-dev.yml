@@ -12,22 +12,49 @@ spring:
     dynamic: true
 
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=USER,VALUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ${DB_PASSWORD:}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/undercontroll}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    username: ${DB_USERNAME:undercontroll}
+    password: ${DB_PASSWORD:undercontroll}
+
+  # H2 — descomente este bloco e comente o datasource postgres acima para voltar
+  # datasource:
+  #   url: jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=USER,VALUE
+  #   driver-class-name: org.h2.Driver
+  #   username: sa
+  #   password: ${DB_PASSWORD:}
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
+  # H2 usava create-drop (banco em memória). Descomente se voltar ao H2:
+  # jpa:
+  #   hibernate:
+  #     ddl-auto: create-drop
+  #   show-sql: true
+
   h2:
     console:
-      enabled: true
+      enabled: false
       path: /h2-console
       settings:
         web-allow-others: false
+  # H2 console — ative junto com o datasource H2
+  # h2:
+  #   console:
+  #     enabled: true
+  #     path: /h2-console
+  #     settings:
+  #       web-allow-others: false
 aws:
   s3:
     upload-bucket: "undercontroll-dev-announcement-image-upload"
     read-expiration-minutes: 1440
+
+jwt:
+  secret: undercontroll-dev-secret
+  # Access token expiration in minutes (default: 15 minutes)
+  access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:15}
+  # Refresh token expiration in days (default: 7 days)
+  refresh-token-expiration-days: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:7}

@@ -2,7 +2,7 @@ package com.undercontroll.infrastructure.pdf;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
-import com.undercontroll.application.dto.ExportOrderRequest;
+import com.undercontroll.application.dto.order.ExportOrderRequest;
 import com.undercontroll.domain.exception.PdfGenerationException;
 import com.undercontroll.domain.exception.TempFileException;
 import com.undercontroll.domain.exception.TemplateLoadException;
@@ -78,7 +78,7 @@ public class PdfBoxAdapter implements PdfExportService {
             return tempFile;
         } catch (IOException e) {
             log.error("Erro ao criar arquivo HTML temporário para OS {}: {}", osNumber, e.getMessage());
-            throw new TempFileException("Falha ao criar arquivo HTML temporário para OS: " + osNumber, e);
+            throw new TempFileException("Failed to create temporary HTML file for service order: " + osNumber, e);
         }
     }
 
@@ -93,7 +93,7 @@ public class PdfBoxAdapter implements PdfExportService {
             return outputStream.toByteArray();
         } catch (IOException e) {
             log.error("Erro ao converter HTML para PDF: {}", e.getMessage());
-            throw new PdfGenerationException("Falha ao converter HTML para PDF", e);
+            throw new PdfGenerationException("Failed to convert HTML to PDF", e);
         }
     }
 
@@ -117,12 +117,12 @@ public class PdfBoxAdapter implements PdfExportService {
     private String loadTemplate() {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(TEMPLATE_PATH)) {
             if (inputStream == null) {
-                throw new TemplateLoadException("Template de OS não encontrado em: " + TEMPLATE_PATH);
+                throw new TemplateLoadException("Service order template not found at: " + TEMPLATE_PATH);
             }
             return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error("Erro ao carregar template: {}", e.getMessage());
-            throw new TemplateLoadException("Falha ao carregar template de OS", e);
+            throw new TemplateLoadException("Failed to load service order template", e);
         }
     }
 

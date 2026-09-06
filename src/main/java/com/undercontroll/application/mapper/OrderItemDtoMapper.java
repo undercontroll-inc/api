@@ -1,6 +1,6 @@
 package com.undercontroll.application.mapper;
 
-import com.undercontroll.application.dto.OrderItemDto;
+import com.undercontroll.application.dto.orderitem.OrderItemDto;
 import com.undercontroll.domain.model.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;

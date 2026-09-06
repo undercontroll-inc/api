@@ -1,5 +1,10 @@
 package com.undercontroll.domain.usecase.order.impl;
 
+import com.undercontroll.application.dto.order.CreateOrderRequest;
+import com.undercontroll.application.dto.demand.CreateDemandRequest;
+import com.undercontroll.application.dto.order.OrderEnrichedDto;
+import com.undercontroll.application.dto.orderitem.CreateOrderItemRequest;
+import com.undercontroll.application.mapper.OrderDtoMapper;
 import com.undercontroll.domain.usecase.order.CreateOrderPort;
 import com.undercontroll.domain.usecase.order_item.CreateOrderItemPort;
 import com.undercontroll.domain.usecase.demand.CreateDemandPort;
@@ -12,7 +17,7 @@ import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.UserGateway;
 import com.undercontroll.domain.gateway.StockManagementGateway;
 import com.undercontroll.infrastructure.service.MetricsService;
-import com.undercontroll.application.dto.PartDto;
+import com.undercontroll.application.dto.order.PartDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,21 +42,22 @@ public class CreateOrderImpl implements CreateOrderPort {
     private final CreateOrderItemPort createOrderItemPort;
     private final CreateDemandPort createDemandPort;
     private final MetricsService metricsService;
+    private final OrderDtoMapper orderDtoMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
-    public Output execute(Input input) {
+    public OrderEnrichedDto execute(CreateOrderRequest request) {
         long startTime = System.currentTimeMillis();
-        log.info("Creating new order for user {}", input.userId());
+        log.info("Creating new order for user {}", request.userId());
 
-        LocalDate completedFormatted = formatOrderDate(input.deadline());
-        LocalDate receivedFormatted = formatOrderDate(input.receivedAt());
+        LocalDate completedFormatted = formatOrderDate(request.deadline());
+        LocalDate receivedFormatted = formatOrderDate(request.receivedAt());
 
         Map<Integer, ComponentPart> validatedComponents = new HashMap<>();
         double partsTotal = 0.0;
 
-        for (PartDto part : input.parts()) {
+        for (PartDto part : request.parts()) {
             ComponentPart component = stockManagementGateway.findComponentById(part.componentId())
                     .orElseThrow(() -> new RuntimeException("Component not found"));
             stockManagementGateway.validateStockAvailability(component, part.quantity());
@@ -63,10 +69,10 @@ public class CreateOrderImpl implements CreateOrderPort {
         List<OrderItem> orderItems = new ArrayList<>();
         Double laborTotal = 0.0;
 
-        for (var appliance : input.appliances()) {
+        for (var appliance : request.appliances()) {
             Double labor = appliance.laborValue() == null ? 0.0 : appliance.laborValue();
 
-            var orderItemCreated = createOrderItemPort.execute(new CreateOrderItemPort.Input(
+            var orderItemCreated = createOrderItemPort.execute(new CreateOrderItemRequest(
                     appliance.brand(),
                     appliance.model(),
                     appliance.type(),
@@ -87,23 +93,23 @@ public class CreateOrderImpl implements CreateOrderPort {
             laborTotal += orderItemCreated.laborValue();
         }
 
-        User user = userGateway.findById(input.userId())
+        User user = userGateway.findById(request.userId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Double total = partsTotal + laborTotal - input.discount();
+        Double total = partsTotal + laborTotal - request.discount();
 
         Order order = Order.builder()
                 .orderItems(orderItems)
                 .status(OrderStatus.PENDING)
                 .user(user)
-                .discount(input.discount())
+                .discount(request.discount())
                 .date(null)
                 .store("Loja")
-                .nf(input.nf())
-                .fabricGuarantee(input.fabricGuarantee())
+                .nf(request.nf())
+                .fabricGuarantee(request.fabricGuarantee())
                 .received_at(receivedFormatted)
-                .description(input.serviceDescription())
-                .returnGuarantee(input.returnGuarantee())
+                .description(request.serviceDescription())
+                .returnGuarantee(request.returnGuarantee())
                 .completedTime(completedFormatted)
                 .total(total)
                 .build();
@@ -112,13 +118,12 @@ public class CreateOrderImpl implements CreateOrderPort {
 
         log.info("Order {} created successfully", savedOrder.getId());
 
-        for (PartDto part : input.parts()) {
+        for (PartDto part : request.parts()) {
             ComponentPart component = validatedComponents.get(part.componentId());
 
-            createDemandPort.execute(new CreateDemandPort.Input(
+            createDemandPort.execute(savedOrder.getId(), new CreateDemandRequest(
                     component.getId(),
-                    Long.valueOf(part.quantity()),
-                    savedOrder.getId()
+                    Long.valueOf(part.quantity())
             ));
 
             stockManagementGateway.decreaseStock(component.getId(), part.quantity());
@@ -127,14 +132,10 @@ public class CreateOrderImpl implements CreateOrderPort {
         metricsService.incrementOrderCreated();
         metricsService.recordOrderProcessingTime(startTime);
 
-        log.info("Order {} created with {} demands", savedOrder.getId(), input.parts().size());
+        log.info("Order {} created with {} demands", savedOrder.getId(), request.parts().size());
 
-        return new Output(
-                savedOrder.getId(),
-                input.userId(),
-                savedOrder.getStatus().toString(),
-                savedOrder.getTotal()
-        );
+        Order finalOrder = orderGateway.findById(savedOrder.getId()).orElse(savedOrder);
+        return orderDtoMapper.toEnrichedDto(finalOrder);
     }
 
     private LocalDate formatOrderDate(String dateStr) {

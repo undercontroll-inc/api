@@ -21,28 +21,26 @@ public class DeleteComponentImpl implements DeleteComponentPort {
     @Override
     @Transactional
     @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
-    public Output execute(Input input) {
-        validateDelete(input.componentId());
+    public void execute(Integer componentId) {
+        validateDelete(componentId);
 
-        ComponentPart component = componentGateway.findById(input.componentId())
-                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + input.componentId()));
+        ComponentPart component = componentGateway.findById(componentId)
+                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + componentId));
 
-        log.info("Attempting to delete component with id: {}, name: {}", input.componentId(), component.getName());
+        log.info("Attempting to delete component with id: {}, name: {}", componentId, component.getName());
 
         if (!component.getDemands().isEmpty()) {
             log.warn("Component {} has {} active demand(s) that will be removed",
-                    input.componentId(), component.getDemands().size());
+                    componentId, component.getDemands().size());
 
             component.getDemands().forEach(demand ->
                 log.info("Removing demand {} for component {} in order {}",
-                        demand.getId(), input.componentId(), demand.getOrder().getId())
+                        demand.getId(), componentId, demand.getOrder().getId())
             );
         }
 
         componentGateway.deleteById(component.getId());
-        log.info("Component {} successfully deleted", input.componentId());
-
-        return new Output(true, "Component deleted successfully");
+        log.info("Component {} successfully deleted", componentId);
     }
 
     private void validateDelete(Integer componentId) {

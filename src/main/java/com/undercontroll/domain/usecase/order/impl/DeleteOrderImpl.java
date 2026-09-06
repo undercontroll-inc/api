@@ -19,17 +19,15 @@ public class DeleteOrderImpl implements DeleteOrderPort {
 
     @Override
     @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
-    public Output execute(Input input) {
-        log.info("Deleting order with id {}", input.orderId());
-        validateDeleteOrder(input.orderId());
+    public void execute(Integer orderId) {
+        log.info("Deleting order with id {}", orderId);
+        validateDeleteOrder(orderId);
 
-        Order order = orderGateway.findById(input.orderId())
+        Order order = orderGateway.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Could not found the order"));
 
         orderGateway.deleteById(order.getId());
-        log.info("Order {} deleted successfully", input.orderId());
-
-        return new Output(true, "Order deleted successfully");
+        log.info("Order {} deleted successfully", orderId);
     }
 
     private void validateDeleteOrder(Integer orderId) {

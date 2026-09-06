@@ -1,6 +1,10 @@
 package com.undercontroll.domain.usecase.order_item.impl;
 
 import com.undercontroll.domain.usecase.order_item.DeleteOrderItemPort;
+import com.undercontroll.domain.model.Order;
+import com.undercontroll.domain.exception.InvalidOrderItemException;
+import com.undercontroll.domain.exception.OrderItemNotFoundException;
+import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.OrderItemGateway;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,15 +16,26 @@ import org.springframework.stereotype.Service;
 public class DeleteOrderItemImpl implements DeleteOrderItemPort {
 
     private final OrderItemGateway orderItemGateway;
+    private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        log.info("Deleting order item with id {}", input.orderItemId());
-        
-        if (input.orderItemId() == null || input.orderItemId() <= 0) {
-            return new Output(false, "Invalid order item ID");
+    public void execute(Integer orderId, Integer orderItemId) {
+        log.info("Deleting order item {} from order {}", orderItemId, orderId);
+
+        if (orderItemId == null || orderItemId <= 0) {
+            throw new InvalidOrderItemException("Invalid order item ID");
         }
-        
-        return new Output(true, "Order item deleted successfully");
+
+        Order order = orderGateway.findOrderByOrderItemId(orderItemId)
+                .orElseThrow(() -> new OrderItemNotFoundException(
+                        "Could not find the order item with id: %s".formatted(orderItemId)
+                ));
+        if (!orderId.equals(order.getId())) {
+            throw new OrderItemNotFoundException(
+                    "Order item %s does not belong to order %s".formatted(orderItemId, orderId)
+            );
+        }
+
+        orderItemGateway.deleteById(orderItemId);
     }
 }

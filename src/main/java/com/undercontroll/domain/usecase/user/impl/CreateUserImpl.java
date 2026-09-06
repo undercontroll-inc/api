@@ -1,5 +1,9 @@
 package com.undercontroll.domain.usecase.user.impl;
 
+import com.undercontroll.application.dto.auth.CreatePasswordEventRequest;
+import com.undercontroll.application.dto.user.CreateUserRequest;
+import com.undercontroll.application.dto.user.CreateUserResponse;
+import com.undercontroll.application.mapper.UserDtoMapper;
 import com.undercontroll.domain.usecase.user.CreateUserPort;
 import com.undercontroll.domain.enums.PasswordEventType;
 import com.undercontroll.domain.usecase.auth.CreatePasswordEventPort;
@@ -25,52 +29,55 @@ public class CreateUserImpl implements CreateUserPort {
     private final PasswordEncoder passwordEncoder;
     private final MetricsService metricsService;
     private final NotificationService notificationService;
+    private final UserDtoMapper userDtoMapper;
 
     @Override
-    public Output execute(Input input) {
+    public CreateUserResponse execute(CreateUserRequest request) {
         try {
-            validateCreateUserRequest(input);
+            validateCreateUserRequest(request);
 
-            Optional<User> existingUserByEmail = userGateway.findByEmail(input.email());
+            Optional<User> existingUserByEmail = userGateway.findByEmail(request.email());
             if (existingUserByEmail.isPresent()) {
                 throw new InvalidUserException("Email is already in use");
             }
 
-            Optional<User> existingUserByPhone = userGateway.findByPhone(input.phone());
+            Optional<User> existingUserByPhone = userGateway.findByPhone(request.phone());
             if (existingUserByPhone.isPresent()) {
                 throw new InvalidUserException("Phone is already in use");
             }
 
-            Optional<User> existingUserByCpf = userGateway.findByCpf(input.cpf());
+            Optional<User> existingUserByCpf = userGateway.findByCpf(request.cpf());
             if (existingUserByCpf.isPresent()) {
                 throw new InvalidUserException("CPF is already in use");
             }
 
-            String password = input.userType().equals(UserType.ADMINISTRATOR)
-                    ? passwordEncoder.encode(input.password())
-                    : passwordEncoder.encode(createPasswordEventPort.execute(
-                            new CreatePasswordEventPort.Input(
-                                    PasswordEventType.CREATE,
-                                    null,
-                                    input.phone(),
-                                    null
-                            )
-                    ).value());
+            String password = passwordEncoder.encode(
+                    request.userType().equals(UserType.ADMINISTRATOR)
+                            ? request.password()
+                            : createPasswordEventPort.execute(
+                                    new CreatePasswordEventRequest(
+                                            PasswordEventType.CREATE,
+                                            null,
+                                            request.phone(),
+                                            null
+                                    )
+                            ).getValue()
+            );
 
             User user = User.builder()
-                    .name(input.name())
-                    .email(input.email())
-                    .lastName(input.lastName())
+                    .name(request.name())
+                    .email(request.email())
+                    .lastName(request.lastName())
                     .password(password)
-                    .address(input.address())
-                    .cpf(input.cpf())
-                    .CEP(input.CEP())
-                    .phone(input.phone())
-                    .avatarUrl(input.avatarUrl())
-                    .hasWhatsApp(input.hasWhatsApp())
-                    .alreadyRecurrent(input.alreadyRecurrent())
-                    .inFirstLogin(input.inFirstLogin())
-                    .userType(input.userType())
+                    .address(request.address())
+                    .cpf(request.cpf())
+                    .CEP(request.CEP())
+                    .phone(request.phone())
+                    .avatarUrl(request.avatarUrl())
+                    .hasWhatsApp(request.hasWhatsApp())
+                    .alreadyRecurrent(request.alreadyRecurrent())
+                    .inFirstLogin(request.inFirstLogin())
+                    .userType(request.userType())
                     .build();
 
             User createdUser = userGateway.save(user);
@@ -85,40 +92,30 @@ public class CreateUserImpl implements CreateUserPort {
 
             metricsService.incrementAccountCreated();
 
-            return new Output(
-                    input.name(),
-                    input.email(),
-                    input.lastName(),
-                    input.address(),
-                    input.cpf(),
-                    input.CEP(),
-                    input.phone(),
-                    input.avatarUrl(),
-                    input.userType()
-            );
+            return userDtoMapper.toCreateUserResponse(createdUser);
         } catch (InvalidUserException e) {
             metricsService.incrementAccountCreationFailed();
             throw e;
         }
     }
 
-    private void validateCreateUserRequest(Input input) {
-        if (input.name() == null || input.name().trim().isEmpty()) {
+    private void validateCreateUserRequest(CreateUserRequest request) {
+        if (request.name() == null || request.name().trim().isEmpty()) {
             throw new InvalidUserException("User name cannot be empty");
         }
-        if (input.CEP() == null || input.CEP().isEmpty()) {
+        if (request.CEP() == null || request.CEP().isEmpty()) {
             throw new InvalidUserException("CEP cannot be empty");
         }
-        if (input.phone() == null || input.phone().isEmpty()) {
+        if (request.phone() == null || request.phone().isEmpty()) {
             throw new InvalidUserException("Phone number cannot be empty");
         }
-        if (input.address() == null || input.address().trim().isEmpty()) {
+        if (request.address() == null || request.address().trim().isEmpty()) {
             throw new InvalidUserException("User address cannot be empty");
         }
-        if (input.lastName() == null || input.lastName().trim().isEmpty()) {
+        if (request.lastName() == null || request.lastName().trim().isEmpty()) {
             throw new InvalidUserException("User last name cannot be empty");
         }
-        if (input.password() == null || input.password().trim().isEmpty()) {
+        if (request.password() == null || request.password().trim().isEmpty()) {
             throw new InvalidUserException("User password cannot be empty");
         }
     }

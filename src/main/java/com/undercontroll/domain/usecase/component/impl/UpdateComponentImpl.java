@@ -1,5 +1,8 @@
 package com.undercontroll.domain.usecase.component.impl;
 
+import com.undercontroll.application.dto.component.ComponentDto;
+import com.undercontroll.application.dto.component.UpdateComponentRequest;
+import com.undercontroll.application.mapper.ComponentPartDtoMapper;
 import com.undercontroll.domain.usecase.component.UpdateComponentPort;
 import com.undercontroll.domain.model.ComponentPart;
 import com.undercontroll.domain.exception.ComponentNotFoundException;
@@ -16,52 +19,44 @@ public class UpdateComponentImpl implements UpdateComponentPort {
 
     private final ComponentGateway componentGateway;
     private final MetricsService metricsService;
+    private final ComponentPartDtoMapper componentPartDtoMapper;
 
     @Override
     @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
-    public Output execute(Input input) {
-        validateUpdate(input.componentId());
+    public ComponentDto execute(Integer componentId, UpdateComponentRequest request) {
+        validateUpdate(componentId);
 
-        ComponentPart component = componentGateway.findById(input.componentId())
-                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + input.componentId()));
+        ComponentPart component = componentGateway.findById(componentId)
+                .orElseThrow(() -> new ComponentNotFoundException("Component not found with id " + componentId));
 
-        if (input.item() != null && !input.item().isEmpty()) {
-            component.setName(input.item());
+        if (request.item() != null && !request.item().isEmpty()) {
+            component.setName(request.item());
         }
 
-        if (input.description() != null && !input.description().isEmpty()) {
-            component.setDescription(input.description());
+        if (request.description() != null && !request.description().isEmpty()) {
+            component.setDescription(request.description());
         }
 
-        if (input.brand() != null && !input.brand().isEmpty()) {
-            component.setBrand(input.brand());
+        if (request.brand() != null && !request.brand().isEmpty()) {
+            component.setBrand(request.brand());
         }
 
-        if (input.category() != null && !input.category().isEmpty()) {
-            component.setCategory(input.category());
+        if (request.category() != null && !request.category().isEmpty()) {
+            component.setCategory(request.category());
         }
 
-        if (input.price() != null) {
-            component.setPrice(input.price());
+        if (request.price() != null) {
+            component.setPrice(request.price());
         }
 
-        if (input.supplier() != null && !input.supplier().isEmpty()) {
-            component.setSupplier(input.supplier());
+        if (request.supplier() != null && !request.supplier().isEmpty()) {
+            component.setSupplier(request.supplier());
         }
 
         ComponentPart savedComponent = componentGateway.save(component);
         metricsService.incrementComponentUpdated();
 
-        return new Output(
-                savedComponent.getId(),
-                savedComponent.getName(),
-                savedComponent.getDescription(),
-                savedComponent.getBrand(),
-                savedComponent.getPrice(),
-                savedComponent.getQuantity(),
-                savedComponent.getSupplier(),
-                savedComponent.getCategory()
-        );
+        return componentPartDtoMapper.toDto(savedComponent);
     }
 
     private void validateUpdate(Integer componentId) {

@@ -1,11 +1,11 @@
 package com.undercontroll.application.usecase;
 
+import com.undercontroll.application.dto.order.UpdateOrderRequest;
 import com.undercontroll.domain.usecase.order.impl.UpdateOrderImpl;
 import com.undercontroll.domain.exception.InvalidUpdateOrderException;
 import com.undercontroll.domain.exception.OrderNotFoundException;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.domain.usecase.order.UpdateOrderPort;
 import com.undercontroll.infrastructure.service.MetricsService;
 import com.undercontroll.domain.gateway.OrderGateway;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,15 +54,11 @@ class UpdateOrderImplTest {
         when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
         when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
 
-        UpdateOrderPort.Input input = new UpdateOrderPort.Input(
-                1, OrderStatus.IN_ANALYSIS, List.of(), List.of(), "Updated description"
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.IN_ANALYSIS, List.of(), List.of(), "Updated description"
         );
 
-        UpdateOrderPort.Output output = updateOrderImpl.execute(input);
-
-        assertNotNull(output);
-        assertTrue(output.success());
-        assertEquals("Order updated successfully", output.message());
+        updateOrderImpl.execute(1, request);
 
         verify(orderGateway, times(1)).findById(1);
         verify(orderGateway, times(1)).save(any(Order.class));
@@ -75,11 +71,11 @@ class UpdateOrderImplTest {
         when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
         doNothing().when(metricsService).incrementOrderCompleted();
 
-        UpdateOrderPort.Input input = new UpdateOrderPort.Input(
-                1, OrderStatus.COMPLETED, List.of(), List.of(), null
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.COMPLETED, List.of(), List.of(), null
         );
 
-        updateOrderImpl.execute(input);
+        updateOrderImpl.execute(1, request);
 
         verify(metricsService, times(1)).incrementOrderCompleted();
     }
@@ -90,11 +86,11 @@ class UpdateOrderImplTest {
         when(orderGateway.findById(999)).thenReturn(Optional.empty());
         doNothing().when(metricsService).incrementOrderUpdateFailed();
 
-        UpdateOrderPort.Input input = new UpdateOrderPort.Input(
-                999, OrderStatus.COMPLETED, List.of(), List.of(), null
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.COMPLETED, List.of(), List.of(), null
         );
 
-        assertThrows(OrderNotFoundException.class, () -> updateOrderImpl.execute(input));
+        assertThrows(OrderNotFoundException.class, () -> updateOrderImpl.execute(999, request));
 
         verify(orderGateway, times(1)).findById(999);
         verify(orderGateway, never()).save(any());
@@ -104,11 +100,11 @@ class UpdateOrderImplTest {
     @Test
     @DisplayName("Should throw InvalidUpdateOrderException when orderId is null")
     void testUpdateOrder_ShouldThrowException_WhenOrderIdIsNull() {
-        UpdateOrderPort.Input input = new UpdateOrderPort.Input(
-                null, OrderStatus.COMPLETED, List.of(), List.of(), null
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.COMPLETED, List.of(), List.of(), null
         );
 
-        assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(input));
+        assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(null, request));
 
         verify(orderGateway, never()).findById(any());
     }
@@ -116,11 +112,11 @@ class UpdateOrderImplTest {
     @Test
     @DisplayName("Should throw InvalidUpdateOrderException when orderId is zero or negative")
     void testUpdateOrder_ShouldThrowException_WhenOrderIdIsInvalid() {
-        UpdateOrderPort.Input input = new UpdateOrderPort.Input(
-                0, OrderStatus.COMPLETED, List.of(), List.of(), null
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.COMPLETED, List.of(), List.of(), null
         );
 
-        assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(input));
+        assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(0, request));
 
         verify(orderGateway, never()).findById(any());
     }
@@ -131,11 +127,11 @@ class UpdateOrderImplTest {
         when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
         when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
 
-        UpdateOrderPort.Input input = new UpdateOrderPort.Input(
-                1, null, List.of(), List.of(), "New description"
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                null, List.of(), List.of(), "New description"
         );
 
-        updateOrderImpl.execute(input);
+        updateOrderImpl.execute(1, request);
 
         assertEquals(OrderStatus.PENDING, existingOrder.getStatus());
         verify(metricsService, never()).incrementOrderCompleted();

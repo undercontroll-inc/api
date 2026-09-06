@@ -14,6 +14,10 @@ public interface OrderMapper {
 
     Order toDomain(OrderJpaEntity entity);
 
+    @Named("toDomainWithoutDemands")
+    @Mapping(target = "demands", ignore = true)
+    Order toDomainWithoutDemands(OrderJpaEntity entity);
+
     List<Order> toDomainList(List<OrderJpaEntity> entities);
 
     @Named("toEntity")

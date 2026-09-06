@@ -5,7 +5,6 @@ import com.undercontroll.domain.exception.InvalidDeleteOrderException;
 import com.undercontroll.domain.exception.OrderNotFoundException;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.domain.usecase.order.DeleteOrderPort;
 import com.undercontroll.domain.gateway.OrderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,12 +45,7 @@ class DeleteOrderImplTest {
         when(orderGateway.findById(1)).thenReturn(Optional.of(order));
         doNothing().when(orderGateway).deleteById(1);
 
-        DeleteOrderPort.Input input = new DeleteOrderPort.Input(1);
-        DeleteOrderPort.Output output = deleteOrderImpl.execute(input);
-
-        assertNotNull(output);
-        assertTrue(output.success());
-        assertEquals("Order deleted successfully", output.message());
+        deleteOrderImpl.execute(1);
 
         verify(orderGateway, times(1)).findById(1);
         verify(orderGateway, times(1)).deleteById(1);
@@ -60,9 +54,7 @@ class DeleteOrderImplTest {
     @Test
     @DisplayName("Should throw InvalidDeleteOrderException when orderId is null")
     void testDeleteOrder_ShouldThrowException_WhenOrderIdIsNull() {
-        DeleteOrderPort.Input input = new DeleteOrderPort.Input(null);
-
-        assertThrows(InvalidDeleteOrderException.class, () -> deleteOrderImpl.execute(input));
+        assertThrows(InvalidDeleteOrderException.class, () -> deleteOrderImpl.execute(null));
 
         verify(orderGateway, never()).findById(any());
         verify(orderGateway, never()).deleteById(any());
@@ -71,9 +63,7 @@ class DeleteOrderImplTest {
     @Test
     @DisplayName("Should throw InvalidDeleteOrderException when orderId is zero or negative")
     void testDeleteOrder_ShouldThrowException_WhenOrderIdIsInvalid() {
-        DeleteOrderPort.Input input = new DeleteOrderPort.Input(-1);
-
-        assertThrows(InvalidDeleteOrderException.class, () -> deleteOrderImpl.execute(input));
+        assertThrows(InvalidDeleteOrderException.class, () -> deleteOrderImpl.execute(-1));
 
         verify(orderGateway, never()).findById(any());
         verify(orderGateway, never()).deleteById(any());
@@ -84,9 +74,7 @@ class DeleteOrderImplTest {
     void testDeleteOrder_ShouldThrowException_WhenOrderNotFound() {
         when(orderGateway.findById(999)).thenReturn(Optional.empty());
 
-        DeleteOrderPort.Input input = new DeleteOrderPort.Input(999);
-
-        assertThrows(OrderNotFoundException.class, () -> deleteOrderImpl.execute(input));
+        assertThrows(OrderNotFoundException.class, () -> deleteOrderImpl.execute(999));
 
         verify(orderGateway, times(1)).findById(999);
         verify(orderGateway, never()).deleteById(any());

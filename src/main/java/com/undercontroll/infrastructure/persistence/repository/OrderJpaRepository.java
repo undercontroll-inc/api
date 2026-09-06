@@ -1,14 +1,17 @@
 package com.undercontroll.infrastructure.persistence.repository;
 
+import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.infrastructure.persistence.entity.OrderJpaEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +19,20 @@ import java.util.Optional;
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Integer> {
 
     List<OrderJpaEntity> findByUser_id(Integer userId);
+
+    @EntityGraph(attributePaths = {"user", "orderItems"})
+    @Query("SELECT o FROM OrderJpaEntity o")
+    List<OrderJpaEntity> findRecentWithUserAndItems(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "orderItems"})
+    List<OrderJpaEntity> findByStatus(OrderStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "orderItems"})
+    List<OrderJpaEntity> findByStatusIn(Collection<OrderStatus> statuses, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "orderItems"})
+    @Query("SELECT o FROM OrderJpaEntity o WHERE o.id = :id")
+    Optional<OrderJpaEntity> findDetailById(@Param("id") Integer id);
 
     @Query("SELECT o FROM OrderJpaEntity o")
     Page<OrderJpaEntity> findAllPaginated(Pageable pageable);
@@ -191,5 +208,20 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Intege
     List<Object[]> getTopComponents(
             @Param("startDate") LocalDate startDate,
             @Param("statuses") List<String> statuses);
+
+    @Query(value = """
+    SELECT
+        oi.brand,
+        oi.model,
+        oi.type,
+        COUNT(oi.id) AS volume
+    FROM orders o
+    INNER JOIN order_item oi ON oi.order_id = o.id
+    WHERE (CAST(:startDate AS DATE) IS NULL OR o.received_at >= CAST(:startDate AS DATE))
+      AND oi.brand IS NOT NULL
+    GROUP BY oi.brand, oi.model, oi.type
+    ORDER BY volume DESC
+    """, nativeQuery = true)
+    List<Object[]> getRepairCatalog(@Param("startDate") LocalDate startDate);
 
 }

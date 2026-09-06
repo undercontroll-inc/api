@@ -2,17 +2,8 @@ package com.undercontroll.domain.usecase.dashboard;
 
 import com.undercontroll.domain.enums.PeriodFilter;
 import com.undercontroll.domain.enums.StatusFilter;
-import com.undercontroll.application.dto.TopComponentsResponse;
+import com.undercontroll.application.dto.dashboard.TopComponentsResponse;
 
 public interface GetTopComponentsPort {
-    record Input(
-            PeriodFilter period,
-            StatusFilter status
-    ) {}
-
-    record Output(
-            TopComponentsResponse response
-    ) {}
-
-    Output execute(Input input);
+    TopComponentsResponse execute(PeriodFilter period, StatusFilter status);
 }

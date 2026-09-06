@@ -1,18 +1,8 @@
 package com.undercontroll.domain.usecase.demand;
 
+import com.undercontroll.application.dto.demand.CreateDemandRequest;
+import com.undercontroll.application.dto.demand.DemandDto;
+
 public interface CreateDemandPort {
-    record Input(
-            Integer componentPartId,
-            Long quantity,
-            Integer orderId
-    ) {}
-
-    record Output(
-            Integer id,
-            Integer componentId,
-            Integer orderId,
-            Long quantity
-    ) {}
-
-    Output execute(Input input);
+    DemandDto execute(Integer orderId, CreateDemandRequest request);
 }

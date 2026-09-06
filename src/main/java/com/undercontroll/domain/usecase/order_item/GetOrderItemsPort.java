@@ -1,15 +1,9 @@
 package com.undercontroll.domain.usecase.order_item;
 
-import com.undercontroll.application.dto.OrderItemDto;
+import com.undercontroll.application.dto.orderitem.OrderItemDto;
 
 import java.util.List;
 
 public interface GetOrderItemsPort {
-    record Input() {}
-
-    record Output(
-            List<OrderItemDto> orderItems
-    ) {}
-
-    Output execute(Input input);
+    List<OrderItemDto> execute(Integer orderId);
 }

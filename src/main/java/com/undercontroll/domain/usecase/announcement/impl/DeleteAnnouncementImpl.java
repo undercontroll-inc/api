@@ -16,11 +16,11 @@ public class DeleteAnnouncementImpl implements DeleteAnnouncementPort {
 
     @Override
     @CacheEvict(value = {"announcements", "lastAnnouncement"}, allEntries = true)
-    public void execute(Input input) {
+    public void execute(Integer announcementId) {
         Announcement announcement = announcementGateway
-                .findById(input.id())
+                .findById(announcementId)
                 .orElseThrow(() -> new AnnouncementNotFoundException(
-                        "Announcement with id " + input.id() + " not found"
+                        "Announcement with id " + announcementId + " not found"
                 ));
 
         announcementGateway.deleteById(announcement.getId());

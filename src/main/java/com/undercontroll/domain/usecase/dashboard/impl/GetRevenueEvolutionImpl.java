@@ -1,7 +1,9 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
-import com.undercontroll.application.dto.RevenueEvolutionResponse;
+import com.undercontroll.application.dto.dashboard.RevenueEvolutionResponse;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.enums.PeriodFilter;
+import com.undercontroll.domain.enums.StatusFilter;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.dashboard.GetRevenueEvolutionPort;
@@ -20,9 +22,9 @@ public class GetRevenueEvolutionImpl implements GetRevenueEvolutionPort {
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
-        List<String> statuses = input.status().getStatuses().stream()
+    public RevenueEvolutionResponse execute(PeriodFilter period, StatusFilter status) {
+        LocalDate startDate = DashboardDateFilter.from(period);
+        List<String> statuses = status.getStatuses().stream()
                 .map(OrderStatus::name)
                 .toList();
 
@@ -37,7 +39,7 @@ public class GetRevenueEvolutionImpl implements GetRevenueEvolutionPort {
                 ))
                 .toList();
 
-        return new Output(new RevenueEvolutionResponse(dataPoints));
+        return new RevenueEvolutionResponse(dataPoints);
     }
 
     private LocalDate toLocalDate(Object value) {

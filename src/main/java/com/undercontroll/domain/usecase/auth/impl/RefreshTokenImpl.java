@@ -1,5 +1,7 @@
 package com.undercontroll.domain.usecase.auth.impl;
 
+import com.undercontroll.application.dto.auth.RefreshTokenRequest;
+import com.undercontroll.application.dto.auth.RefreshTokenResponse;
 import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.infrastructure.service.RefreshTokenService;
@@ -16,8 +18,8 @@ public class RefreshTokenImpl implements RefreshTokenPort {
     private final TokenServce tokenServce;
 
     @Override
-    public Output execute(Input input) {
-        RefreshTokenData data = refreshTokenService.validateRefreshToken(input.refreshToken());
+    public RefreshTokenResponse execute(RefreshTokenRequest request) {
+        RefreshTokenData data = refreshTokenService.validateRefreshToken(request.refreshToken());
 
         UserType userType = UserType.valueOf(data.userRole());
 
@@ -28,7 +30,7 @@ public class RefreshTokenImpl implements RefreshTokenPort {
 
         String newAccessToken = tokenServce.generateToken(String.valueOf(data.userId()), userType);
 
-        return new Output(newAccessToken, newRefreshToken);
+        return new RefreshTokenResponse(newAccessToken, newRefreshToken);
     }
 }
 

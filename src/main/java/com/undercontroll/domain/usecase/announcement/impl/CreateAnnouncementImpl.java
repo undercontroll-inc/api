@@ -7,6 +7,8 @@ import com.undercontroll.infrastructure.events.AnnouncementCreatedEvent;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
 import com.undercontroll.infrastructure.service.MetricsService;
 import com.undercontroll.infrastructure.service.StorageService;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -32,21 +34,21 @@ public class CreateAnnouncementImpl implements CreateAnnouncementPort {
 
     @Override
     @CacheEvict(value = {"announcements", "lastAnnouncement"}, allEntries = true)
-    public Output execute(Input input) {
+    public CreateAnnouncementResponse execute(CreateAnnouncementRequest request, String token) {
 
         Announcement announcement = Announcement.builder()
-                .title(input.title())
-                .content(input.description())
-                .type(input.type())
+                .title(request.title())
+                .content(request.description())
+                .type(request.type())
                 .build();
 
         Announcement announcementCreated = announcementGateway.save(announcement);
 
-        final var presignedUpload = input.imageUpload() == null
+        final var presignedUpload = request.imageUpload() == null
                 ? null
                 : storageService.generatePresignedUploadUrl(
                         bucket,
-                        generateKey(announcementCreated.getId(), input.imageUpload().originalName(), input.imageUpload().contentType()),
+                        generateKey(announcementCreated.getId(), request.imageUpload().originalName(), request.imageUpload().contentType()),
                         uploadExpirationMinutes
                 );
 
@@ -57,9 +59,9 @@ public class CreateAnnouncementImpl implements CreateAnnouncementPort {
 
         metricsService.incrementAnnouncementCreated();
 
-        notificationService.handleAnnouncementCreated(new AnnouncementCreatedEvent(announcementCreated, input.token()));
+        notificationService.handleAnnouncementCreated(new AnnouncementCreatedEvent(announcementCreated, token));
 
-        return new Output(
+        return new CreateAnnouncementResponse(
                 announcementCreated.getId(),
                 announcementCreated.getTitle(),
                 announcementCreated.getContent(),

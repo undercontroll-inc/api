@@ -3,7 +3,7 @@ package com.undercontroll.domain.usecase.announcement.impl;
 import com.undercontroll.domain.usecase.announcement.GetLastAnnouncementPort;
 import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
-import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.dto.announcement.AnnouncementDto;
 import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

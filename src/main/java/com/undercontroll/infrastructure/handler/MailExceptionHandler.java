@@ -1,7 +1,7 @@
 package com.undercontroll.infrastructure.handler;
 
 import com.undercontroll.domain.exception.MailSendingException;
-import com.undercontroll.application.dto.ExceptionHandlerResponse;
+import com.undercontroll.application.dto.common.ExceptionHandlerResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,12 @@ public class MailExceptionHandler extends GenericExceptionHandler {
     ) {
         log.error("Error sending email: {}", ex.getMessage());
 
-        return this.buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send email: " + ex.getMessage(), request.getRequestURI());
+        return this.buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Failed to send email: " + ex.getMessage(),
+                request.getRequestURI(),
+                MailSendingException.CODE
+        );
     }
 
 }

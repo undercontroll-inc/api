@@ -1,0 +1,35 @@
+package com.undercontroll.domain.model.market;
+
+public record MarketRisingProduct(
+        String bucketKey,
+        String externalType,
+        String externalId,
+        String title,
+        String brand,
+        String brandSlug,
+        String model,
+        String productKey,
+        String domainId,
+        String categoryId,
+        String categoryName,
+        Integer rank,
+        String rankBand,
+        Integer rankDelta,
+        String trajectoryLabel,
+        Double score,
+        String priorityLabel,
+        String confidence,
+        Double priceMedian,
+        Double priceMin,
+        Double priceMax,
+        Double priceDeltaPct,
+        Double discountPct,
+        Integer offerCount,
+        Integer sellerCount,
+        Double capacityValue,
+        String capacityUnit,
+        Integer powerWatts,
+        String voltage,
+        String permalink
+) {
+}
