@@ -9,6 +9,7 @@ import com.undercontroll.application.dto.auth.RefreshTokenResponse;
 import com.undercontroll.application.dto.user.UserDto;
 import com.undercontroll.domain.enums.AuthProvider;
 import com.undercontroll.domain.enums.UserType;
+import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.domain.usecase.auth.AuthUserPort;
 import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
@@ -123,6 +124,8 @@ class AuthControllerTest {
     void shouldRefreshEvenWhenExpiredAccessTokenIsSent() throws Exception {
         RefreshTokenRequest request = new RefreshTokenRequest("old-refresh-token");
 
+        when(tokenServce.validateToken(any()))
+                .thenThrow(new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED));
         when(refreshTokenPort.execute(any(RefreshTokenRequest.class)))
                 .thenReturn(new RefreshTokenResponse("new-access-token", "new-refresh-token"));
 
@@ -135,7 +138,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
 
         verify(refreshTokenPort, times(1)).execute(any(RefreshTokenRequest.class));
-        verifyNoInteractions(tokenServce);
     }
 
     @Test

@@ -23,9 +23,6 @@ import java.util.List;
 @Component
 public class AuthContextFilter extends OncePerRequestFilter {
 
-    private static final String AUTH_PATH = "/v1/api/auth";
-    private static final String AUTH_REFRESH_PATH = "/v1/api/auth/refresh";
-
     private final TokenServce tokenServce;
 
     @Override
@@ -75,24 +72,5 @@ public class AuthContextFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = pathWithinApplication(request);
-        return AUTH_PATH.equals(path) || AUTH_REFRESH_PATH.equals(path);
-    }
-
-    private static String pathWithinApplication(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        if (uri == null || uri.isEmpty()) {
-            String servletPath = request.getServletPath();
-            return servletPath == null ? "" : servletPath;
-        }
-        String contextPath = request.getContextPath();
-        if (contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath)) {
-            return uri.substring(contextPath.length());
-        }
-        return uri;
     }
 }

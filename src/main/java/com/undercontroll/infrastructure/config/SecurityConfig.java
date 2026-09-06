@@ -45,12 +45,13 @@ public class SecurityConfig {
     private List<String> allowedOrigins;
 
     @Bean
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/v1/api/**", "/h2-console/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/v1/api/**", "/h2-console/**")) // NOSONAR - Bearer JWT, no cookies
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/h2-console/**").access((authentication, context) -> {
