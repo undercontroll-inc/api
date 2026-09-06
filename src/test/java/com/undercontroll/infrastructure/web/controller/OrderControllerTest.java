@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -83,6 +84,7 @@ class OrderControllerTest {
         when(createOrderPort.execute(any(CreateOrderRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/orders")
+                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -108,6 +110,7 @@ class OrderControllerTest {
         when(createOrderPort.execute(any(CreateOrderRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/orders")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -124,6 +127,7 @@ class OrderControllerTest {
         );
 
         mockMvc.perform(patch("/v1/api/orders/1")
+                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -140,6 +144,7 @@ class OrderControllerTest {
         );
 
         mockMvc.perform(patch("/v1/api/orders/1")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -217,6 +222,7 @@ class OrderControllerTest {
     @DisplayName("DELETE /v1/api/orders/{orderId} - ADMINISTRATOR should delete order and return 204")
     void administratorShouldDeleteOrderSuccessfully() throws Exception {
         mockMvc.perform(delete("/v1/api/orders/1")
+                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isNoContent());
 
@@ -227,6 +233,7 @@ class OrderControllerTest {
     @DisplayName("DELETE /v1/api/orders/{orderId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteOrder() throws Exception {
         mockMvc.perform(delete("/v1/api/orders/1")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 

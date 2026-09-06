@@ -26,6 +26,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -72,6 +73,7 @@ class ComponentControllerTest {
         when(registerComponentPort.execute(any(RegisterComponentRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/components")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -90,6 +92,7 @@ class ComponentControllerTest {
         );
 
         mockMvc.perform(post("/v1/api/components")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -204,6 +207,7 @@ class ComponentControllerTest {
         when(updateComponentPort.execute(anyInt(), any(UpdateComponentRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/components/1")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -221,6 +225,7 @@ class ComponentControllerTest {
         );
 
         mockMvc.perform(put("/v1/api/components/1")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -235,7 +240,7 @@ class ComponentControllerTest {
     void administratorShouldDeleteComponentSuccessfully() throws Exception {
         doNothing().when(deleteComponentPort).execute(any(Integer.class));
 
-        mockMvc.perform(delete("/v1/api/components/1"))
+        mockMvc.perform(delete("/v1/api/components/1").with(csrf()))
                 .andExpect(status().isNoContent());
 
         verify(deleteComponentPort, times(1)).execute(any(Integer.class));
@@ -245,6 +250,7 @@ class ComponentControllerTest {
     @DisplayName("DELETE /v1/api/components/{componentId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteComponent() throws Exception {
         mockMvc.perform(delete("/v1/api/components/1")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
                 .andExpect(status().isForbidden());
 

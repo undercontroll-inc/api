@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -57,6 +58,7 @@ class ChatControllerTest {
         when(sendChatMessagePort.execute(any())).thenReturn(new SendChatMessageResponse("Tem 2 consertos abertos."));
 
         mockMvc.perform(post("/v1/api/chats/messages")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"Quais consertos estão abertos?\"}"))
                 .andExpect(status().isOk())
@@ -70,6 +72,7 @@ class ChatControllerTest {
         when(sendChatMessagePort.execute(any())).thenThrow(new AnaUnavailableException());
 
         mockMvc.perform(post("/v1/api/chats/messages")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"Oi\"}"))
                 .andExpect(status().isServiceUnavailable())
@@ -81,6 +84,7 @@ class ChatControllerTest {
     @DisplayName("chat endpoints are forbidden for customers")
     void forbiddenForCustomer() throws Exception {
         mockMvc.perform(post("/v1/api/chats/messages")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"Oi\"}"))
                 .andExpect(status().isForbidden());
@@ -108,7 +112,7 @@ class ChatControllerTest {
         when(getChatSuggestionsPort.execute(anyBoolean()))
                 .thenReturn(new ChatSuggestionsResponse(List.of("Nova")));
 
-        mockMvc.perform(post("/v1/api/chats/suggestions"))
+        mockMvc.perform(post("/v1/api/chats/suggestions").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.suggestions[0]").value("Nova"));
     }

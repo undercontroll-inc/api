@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -91,6 +92,7 @@ class UserControllerTest {
         when(createUserPort.execute(any(CreateUserRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -110,6 +112,7 @@ class UserControllerTest {
         );
 
         mockMvc.perform(patch("/v1/api/users/1")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -219,6 +222,7 @@ class UserControllerTest {
     @DisplayName("DELETE /v1/api/users/{userId} - ADMINISTRATOR should delete user and return 204")
     void administratorShouldDeleteUserSuccessfully() throws Exception {
         mockMvc.perform(delete("/v1/api/users/1")
+                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isNoContent());
 
@@ -229,6 +233,7 @@ class UserControllerTest {
     @DisplayName("DELETE /v1/api/users/{userId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteUser() throws Exception {
         mockMvc.perform(delete("/v1/api/users/1")
+                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
@@ -243,6 +248,7 @@ class UserControllerTest {
         ResetPasswordRequest request = new ResetPasswordRequest("newPassword123", false);
 
         mockMvc.perform(patch("/v1/api/users/1/password")
+                        .with(csrf())
                         .header("Authorization", "Bearer mock-customer-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -259,6 +265,7 @@ class UserControllerTest {
         ResetPasswordRequest request = new ResetPasswordRequest("newAdminPassword123", true);
 
         mockMvc.perform(patch("/v1/api/users/2/password")
+                        .with(csrf())
                         .header("Authorization", "Bearer mock-admin-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

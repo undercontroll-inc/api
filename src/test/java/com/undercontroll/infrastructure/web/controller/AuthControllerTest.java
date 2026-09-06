@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +63,7 @@ class AuthControllerTest {
                 .thenReturn(new AuthUserResponse("jwt-token-here", "refresh-token-here", userDto));
 
         mockMvc.perform(post("/v1/api/auth/login")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -85,6 +87,7 @@ class AuthControllerTest {
                 .thenReturn(new AuthUserResponse("jwt-token-here", "refresh-token-here", userDto));
 
         mockMvc.perform(post("/v1/api/auth/google")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -104,6 +107,7 @@ class AuthControllerTest {
                 .thenReturn(new RefreshTokenResponse("new-access-token", "new-refresh-token"));
 
         mockMvc.perform(post("/v1/api/auth/refresh")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -30,6 +32,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private static final String ORDER_BY_ID = "/v1/api/orders/{orderId}";
+    private static final String ANNOUNCEMENTS = "/v1/api/announcements/**";
     private static final IpAddressMatcher LOCALHOST_IPV4 = new IpAddressMatcher("127.0.0.1");
     private static final IpAddressMatcher LOCALHOST_IPV6 = new IpAddressMatcher("::1");
 
@@ -45,14 +48,10 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers(
-                        "/v1/api/**",
-                        "/swagger-ui.html",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/actuator/**",
-                        "/h2-console/**"
-                ))
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(csrfRequestHandler())
+                )
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/h2-console/**").access((authentication, context) -> {
@@ -65,13 +64,13 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**", "/actuator/health/**", "/actuator/prometheus").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/auth/login", "/v1/api/auth/google", "/v1/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements/**", "/v1/api/announcements/latest").permitAll()
+                        .requestMatchers(HttpMethod.GET, ANNOUNCEMENTS, "/v1/api/announcements/latest").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/v1/api/users/{userId}", "/v1/api/users/{userId}/password").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/orders", ORDER_BY_ID, ORDER_BY_ID + "/export").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, ANNOUNCEMENTS).hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, ANNOUNCEMENTS).hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/dashboard/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/analytics/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/insights/**").hasRole("ADMINISTRATOR")
@@ -114,7 +113,8 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of(
                 HttpHeaders.AUTHORIZATION,
                 HttpHeaders.CONTENT_TYPE,
-                HttpHeaders.ACCEPT
+                HttpHeaders.ACCEPT,
+                "X-XSRF-TOKEN"
         ));
         configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE));
         configuration.setAllowCredentials(true);
@@ -122,6 +122,12 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource origin = new UrlBasedCorsConfigurationSource();
         origin.registerCorsConfiguration("/**", configuration);
         return origin;
+    }
+
+    private static CsrfTokenRequestAttributeHandler csrfRequestHandler() {
+        CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
+        handler.setCsrfRequestAttributeName(null);
+        return handler;
     }
 
 }

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -75,7 +76,7 @@ class MarketInsightsControllerTest {
         when(generateMonthlyInsightsPort.execute(true))
                 .thenReturn(InsightGenerationResult.success("2026-08"));
 
-        mockMvc.perform(post("/v1/api/insights"))
+        mockMvc.perform(post("/v1/api/insights").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(""));
     }
@@ -84,7 +85,7 @@ class MarketInsightsControllerTest {
     @WithMockUser(roles = "CUSTOMER")
     @DisplayName("POST /v1/api/insights is forbidden for customers")
     void postForbiddenForCustomer() throws Exception {
-        mockMvc.perform(post("/v1/api/insights"))
+        mockMvc.perform(post("/v1/api/insights").with(csrf()))
                 .andExpect(status().isForbidden());
 
         verify(generateMonthlyInsightsPort, never()).execute(true);
@@ -93,7 +94,7 @@ class MarketInsightsControllerTest {
     @Test
     @DisplayName("POST /v1/api/insights is forbidden without a token")
     void postForbiddenWithoutToken() throws Exception {
-        mockMvc.perform(post("/v1/api/insights"))
+        mockMvc.perform(post("/v1/api/insights").with(csrf()))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(generateMonthlyInsightsPort);
