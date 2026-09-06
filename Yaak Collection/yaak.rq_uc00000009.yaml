@@ -1,0 +1,67 @@
+type: http_request
+model: http_request
+id: rq_uc00000009
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucOrders01
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "userId": 1,
+      "appliances": [
+        {
+          "type": "Geladeira",
+          "brand": "Electrolux",
+          "model": "DF80",
+          "voltage": "220V",
+          "serial": "SN12345",
+          "customerNote": "Nao gela",
+          "laborValue": 80.0
+        }
+      ],
+      "parts": [
+        {
+          "componentId": 1,
+          "quantity": 1
+        }
+      ],
+      "discount": 0.0,
+      "receivedAt": "2026-09-01",
+      "deadline": "2026-09-10",
+      "serviceDescription": "Reparo em geladeira",
+      "notes": "Cliente recorrente",
+      "status": "PENDING",
+      "returnGuarantee": true,
+      "fabricGuarantee": true,
+      "nf": "NF-1001"
+    }
+bodyType: application/json
+description: ""
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: ct00000009
+method: POST
+name: Create order
+sortPriority: 1000.0
+url: ${[ base_url ]}/v1/api/orders
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

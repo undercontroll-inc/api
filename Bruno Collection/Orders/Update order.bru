@@ -1,0 +1,41 @@
+meta {
+  name: Update order
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/v1/api/orders/{{orderId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+{
+  "status": "IN_ANALYSIS",
+  "appliances": [
+    {
+      "id": 1,
+      "type": "Geladeira",
+      "brand": "Electrolux",
+      "model": "DF80",
+      "volt": "220V",
+      "series": "SN12345",
+      "laborValue": 90.0,
+      "customerNote": "Atualizado"
+    }
+  ],
+  "parts": [
+    {
+      "componentId": 1,
+      "quantity": 1
+    }
+  ],
+  "serviceDescription": "Reparo em analise"
+}
+}
+

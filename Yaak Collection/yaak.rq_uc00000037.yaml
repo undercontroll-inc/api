@@ -1,0 +1,37 @@
+type: http_request
+model: http_request
+id: rq_uc00000037
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucDash0001
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ""
+headers: []
+method: GET
+name: Get ongoing orders
+sortPriority: 4000.0
+url: ${[ base_url ]}/v1/api/dashboard/ongoing-orders
+urlParameters:
+- enabled: true
+  name: period
+  value: "ALL"
+  id: p00003701
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

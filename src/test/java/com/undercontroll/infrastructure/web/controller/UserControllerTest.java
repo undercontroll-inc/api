@@ -10,6 +10,7 @@ import com.undercontroll.application.dto.user.UpdateUserRequest;
 import com.undercontroll.application.dto.user.UserDto;
 import com.undercontroll.domain.usecase.auth.ResetPasswordPort;
 import com.undercontroll.domain.enums.UserType;
+import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.user.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
@@ -30,7 +31,6 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -92,7 +92,6 @@ class UserControllerTest {
         when(createUserPort.execute(any(CreateUserRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/users")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -112,7 +111,6 @@ class UserControllerTest {
         );
 
         mockMvc.perform(patch("/v1/api/users/1")
-                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -222,7 +220,6 @@ class UserControllerTest {
     @DisplayName("DELETE /v1/api/users/{userId} - ADMINISTRATOR should delete user and return 204")
     void administratorShouldDeleteUserSuccessfully() throws Exception {
         mockMvc.perform(delete("/v1/api/users/1")
-                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isNoContent());
 
@@ -233,7 +230,6 @@ class UserControllerTest {
     @DisplayName("DELETE /v1/api/users/{userId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteUser() throws Exception {
         mockMvc.perform(delete("/v1/api/users/1")
-                        .with(csrf())
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
@@ -248,7 +244,6 @@ class UserControllerTest {
         ResetPasswordRequest request = new ResetPasswordRequest("newPassword123", false);
 
         mockMvc.perform(patch("/v1/api/users/1/password")
-                        .with(csrf())
                         .header("Authorization", "Bearer mock-customer-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -265,12 +260,26 @@ class UserControllerTest {
         ResetPasswordRequest request = new ResetPasswordRequest("newAdminPassword123", true);
 
         mockMvc.perform(patch("/v1/api/users/2/password")
-                        .with(csrf())
                         .header("Authorization", "Bearer mock-admin-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
         verify(resetPasswordPort, times(1)).execute(eq(2), any(ResetPasswordRequest.class), eq("mock-admin-token"));
+    }
+
+    @Test
+    @DisplayName("GET /v1/api/users - Expired JWT should return 401 with TOKEN_EXPIRED")
+    void expiredJwtShouldReturn401WithTokenExpiredCode() throws Exception {
+        when(tokenServce.validateToken(anyString()))
+                .thenThrow(new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED));
+
+        mockMvc.perform(get("/v1/api/users")
+                        .header("Authorization", "Bearer expired-access-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("TOKEN_EXPIRED"))
+                .andExpect(jsonPath("$.message").value("Access token has expired"));
+
+        verify(getUsersPort, never()).execute(any(), any());
     }
 }

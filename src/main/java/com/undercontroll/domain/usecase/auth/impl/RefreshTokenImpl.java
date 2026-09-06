@@ -9,6 +9,7 @@ import com.undercontroll.infrastructure.service.RefreshTokenService.RefreshToken
 import com.undercontroll.infrastructure.service.TokenServce;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,12 +19,12 @@ public class RefreshTokenImpl implements RefreshTokenPort {
     private final TokenServce tokenServce;
 
     @Override
+    @Transactional
     public RefreshTokenResponse execute(RefreshTokenRequest request) {
-        RefreshTokenData data = refreshTokenService.validateRefreshToken(request.refreshToken());
+        RefreshTokenData data = refreshTokenService.consumeRefreshToken(request.refreshToken());
 
         UserType userType = UserType.valueOf(data.userRole());
 
-        // Rotate: revoke old token and issue a new refresh token
         String newRefreshToken = refreshTokenService.createRefreshToken(
                 data.userId(), data.userEmail(), userType
         );
@@ -33,4 +34,3 @@ public class RefreshTokenImpl implements RefreshTokenPort {
         return new RefreshTokenResponse(newAccessToken, newRefreshToken);
     }
 }
-

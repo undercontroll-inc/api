@@ -1,0 +1,45 @@
+type: http_request
+model: http_request
+id: rq_uc00000030
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucAnnounc1
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ""
+headers: []
+method: GET
+name: List announcements
+sortPriority: 2000.0
+url: ${[ base_url ]}/v1/api/announcements
+urlParameters:
+- enabled: true
+  name: page
+  value: "0"
+  id: p00003001
+- enabled: true
+  name: size
+  value: "10"
+  id: p00003002
+- enabled: false
+  name: type
+  value: "UPDATES"
+  id: p00003003
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

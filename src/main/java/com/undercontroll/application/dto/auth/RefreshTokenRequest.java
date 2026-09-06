@@ -1,4 +1,7 @@
 package com.undercontroll.application.dto.auth;
 
-public record RefreshTokenRequest(String refreshToken) {}
+import jakarta.validation.constraints.NotBlank;
 
+public record RefreshTokenRequest(
+        @NotBlank String refreshToken
+) {}

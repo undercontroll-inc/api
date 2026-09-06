@@ -9,6 +9,7 @@ import com.undercontroll.application.dto.auth.RefreshTokenResponse;
 import com.undercontroll.application.dto.user.UserDto;
 import com.undercontroll.domain.enums.AuthProvider;
 import com.undercontroll.domain.enums.UserType;
+import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.domain.usecase.auth.AuthUserPort;
 import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
@@ -27,7 +28,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,11 +65,10 @@ class AuthControllerTest {
                 .thenReturn(new AuthUserResponse("jwt-token-here", "refresh-token-here", userDto));
 
         mockMvc.perform(post("/v1/api/auth")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token-here"))
+                .andExpect(jsonPath("$.accessToken").value("jwt-token-here"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token-here"))
                 .andExpect(jsonPath("$.user.email").value("john@example.com"));
 
@@ -90,11 +89,10 @@ class AuthControllerTest {
                 .thenReturn(new AuthUserResponse("jwt-token-here", "refresh-token-here", userDto));
 
         mockMvc.perform(post("/v1/api/auth")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token-here"))
+                .andExpect(jsonPath("$.accessToken").value("jwt-token-here"))
                 .andExpect(jsonPath("$.refreshToken").value("refresh-token-here"))
                 .andExpect(jsonPath("$.user.email").value("john@example.com"));
 
@@ -110,7 +108,27 @@ class AuthControllerTest {
                 .thenReturn(new RefreshTokenResponse("new-access-token", "new-refresh-token"));
 
         mockMvc.perform(post("/v1/api/auth/refresh")
-                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
+
+        verify(refreshTokenPort, times(1)).execute(any(RefreshTokenRequest.class));
+    }
+
+    @Test
+    @DisplayName("POST /v1/api/auth/refresh - Expired access token on the request must not block refresh")
+    void shouldRefreshEvenWhenExpiredAccessTokenIsSent() throws Exception {
+        RefreshTokenRequest request = new RefreshTokenRequest("old-refresh-token");
+
+        when(tokenServce.validateToken(any()))
+                .thenThrow(new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED));
+        when(refreshTokenPort.execute(any(RefreshTokenRequest.class)))
+                .thenReturn(new RefreshTokenResponse("new-access-token", "new-refresh-token"));
+
+        mockMvc.perform(post("/v1/api/auth/refresh")
+                        .header("Authorization", "Bearer expired-access-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

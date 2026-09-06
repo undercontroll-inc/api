@@ -1,0 +1,41 @@
+type: http_request
+model: http_request
+id: rq_uc00000044
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucChat0001
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "content": "${[ chat_content ]}"
+    }
+bodyType: application/json
+description: ""
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: ct00000044
+method: POST
+name: Send chat message
+sortPriority: 1000.0
+url: ${[ base_url ]}/v1/api/chats/messages
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

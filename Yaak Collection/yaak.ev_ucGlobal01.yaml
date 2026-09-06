@@ -1,0 +1,58 @@
+type: environment
+model: environment
+id: ev_ucGlobal01
+workspaceId: wk_ucCoreApi1
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+name: Global
+public: true
+base: true
+parentModel: workspace
+parentId: null
+variables:
+- enabled: true
+  name: email
+  value: "admin@undercontroll.com"
+  id: vg00000001
+- enabled: true
+  name: password
+  value: "123"
+  id: vg00000002
+- enabled: true
+  name: google_token
+  value: ""
+  id: vg00000003
+- enabled: true
+  name: user_id
+  value: "1"
+  id: vg00000004
+- enabled: true
+  name: order_id
+  value: "1"
+  id: vg00000005
+- enabled: true
+  name: order_item_id
+  value: "1"
+  id: vg00000006
+- enabled: true
+  name: demand_id
+  value: "1"
+  id: vg00000007
+- enabled: true
+  name: component_id
+  value: "1"
+  id: vg00000008
+- enabled: true
+  name: announcement_id
+  value: "1"
+  id: vg00000009
+- enabled: true
+  name: chat_content
+  value: "Quais consertos estao em andamento?"
+  id: vg00000010
+- enabled: true
+  name: base_url
+  value: "http://localhost:8080"
+  id: vg00000011
+color: null
+sortPriority: 0.0

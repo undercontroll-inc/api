@@ -1,0 +1,17 @@
+meta {
+  name: Get customer type evolution
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/charts/customer-type
+  body: none
+  auth: inherit
+}
+
+params:query {
+  period: ALL
+  status: ALL
+}
+

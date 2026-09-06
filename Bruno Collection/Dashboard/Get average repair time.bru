@@ -1,0 +1,17 @@
+meta {
+  name: Get average repair time
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/average-repair-time
+  body: none
+  auth: inherit
+}
+
+params:query {
+  period: ALL
+  status: ALL
+}
+

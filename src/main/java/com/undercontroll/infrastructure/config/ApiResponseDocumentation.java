@@ -90,9 +90,9 @@ public class ApiResponseDocumentation {
                                         "timestamp": "2025-11-23T14:30:00",
                                         "status": 401,
                                         "error": "Unauthorized",
-                                        "message": "Invalid or expired JWT token",
+                                        "message": "Access token has expired",
                                         "path": "/v1/api/components",
-                                        "code": "INVALID_TOKEN"
+                                        "code": "TOKEN_EXPIRED"
                                     }
                                     """
                     )

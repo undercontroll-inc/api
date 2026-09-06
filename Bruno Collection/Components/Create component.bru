@@ -1,0 +1,28 @@
+meta {
+  name: Create component
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/v1/api/components
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+{
+  "item": "Capacitor 25uF",
+  "description": "Capacitor eletrolitico 25uF 400V",
+  "brand": "Nichicon",
+  "category": "Capacitores",
+  "quantity": 80,
+  "price": 18.0,
+  "supplier": "ElecSupply"
+}
+}
+

@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.infrastructure.service.TokenServce;
@@ -43,35 +44,26 @@ public class JwtTokenAdapter implements TokenServce {
 
     @Override
     public DecodedJWT validateToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new InvalidTokenException("Invalid token");
+        }
+
         try {
-
-            if (token == null || token.isBlank()) {
-                throw new InvalidTokenException("Invalid token");
-            }
-
             Algorithm algorithm = Algorithm.HMAC256(secret);
 
             return JWT.require(algorithm)
                     .withIssuer("undercontroll")
                     .build()
                     .verify(token);
-        } catch (Exception e) {
+        } catch (TokenExpiredException e) {
+            throw new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED);
+        } catch (JWTVerificationException e) {
             throw new InvalidTokenException("Error while validating token " + e.getMessage());
         }
     }
 
     @Override
     public String extractUsername(String token) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(secret);
-
-            return JWT.require(algorithm)
-                    .withIssuer("undercontroll")
-                    .build()
-                    .verify(token)
-                    .getSubject();
-        } catch (JWTVerificationException exception){
-            throw new InvalidTokenException("Received a invalid jwt token " + exception.getMessage());
-        }
+        return validateToken(token).getSubject();
     }
 }

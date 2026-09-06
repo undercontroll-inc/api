@@ -1,0 +1,43 @@
+type: http_request
+model: http_request
+id: rq_uc00000001
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucAuth0001
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "provider": "GOOGLE",
+      "email": "${[ email ]}",
+      "token": "${[ google_token ]}"
+    }
+bodyType: application/json
+description: ""
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: ct00000001
+method: POST
+name: Sign in Google
+sortPriority: 2000.0
+url: ${[ base_url ]}/v1/api/auth
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

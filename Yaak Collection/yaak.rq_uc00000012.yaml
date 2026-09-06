@@ -1,0 +1,60 @@
+type: http_request
+model: http_request
+id: rq_uc00000012
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucOrders01
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "status": "IN_ANALYSIS",
+      "appliances": [
+        {
+          "id": 1,
+          "type": "Geladeira",
+          "brand": "Electrolux",
+          "model": "DF80",
+          "volt": "220V",
+          "series": "SN12345",
+          "laborValue": 90.0,
+          "customerNote": "Atualizado"
+        }
+      ],
+      "parts": [
+        {
+          "componentId": 1,
+          "quantity": 1
+        }
+      ],
+      "serviceDescription": "Reparo em analise"
+    }
+bodyType: application/json
+description: ""
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: ct00000012
+method: PATCH
+name: Update order
+sortPriority: 4000.0
+url: ${[ base_url ]}/v1/api/orders/${[ order_id ]}
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0
