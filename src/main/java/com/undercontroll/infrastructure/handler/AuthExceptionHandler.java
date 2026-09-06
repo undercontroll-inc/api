@@ -33,7 +33,7 @@ public class AuthExceptionHandler extends GenericExceptionHandler {
         log.error("Token validation error: {}", ex.getMessage());
 
         return this.buildErrorResponse(
-                HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI(), ex.getCode()
+                HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI(), ex.getErrorCode()
         );
     }
 

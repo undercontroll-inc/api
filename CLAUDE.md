@@ -31,7 +31,7 @@ Collections HTTP (manter as duas alinhadas ao contrato):
 Depois de **qualquer** mudança de contrato HTTP (path, método, status, query, body, headers, auth, CSRF), atualizar **Bruno Collection e Yaak Collection no mesmo trabalho**. Fonte de verdade: interfaces `*Api.java` + records em `application/dto`. Incluir request novo, apagar o obsoleto, e criar/ajustar env vars se nascer path ou id novo.
 
 - Yaak automatiza Bearer (`Auth / Sign in password` → `$.accessToken`) via `response.body.path` com `behavior=smart`. A pasta Authenticated herda isso. Não commitar `cookie_jar` nem tokens no YAML.
-- Bruno não encadeia requests: rodar `Auth / Sign in password` (grava `token` / `refreshToken`). Requests autenticados usam Bearer; CSRF está desligado.
+- Bruno não encadeia requests: rodar `Auth / Sign in password` (grava `token` / `refreshToken`). Requests autenticados usam Bearer; CSRF não é exigido em `/v1/api/**`.
 
 ## Conventions
 

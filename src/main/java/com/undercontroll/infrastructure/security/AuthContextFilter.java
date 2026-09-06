@@ -52,7 +52,7 @@ public class AuthContextFilter extends OncePerRequestFilter {
                 return;
             }
 
-            log.info("User id: {} resolved with roles: {}", userId, role);
+            log.debug("User id: {} resolved with roles: {}", userId, role);
 
             SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
@@ -61,11 +61,18 @@ public class AuthContextFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(auth);
         } catch (InvalidTokenException e) {
-            request.setAttribute(JsonAuthenticationEntryPoint.FAILURE_CODE_ATTRIBUTE, e.getCode());
+            SecurityContextHolder.clearContext();
+            request.setAttribute(JsonAuthenticationEntryPoint.FAILURE_CODE_ATTRIBUTE, e.getErrorCode());
             request.setAttribute(JsonAuthenticationEntryPoint.FAILURE_MESSAGE_ATTRIBUTE, e.getMessage());
             log.debug("JWT rejected for {}: {}", request.getRequestURI(), e.getMessage());
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return "/v1/api/auth".equals(path) || "/v1/api/auth/refresh".equals(path);
     }
 }

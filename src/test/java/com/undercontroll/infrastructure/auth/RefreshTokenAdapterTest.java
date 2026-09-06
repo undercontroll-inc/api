@@ -88,8 +88,8 @@ class RefreshTokenAdapterTest {
         assertThatThrownBy(() -> adapter.consumeRefreshToken("expired-refresh"))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessage("Refresh token has expired")
-                .extracting(ex -> ((InvalidTokenException) ex).getCode())
-                .isEqualTo(InvalidTokenException.CODE);
+                .extracting(ex -> ((InvalidTokenException) ex).getErrorCode())
+                .isEqualTo(InvalidTokenException.INVALID_TOKEN);
         verify(refreshTokenRepository, never()).revokeIfActive(any());
         verify(refreshTokenRepository, never()).revokeAllByUserId(any());
     }
@@ -111,7 +111,7 @@ class RefreshTokenAdapterTest {
         assertThatThrownBy(() -> adapter.consumeRefreshToken("stolen-refresh"))
                 .isInstanceOf(InvalidTokenException.class)
                 .hasMessage("Refresh token has been reused")
-                .extracting(ex -> ((InvalidTokenException) ex).getCode())
+                .extracting(ex -> ((InvalidTokenException) ex).getErrorCode())
                 .isEqualTo(InvalidTokenException.REFRESH_TOKEN_REUSED);
         verify(refreshTokenRepository).revokeAllByUserId(7);
     }
@@ -126,7 +126,7 @@ class RefreshTokenAdapterTest {
 
         assertThatThrownBy(() -> adapter.consumeRefreshToken("racing-refresh"))
                 .isInstanceOf(InvalidTokenException.class)
-                .extracting(ex -> ((InvalidTokenException) ex).getCode())
+                .extracting(ex -> ((InvalidTokenException) ex).getErrorCode())
                 .isEqualTo(InvalidTokenException.REFRESH_TOKEN_REUSED);
         verify(refreshTokenRepository).revokeAllByUserId(7);
     }

@@ -58,7 +58,7 @@ public class JwtTokenAdapter implements TokenServce {
         } catch (TokenExpiredException e) {
             throw new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
-            throw new InvalidTokenException("Error while validating token " + e.getMessage());
+            throw new InvalidTokenException("Invalid token");
         }
     }
 

@@ -23,9 +23,9 @@ Error responses now always include a stable `code` field (for example `USER_NOT_
 
 These apply on localhost too (`http://localhost:3000` / `5173` talking to `http://localhost:8080`). Different ports are different origins.
 
-### CSRF (disabled)
+### CSRF (not required on `/v1/api/**`)
 
-CSRF is **off**. Auth is `Authorization: Bearer` plus refresh in the JSON body. There is no session cookie, so the browser does not send credentials on its own; CORS already blocks cross-site reads of the response.
+The REST API (`/v1/api/**`) does not require CSRF. Auth is `Authorization: Bearer` plus refresh in the JSON body. There is no session cookie, so the browser does not send credentials on its own; CORS already blocks cross-site reads of the response.
 
 Do not send `X-XSRF-TOKEN`. Do not call `GET /v1/api/auth` (that warmup endpoint does not exist). Axios should omit `withCredentials` (or set it to `false`).
 

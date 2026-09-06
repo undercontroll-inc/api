@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
                 )
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/v1/api/**", "/h2-console/**"))
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/h2-console/**").access((authentication, context) -> {

@@ -9,11 +9,11 @@ import com.undercontroll.application.dto.auth.RefreshTokenResponse;
 import com.undercontroll.application.dto.user.UserDto;
 import com.undercontroll.domain.enums.AuthProvider;
 import com.undercontroll.domain.enums.UserType;
-import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.domain.usecase.auth.AuthUserPort;
 import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
 import com.undercontroll.infrastructure.config.SecurityConfig;
+import com.undercontroll.infrastructure.handler.GlobalExceptionHandler;
 import com.undercontroll.infrastructure.service.TokenServce;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,13 +27,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import({SecurityConfig.class, RateLimitProperties.class})
+@Import({SecurityConfig.class, RateLimitProperties.class, GlobalExceptionHandler.class})
 class AuthControllerTest {
 
     @Autowired
@@ -122,8 +123,6 @@ class AuthControllerTest {
     void shouldRefreshEvenWhenExpiredAccessTokenIsSent() throws Exception {
         RefreshTokenRequest request = new RefreshTokenRequest("old-refresh-token");
 
-        when(tokenServce.validateToken(any()))
-                .thenThrow(new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED));
         when(refreshTokenPort.execute(any(RefreshTokenRequest.class)))
                 .thenReturn(new RefreshTokenResponse("new-access-token", "new-refresh-token"));
 
@@ -136,5 +135,18 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
 
         verify(refreshTokenPort, times(1)).execute(any(RefreshTokenRequest.class));
+        verifyNoInteractions(tokenServce);
+    }
+
+    @Test
+    @DisplayName("POST /v1/api/auth/refresh - Blank refresh token should return 400")
+    void shouldRejectBlankRefreshToken() throws Exception {
+        mockMvc.perform(post("/v1/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(refreshTokenPort);
     }
 }
