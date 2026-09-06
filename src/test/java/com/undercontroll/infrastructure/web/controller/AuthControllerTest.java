@@ -2,12 +2,12 @@ package com.undercontroll.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.application.controller.impl.AuthController;
-import com.undercontroll.application.dto.auth.AuthGoogleRequest;
 import com.undercontroll.application.dto.auth.AuthUserRequest;
 import com.undercontroll.application.dto.auth.AuthUserResponse;
 import com.undercontroll.application.dto.auth.RefreshTokenRequest;
 import com.undercontroll.application.dto.auth.RefreshTokenResponse;
 import com.undercontroll.application.dto.user.UserDto;
+import com.undercontroll.domain.enums.AuthProvider;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.domain.usecase.auth.AuthUserPort;
 import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
@@ -24,7 +24,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -46,14 +48,14 @@ class AuthControllerTest {
     @MockitoBean
     private RefreshTokenPort refreshTokenPort;
 
-    // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
     private TokenServce tokenServce;
 
     @Test
-    @DisplayName("POST /v1/api/auth/login - Should authenticate user and return 200 with token")
+    @DisplayName("POST /v1/api/auth - Should authenticate with password and return 200 with token")
     void shouldAuthenticateUserSuccessfully() throws Exception {
-        AuthUserRequest request = new AuthUserRequest("john@example.com", "password123");
+        AuthUserRequest request = new AuthUserRequest(
+                AuthProvider.PASSWORD, "john@example.com", "password123", null);
 
         UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
                 "Street 123", "12345678900", "12345-678", "11999999999",
@@ -62,7 +64,7 @@ class AuthControllerTest {
         when(authUserPort.execute(any(AuthUserRequest.class)))
                 .thenReturn(new AuthUserResponse("jwt-token-here", "refresh-token-here", userDto));
 
-        mockMvc.perform(post("/v1/api/auth/login")
+        mockMvc.perform(post("/v1/api/auth")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -75,9 +77,10 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/api/auth/google - Should authenticate with Google and return 200")
+    @DisplayName("POST /v1/api/auth - Should authenticate with Google and return 200")
     void shouldAuthenticateWithGoogleSuccessfully() throws Exception {
-        AuthGoogleRequest request = new AuthGoogleRequest("john@example.com", "google-token");
+        AuthUserRequest request = new AuthUserRequest(
+                AuthProvider.GOOGLE, "john@example.com", null, "google-token");
 
         UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
                 "Street 123", "12345678900", "12345-678", "11999999999",
@@ -86,7 +89,7 @@ class AuthControllerTest {
         when(authUserPort.execute(any(AuthUserRequest.class)))
                 .thenReturn(new AuthUserResponse("jwt-token-here", "refresh-token-here", userDto));
 
-        mockMvc.perform(post("/v1/api/auth/google")
+        mockMvc.perform(post("/v1/api/auth")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

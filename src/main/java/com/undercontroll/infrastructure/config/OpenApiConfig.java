@@ -91,7 +91,7 @@ public class    OpenApiConfig {
                 .description("""
                         JWT bearer authentication.
                         
-                        Obtain a token by signing in at POST /v1/api/auth/login
+                        Obtain a token by signing in at POST /v1/api/auth
                         
                         Usage example:
                         Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

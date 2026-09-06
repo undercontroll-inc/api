@@ -72,7 +72,7 @@ public class SecurityConfig {
                         })
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**", "/actuator/health/**", "/actuator/prometheus").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/api/auth/login", "/v1/api/auth/google", "/v1/api/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/api/auth", "/v1/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
                         .requestMatchers(HttpMethod.GET, ANNOUNCEMENTS, "/v1/api/announcements/latest").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")

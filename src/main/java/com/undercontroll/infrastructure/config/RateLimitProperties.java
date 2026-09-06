@@ -13,7 +13,7 @@ public class RateLimitProperties {
 
     /**
      * Max requests per minute per IP for authentication endpoints
-     * (POST /v1/api/auth/login and POST /v1/api/auth/google).
+     * (POST /v1/api/auth and POST /v1/api/auth/refresh).
      */
     private int authRequestsPerMinute = 10;
 

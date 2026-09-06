@@ -1,7 +1,6 @@
 package com.undercontroll.application.controller.impl;
 
 import com.undercontroll.application.controller.AuthApi;
-import com.undercontroll.application.dto.auth.AuthGoogleRequest;
 import com.undercontroll.application.dto.auth.AuthUserRequest;
 import com.undercontroll.application.dto.auth.AuthUserResponse;
 import com.undercontroll.application.dto.auth.RefreshTokenRequest;
@@ -22,11 +21,6 @@ public class AuthController implements AuthApi {
     @Override
     public ResponseEntity<AuthUserResponse> login(AuthUserRequest request) {
         return ResponseEntity.ok(authUserPort.execute(request));
-    }
-
-    @Override
-    public ResponseEntity<AuthUserResponse> loginWithGoogle(AuthGoogleRequest request) {
-        return ResponseEntity.ok(authUserPort.execute(new AuthUserRequest(request.email(), null)));
     }
 
     @Override
