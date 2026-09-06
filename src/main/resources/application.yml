@@ -20,6 +20,39 @@ spring:
   cache:
     type: redis
 
+  http:
+    client:
+      connect-timeout: 5s
+      read-timeout: 25s
+
+  ai:
+    retry:
+      max-attempts: 1
+    chat:
+      client:
+        enabled: false
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
+          temperature: 0.2
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:${GOOGLE_API_KEY:}}
+        chat:
+          options:
+            model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
+      - org.springframework.ai.model.google.genai.autoconfigure.embedding.GoogleGenAiEmbeddingConnectionAutoConfiguration
+      - org.springframework.ai.model.google.genai.autoconfigure.embedding.GoogleGenAiTextEmbeddingAutoConfiguration
+
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
@@ -87,6 +120,21 @@ rate-limit:
   auth-requests-per-minute: ${RATE_LIMIT_AUTH_RPM:10}
   # Max requests per minute per IP for all other endpoints
   general-requests-per-minute: ${RATE_LIMIT_GENERAL_RPM:100}
+
+undercontroll:
+  insights:
+    provider: ${INSIGHTS_PROVIDER:none}
+    prompt-version: "4"
+    cron: "0 0 4 1 * *"
+    openai-model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
+    gemini-model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
+    max-insights: 7
+    repair-catalog-days: 90
+  ana:
+    suggestion-count: 4
+    suggestion-ttl-hours: 12
+    memory-ttl-hours: 24
+    memory-window: 10
 aws:
   accessKeyId: ${ACCESS_KEY_ID:example}
   secretAccessKey: ${SECRET_ACCESS_KEY:example}

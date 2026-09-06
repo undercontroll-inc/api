@@ -1,5 +1,8 @@
 package com.undercontroll.domain.usecase.auth.impl;
 
+import com.undercontroll.application.dto.auth.AuthUserRequest;
+import com.undercontroll.application.dto.auth.AuthUserResponse;
+import com.undercontroll.application.mapper.UserDtoMapper;
 import com.undercontroll.domain.usecase.auth.AuthUserPort;
 import com.undercontroll.domain.exception.InvalidAuthException;
 import com.undercontroll.domain.model.User;
@@ -7,7 +10,6 @@ import com.undercontroll.domain.gateway.UserGateway;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.infrastructure.service.RefreshTokenService;
 import com.undercontroll.infrastructure.service.MetricsService;
-import com.undercontroll.application.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,11 +25,12 @@ public class AuthUserImpl implements AuthUserPort {
     private final TokenServce tokenServce;
     private final RefreshTokenService refreshTokenService;
     private final MetricsService metricsService;
+    private final UserDtoMapper userDtoMapper;
 
     @Override
-    public Output execute(Input input) {
+    public AuthUserResponse execute(AuthUserRequest request) {
         try {
-            Optional<User> userFound = userGateway.findByEmail(input.email());
+            Optional<User> userFound = userGateway.findByEmail(request.email());
 
             if (userFound.isEmpty()) {
                 metricsService.incrementLoginFailed();
@@ -37,8 +40,8 @@ public class AuthUserImpl implements AuthUserPort {
             User user = userFound.get();
 
             // Google auth passes null password — skip password check
-            if (input.password() != null) {
-                boolean passwordMatch = passwordEncoder.matches(input.password(), user.getPassword());
+            if (request.password() != null) {
+                boolean passwordMatch = passwordEncoder.matches(request.password(), user.getPassword());
                 if (!passwordMatch) {
                     metricsService.incrementLoginFailed();
                     throw new InvalidAuthException("Email or password is invalid");
@@ -50,27 +53,9 @@ public class AuthUserImpl implements AuthUserPort {
 
             metricsService.incrementLoginSuccess();
 
-            return new Output(accessToken, refreshToken, mapToDto(user));
+            return new AuthUserResponse(accessToken, refreshToken, userDtoMapper.toDto(user));
         } catch (InvalidAuthException e) {
             throw e;
         }
-    }
-
-    private UserDto mapToDto(User user) {
-        return new UserDto(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getLastName(),
-                user.getAddress(),
-                user.getCpf(),
-                user.getCEP(),
-                user.getPhone(),
-                user.getAvatarUrl(),
-                user.getHasWhatsApp(),
-                user.getAlreadyRecurrent(),
-                user.getInFirstLogin(),
-                user.getUserType()
-        );
     }
 }

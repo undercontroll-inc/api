@@ -27,9 +27,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
-    private static final String AUTH_PATH        = "/v1/api/users/auth";
-    private static final String AUTH_GOOGLE_PATH  = "/v1/api/users/auth/google";
-    private static final String AUTH_REFRESH_PATH = "/v1/api/users/auth/refresh";
+    private static final String AUTH_PATH        = "/v1/api/auth/login";
+    private static final String AUTH_GOOGLE_PATH  = "/v1/api/auth/google";
+    private static final String AUTH_REFRESH_PATH = "/v1/api/auth/refresh";
 
     private final RateLimitProperties props;
 

@@ -2,21 +2,22 @@ package com.undercontroll.application.controller.impl;
 
 import com.undercontroll.domain.usecase.dashboard.*;
 import com.undercontroll.domain.usecase.order.GetOrdersByStatusPort;
-import com.undercontroll.application.dto.*;
+import com.undercontroll.application.controller.DashboardApi;
+import com.undercontroll.application.dto.dashboard.CustomerTypeResponse;
+import com.undercontroll.application.dto.dashboard.DashboardMetricsResponse;
+import com.undercontroll.application.dto.dashboard.OrdersByStatusResponse;
+import com.undercontroll.application.dto.dashboard.RevenueEvolutionResponse;
+import com.undercontroll.application.dto.dashboard.TopAppliancesResponse;
+import com.undercontroll.application.dto.dashboard.TopComponentsResponse;
 import com.undercontroll.domain.enums.PeriodFilter;
 import com.undercontroll.domain.enums.StatusFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/v1/api/dashboard", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-public class DashboardController {
+public class DashboardController implements DashboardApi {
 
     private final GetTotalRevenuePort getTotalRevenuePort;
     private final GetProfitMarginPort getProfitMarginPort;
@@ -29,81 +30,53 @@ public class DashboardController {
     private final GetTopAppliancesPort getTopAppliancesPort;
     private final GetTopComponentsPort getTopComponentsPort;
 
-    @GetMapping("/metrics")
-    public ResponseEntity<DashboardMetricsResponse> getDashboardMetrics(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getTotalRevenuePort.execute(new GetTotalRevenuePort.Input(period, status));
-        return ResponseEntity.ok(new DashboardMetricsResponse(output.totalRevenue()));
+    @Override
+    public ResponseEntity<DashboardMetricsResponse> getDashboardMetrics(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getTotalRevenuePort.execute(period, status));
     }
 
-    @GetMapping("/profit-margin")
-    public ResponseEntity<DashboardMetricsResponse> getProfitMargin(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getProfitMarginPort.execute(new GetProfitMarginPort.Input(period, status));
-        return ResponseEntity.ok(new DashboardMetricsResponse(output.profitMargin()));
+    @Override
+    public ResponseEntity<DashboardMetricsResponse> getProfitMargin(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getProfitMarginPort.execute(period, status));
     }
 
-    @GetMapping("/average-order-price")
-    public ResponseEntity<DashboardMetricsResponse> getAverageOrderPrice(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getAverageOrderPricePort.execute(new GetAverageOrderPricePort.Input(period, status));
-        return ResponseEntity.ok(new DashboardMetricsResponse(output.averageOrderPrice()));
+    @Override
+    public ResponseEntity<DashboardMetricsResponse> getAverageOrderPrice(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getAverageOrderPricePort.execute(period, status));
     }
 
-    @GetMapping("/ongoing-orders")
-    public ResponseEntity<DashboardMetricsResponse> getOngoingOrders(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period) {
-        var output = getOngoingOrdersPort.execute(new GetOngoingOrdersPort.Input(period, null));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<DashboardMetricsResponse> getOngoingOrders(PeriodFilter period) {
+        return ResponseEntity.ok(getOngoingOrdersPort.execute(period));
     }
 
-    @GetMapping("/average-repair-time")
-    public ResponseEntity<DashboardMetricsResponse> getAverageRepairTime(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getAverageRepairTimePort.execute(new GetAverageRepairTimePort.Input(period, status));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<DashboardMetricsResponse> getAverageRepairTime(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getAverageRepairTimePort.execute(period, status));
     }
 
-    @GetMapping("/charts/revenue-evolution")
-    public ResponseEntity<RevenueEvolutionResponse> getRevenueEvolution(
-            @RequestParam(required = false, defaultValue = "THIRTY_DAYS") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getRevenueEvolutionPort.execute(new GetRevenueEvolutionPort.Input(period, status));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<RevenueEvolutionResponse> getRevenueEvolution(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getRevenueEvolutionPort.execute(period, status));
     }
 
-    @GetMapping("/charts/customer-type")
-    public ResponseEntity<CustomerTypeResponse> getCustomerTypeEvolution(
-            @RequestParam(required = false, defaultValue = "THIRTY_DAYS") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getCustomerTypeEvolutionPort.execute(new GetCustomerTypeEvolutionPort.Input(period, status));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<CustomerTypeResponse> getCustomerTypeEvolution(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getCustomerTypeEvolutionPort.execute(period, status));
     }
 
-    @GetMapping("/charts/orders-by-status")
-    public ResponseEntity<OrdersByStatusResponse> getOrdersByStatus(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period) {
-        var output = getOrdersByStatusPort.execute(new GetOrdersByStatusPort.Input(period));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<OrdersByStatusResponse> getOrdersByStatus(PeriodFilter period) {
+        return ResponseEntity.ok(getOrdersByStatusPort.execute(period));
     }
 
-    @GetMapping("/charts/top-appliances")
-    public ResponseEntity<TopAppliancesResponse> getTopAppliances(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getTopAppliancesPort.execute(new GetTopAppliancesPort.Input(period, status));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<TopAppliancesResponse> getTopAppliances(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getTopAppliancesPort.execute(period, status));
     }
 
-    @GetMapping("/charts/top-components")
-    public ResponseEntity<TopComponentsResponse> getTopComponents(
-            @RequestParam(required = false, defaultValue = "ALL") PeriodFilter period,
-            @RequestParam(required = false, defaultValue = "ALL") StatusFilter status) {
-        var output = getTopComponentsPort.execute(new GetTopComponentsPort.Input(period, status));
-        return ResponseEntity.ok(output.response());
+    @Override
+    public ResponseEntity<TopComponentsResponse> getTopComponents(PeriodFilter period, StatusFilter status) {
+        return ResponseEntity.ok(getTopComponentsPort.execute(period, status));
     }
 }

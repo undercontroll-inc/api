@@ -12,12 +12,7 @@ public class DeleteDemandImpl implements DeleteDemandPort {
     private final DemandGateway demandGateway;
 
     @Override
-    public Output execute(Input input) {
-        try {
-            demandGateway.deleteById(input.demandId());
-            return new Output(true, "Demand deleted successfully");
-        } catch (Exception e) {
-            return new Output(false, "Failed to delete demand: " + e.getMessage());
-        }
+    public void execute(Integer demandId) {
+        demandGateway.deleteById(demandId);
     }
 }

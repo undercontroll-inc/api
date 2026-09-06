@@ -1,5 +1,6 @@
 package com.undercontroll.domain.usecase.auth.impl;
 
+import com.undercontroll.application.dto.auth.CreatePasswordEventRequest;
 import com.undercontroll.domain.usecase.auth.CreatePasswordEventPort;
 import com.undercontroll.domain.model.PasswordEvent;
 import com.undercontroll.domain.enums.PasswordEventStatus;
@@ -19,10 +20,10 @@ public class CreatePasswordEventImpl implements CreatePasswordEventPort {
     private final PasswordEventGateway passwordEventGateway;
 
     @Override
-    public Output execute(Input input) {
-        String value = input.userPhone();
+    public PasswordEvent execute(CreatePasswordEventRequest request) {
+        String value = request.userPhone();
 
-        if (input.type().equals(PasswordEventType.RESET)) {
+        if (request.type().equals(PasswordEventType.RESET)) {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime lastWeek = now.minusDays(7);
 
@@ -41,25 +42,18 @@ public class CreatePasswordEventImpl implements CreatePasswordEventPort {
                 passwordEventGateway.save(activePassword);
             }
 
-            value = input.value();
+            value = request.value();
         }
 
         PasswordEvent passwordEvent = PasswordEvent.builder()
                 .id(UUID.randomUUID())
-                .type(input.type())
+                .type(request.type())
                 .status(PasswordEventStatus.ACTIVE)
-                .userAgent(input.agent())
+                .userAgent(request.agent())
                 .value(value)
-                .userPhone(input.userPhone())
+                .userPhone(request.userPhone())
                 .build();
 
-        PasswordEvent saved = passwordEventGateway.save(passwordEvent);
-
-        return new Output(
-                saved.getId().toString(),
-                saved.getType(),
-                saved.getValue(),
-                saved.getUserPhone()
-        );
+        return passwordEventGateway.save(passwordEvent);
     }
 }

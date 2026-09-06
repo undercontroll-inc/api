@@ -1,5 +1,7 @@
 package com.undercontroll.domain.usecase.demand.impl;
 
+import com.undercontroll.application.dto.demand.CreateDemandRequest;
+import com.undercontroll.application.dto.demand.DemandDto;
 import com.undercontroll.domain.usecase.demand.CreateDemandPort;
 import com.undercontroll.domain.model.ComponentPart;
 import com.undercontroll.domain.model.Demand;
@@ -24,32 +26,32 @@ public class CreateDemandImpl implements CreateDemandPort {
     private final MetricsService metricsService;
 
     @Override
-    public Output execute(Input input) {
-        if (input.quantity() == null || input.quantity() <= 0) {
+    public DemandDto execute(Integer orderId, CreateDemandRequest request) {
+        if (request.quantity() == null || request.quantity() <= 0) {
             throw new InvalidDemandException("Quantity should be greater than 0 and not null");
         }
 
-        ComponentPart component = componentGateway.findById(input.componentPartId())
+        ComponentPart component = componentGateway.findById(request.componentPartId())
                 .orElseThrow(() -> new InvalidDemandException("Component not found"));
-        Order order = orderGateway.findById(input.orderId())
+        Order order = orderGateway.findById(orderId)
                 .orElseThrow(() -> new InvalidDemandException("Order not found"));
 
         Demand demand = Demand.builder()
-                .quantity(input.quantity())
+                .quantity(request.quantity())
                 .component(component)
                 .order(order)
                 .build();
 
         log.info("Creating demand for component {} in order {} with quantity {}",
-                input.componentPartId(),
-                input.orderId(),
-                input.quantity());
+                request.componentPartId(),
+                orderId,
+                request.quantity());
 
         Demand savedDemand = demandGateway.save(demand);
 
         metricsService.incrementDemandCreated();
 
-        return new Output(
+        return new DemandDto(
                 savedDemand.getId(),
                 savedDemand.getComponent().getId(),
                 savedDemand.getOrder().getId(),

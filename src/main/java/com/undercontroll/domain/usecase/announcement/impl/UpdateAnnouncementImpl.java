@@ -6,6 +6,8 @@ import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.exception.AnnouncementNotFoundException;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
 import com.undercontroll.infrastructure.service.StorageService;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -32,38 +34,38 @@ public class UpdateAnnouncementImpl implements UpdateAnnouncementPort {
 
     @Override
     @CacheEvict(value = {"announcements", "lastAnnouncement"}, allEntries = true)
-    public Output execute(Input input) {
-        if (input.imageUpload() != null && Boolean.TRUE.equals(input.removeImage())) {
+    public UpdateAnnouncementResponse execute(Integer announcementId, UpdateAnnouncementRequest request) {
+        if (request.imageUpload() != null && Boolean.TRUE.equals(request.removeImage())) {
             throw new InvalidAnnouncementException("Cannot upload and remove an image at the same time");
         }
 
         Announcement announcement = announcementGateway
-                .findById(input.id())
+                .findById(announcementId)
                 .orElseThrow(() -> new AnnouncementNotFoundException(
-                        "Announcement with id " + input.id() + " not found"
+                        "Announcement with id " + announcementId + " not found"
                 ));
 
-        if (input.title() != null) {
-            announcement.setTitle(input.title());
+        if (request.title() != null) {
+            announcement.setTitle(request.title());
         }
 
-        if (input.content() != null) {
-            announcement.setContent(input.content());
+        if (request.content() != null) {
+            announcement.setContent(request.content());
         }
 
-        if (Boolean.TRUE.equals(input.removeImage())) {
+        if (Boolean.TRUE.equals(request.removeImage())) {
             announcement.setImageKey(null);
         }
 
-        if (input.type() != null) {
-            announcement.setType(input.type());
+        if (request.type() != null) {
+            announcement.setType(request.type());
         }
 
-        var imageUpload = input.imageUpload() == null
+        var imageUpload = request.imageUpload() == null
                 ? null
                 : storageService.generatePresignedUploadUrl(
                         bucket,
-                        generateKey(announcement.getId(), input.imageUpload().originalName(), input.imageUpload().contentType()),
+                        generateKey(announcement.getId(), request.imageUpload().originalName(), request.imageUpload().contentType()),
                         uploadExpirationMinutes
                 );
 
@@ -73,7 +75,7 @@ public class UpdateAnnouncementImpl implements UpdateAnnouncementPort {
 
         Announcement saved = announcementGateway.save(announcement);
 
-        return new Output(
+        return new UpdateAnnouncementResponse(
                 saved.getId(),
                 saved.getTitle(),
                 saved.getContent(),

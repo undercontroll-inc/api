@@ -1,7 +1,10 @@
 package com.undercontroll.domain.usecase.order.impl;
 
-import com.undercontroll.application.dto.PartDto;
-import com.undercontroll.application.dto.UpdateOrderItemDto;
+import com.undercontroll.application.dto.demand.CreateDemandRequest;
+import com.undercontroll.application.dto.order.PartDto;
+import com.undercontroll.application.dto.order.UpdateOrderRequest;
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemDto;
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemRequest;
 import com.undercontroll.domain.model.Demand;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.OrderItem;
@@ -36,32 +39,31 @@ public class UpdateOrderImpl implements UpdateOrderPort {
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = {"orders", "ordersByUser", "order", "orderParts", "dashboardMetrics"}, allEntries = true)
-    public Output execute(Input input) {
+    public void execute(Integer orderId, UpdateOrderRequest request) {
         try {
-            log.info("Updating order {}", input.orderId());
+            log.info("Updating order {}", orderId);
 
-            validateUpdateOrder(input.orderId());
+            validateUpdateOrder(orderId);
 
-            Order order = orderGateway.findById(input.orderId())
+            Order order = orderGateway.findById(orderId)
                     .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
 
-            if (input.status() != null) {
-                order.setStatus(input.status());
-                log.info("Order {} status updated to {}", input.orderId(), input.status());
-                if (input.status() == OrderStatus.COMPLETED) {
+            if (request.status() != null) {
+                order.setStatus(request.status());
+                log.info("Order {} status updated to {}", orderId, request.status());
+                if (request.status() == OrderStatus.COMPLETED) {
                     metricsService.incrementOrderCompleted();
                 }
             }
 
-            if (input.serviceDescription() != null) {
-                order.setDescription(input.serviceDescription());
+            if (request.serviceDescription() != null) {
+                order.setDescription(request.serviceDescription());
             }
 
-            if (input.appliances() != null) {
-                for (UpdateOrderItemDto dto : input.appliances()) {
+            if (request.appliances() != null) {
+                for (UpdateOrderItemDto dto : request.appliances()) {
                     if (dto.id() != null) {
-                        updateOrderItemPort.execute(new UpdateOrderItemPort.Input(
-                                dto.id(),
+                        updateOrderItemPort.execute(orderId, dto.id(), new UpdateOrderItemRequest(
                                 null,
                                 dto.laborValue(),
                                 dto.customerNote(),
@@ -87,8 +89,8 @@ public class UpdateOrderImpl implements UpdateOrderPort {
                 }
             }
 
-            if (input.parts() != null) {
-                for (PartDto p : input.parts()) {
+            if (request.parts() != null) {
+                for (PartDto p : request.parts()) {
                     if (p.componentId() == null) continue;
                     Optional<Demand> existing = demandGateway.findByOrderAndComponentId(order, p.componentId());
                     boolean keep = p.quantity() != null && p.quantity() > 0;
@@ -101,19 +103,16 @@ public class UpdateOrderImpl implements UpdateOrderPort {
                             demandGateway.deleteById(existing.get().getId());
                         }
                     } else if (keep) {
-                        createDemandPort.execute(new CreateDemandPort.Input(
+                        createDemandPort.execute(order.getId(), new CreateDemandRequest(
                                 p.componentId(),
-                                p.quantity().longValue(),
-                                order.getId()
+                                p.quantity().longValue()
                         ));
                     }
                 }
             }
 
             orderGateway.save(order);
-            log.info("Order {} updated successfully", input.orderId());
-
-            return new Output(true, "Order updated successfully");
+            log.info("Order {} updated successfully", orderId);
         } catch (Exception e) {
             metricsService.incrementOrderUpdateFailed();
             throw e;

@@ -43,8 +43,10 @@ public class RedisConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        RedisCacheConfiguration defaults = this.cacheConfiguration();
         return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(this.cacheConfiguration())
+                .cacheDefaults(defaults)
+                .withCacheConfiguration("anaShopSnapshot", defaults.entryTtl(Duration.ofSeconds(60)))
                 .build();
     }
 

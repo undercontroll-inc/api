@@ -18,9 +18,29 @@ spring:
     routing-key:
       announcement: "announcement.created"
       user-created: "user.created"
+  task:
+    scheduling:
+      enabled: false
+  ai:
+    chat:
+      client:
+        enabled: false
 
 jwt:
   secret: test-secret-key-for-unit-tests
+
+undercontroll:
+  insights:
+    provider: none
+    prompt-version: "4"
+    cron: "0 0 4 1 * *"
+    max-insights: 7
+    repair-catalog-days: 90
+  ana:
+    suggestion-count: 4
+    suggestion-ttl-hours: 12
+    memory-ttl-hours: 24
+    memory-window: 10
 
 logging:
   level:

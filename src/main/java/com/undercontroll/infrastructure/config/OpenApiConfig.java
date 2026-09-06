@@ -24,7 +24,7 @@ public class    OpenApiConfig {
     @Value("${api.version:1.0.0}")
     private String apiVersion;
 
-    @Value("${api.description:API RESTful para gerenciamento de componentes, pedidos e usuários}")
+    @Value("${api.description:RESTful API for managing components, orders, and users}")
     private String apiDescription;
 
 
@@ -69,7 +69,7 @@ public class    OpenApiConfig {
     private List<Server> buildServers() {
         Server localServer = new Server()
                 .url("http://localhost:8080")
-                .description("Servidor Local de Desenvolvimento");
+                .description("Local development server");
 
 //        Server devServer = new Server()
 //                .url("https://dev-api.undercontroll.com")
@@ -89,14 +89,14 @@ public class    OpenApiConfig {
                 .scheme("bearer")
                 .bearerFormat("JWT")
                 .description("""
-                        Autenticação via JWT Token.
+                        JWT bearer authentication.
                         
-                        Para obter o token, faça login através do endpoint /v1/api/users/auth
+                        Obtain a token by signing in at POST /v1/api/auth/login
                         
-                        Exemplo de uso:
+                        Usage example:
                         Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                         
-                        O token deve ser enviado no header 'Authorization' com o prefixo 'Bearer '.
+                        The token must be sent in the Authorization header with the Bearer prefix.
                         """);
     }
 }

@@ -1,11 +1,11 @@
 package com.undercontroll.application.usecase;
 
-import com.undercontroll.application.dto.OrderEnrichedDto;
+import com.undercontroll.application.dto.order.GetOrderByIdResponse;
+import com.undercontroll.application.dto.order.OrderEnrichedDto;
 import com.undercontroll.application.mapper.OrderDtoMapper;
 import com.undercontroll.domain.usecase.order.impl.GetOrderByIdImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
-import com.undercontroll.domain.usecase.order.GetOrderByIdPort;
 import com.undercontroll.domain.gateway.OrderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,28 +54,24 @@ class GetOrderByIdImplTest {
         when(orderMapper.toEnrichedDto(order)).thenReturn(
                 new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
 
-        GetOrderByIdPort.Input input = new GetOrderByIdPort.Input(1, null);
-        GetOrderByIdPort.Output output = getOrderByIdImpl.execute(input);
+        Optional<GetOrderByIdResponse> output = getOrderByIdImpl.execute(1);
 
-        assertNotNull(output);
-        assertNotNull(output.order());
-        assertNotNull(output.order().data());
-        assertEquals(1, output.order().data().id());
-        assertEquals(OrderStatus.PENDING, output.order().data().status());
+        assertTrue(output.isPresent());
+        assertNotNull(output.get().data());
+        assertEquals(1, output.get().data().id());
+        assertEquals(OrderStatus.PENDING, output.get().data().status());
 
         verify(orderGateway, times(1)).findById(1);
     }
 
     @Test
-    @DisplayName("Should return null order when order does not exist")
+    @DisplayName("Should return empty when order does not exist")
     void testGetOrderById_ShouldReturnNullOrder_WhenNotFound() {
         when(orderGateway.findById(999)).thenReturn(Optional.empty());
 
-        GetOrderByIdPort.Input input = new GetOrderByIdPort.Input(999, null);
-        GetOrderByIdPort.Output output = getOrderByIdImpl.execute(input);
+        Optional<GetOrderByIdResponse> output = getOrderByIdImpl.execute(999);
 
-        assertNotNull(output);
-        assertNull(output.order());
+        assertTrue(output.isEmpty());
 
         verify(orderGateway, times(1)).findById(999);
     }

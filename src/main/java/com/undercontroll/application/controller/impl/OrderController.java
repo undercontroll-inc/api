@@ -1,22 +1,22 @@
 package com.undercontroll.application.controller.impl;
 
-import com.undercontroll.application.dto.*;
+import com.undercontroll.application.dto.order.CreateOrderRequest;
+import com.undercontroll.application.dto.order.GetAllOrdersResponse;
+import com.undercontroll.application.dto.order.GetOrderByIdResponse;
+import com.undercontroll.application.dto.order.OrderEnrichedDto;
+import com.undercontroll.application.dto.order.UpdateOrderRequest;
 import com.undercontroll.domain.usecase.order.*;
 import com.undercontroll.application.controller.OrderApi;
-import com.undercontroll.application.dto.CreateOrderRequest;
-import com.undercontroll.application.dto.GetAllOrdersResponse;
-import com.undercontroll.application.dto.UpdateOrderRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/v1/api/orders")
 @RequiredArgsConstructor
 public class OrderController implements OrderApi {
 
@@ -25,99 +25,61 @@ public class OrderController implements OrderApi {
     private final GetOrdersPort getOrdersPort;
     private final GetOrderByIdPort getOrderByIdPort;
     private final DeleteOrderPort deleteOrderPort;
-    private final GetOrdersByUserIdPort getOrdersByUserIdPort;
     private final ExportOrderPort exportOrderPort;
 
     @Override
-    @PostMapping
-    public ResponseEntity<OrderDto> createOrder(@RequestBody CreateOrderRequest request) {
-        var output = createOrderPort.execute(new CreateOrderPort.Input(
-                request.userId(),
-                request.parts(),
-                request.appliances(),
-                request.discount(),
-                request.deadline(),
-                request.receivedAt(),
-                request.nf(),
-                request.fabricGuarantee(),
-                request.returnGuarantee(),
-                request.serviceDescription()
-        ));
-        return ResponseEntity.status(201).body(new OrderDto(null, null, null, null, null));
+    public ResponseEntity<OrderEnrichedDto> createOrder(CreateOrderRequest request) {
+        return ResponseEntity.status(201).body(createOrderPort.execute(request));
     }
 
     @Override
-    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateOrder(@PathVariable Integer id, @RequestBody UpdateOrderRequest request) {
-        updateOrderPort.execute(new UpdateOrderPort.Input(
-                id,
-                request.status(),
-                request.parts(),
-                request.appliances(),
-                request.serviceDescription()
-        ));
+    public ResponseEntity<Void> updateOrder(Integer orderId, UpdateOrderRequest request) {
+        updateOrderPort.execute(orderId, request);
         return ResponseEntity.ok().build();
     }
 
     @Override
-    @GetMapping
-    public ResponseEntity<GetAllOrdersResponse> getOrders(
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size
-    ) {
-        var output = getOrdersPort.execute(new GetOrdersPort.Input(page, size));
-        return ResponseEntity.ok(new GetAllOrdersResponse(
-                output.orders(),
-                output.totalElements(),
-                output.totalPages(),
-                page,
-                size
-        ));
-    }
-
-    @Override
-    @GetMapping("/{orderId}")
-    public ResponseEntity<GetOrderByIdResponse> getOrderById(@PathVariable Integer orderId) {
-        var output = getOrderByIdPort.execute(new GetOrderByIdPort.Input(orderId, null));
-        return output.order() != null ? ResponseEntity.ok(output.order()) : ResponseEntity.notFound().build();
-    }
-
-    @Override
-    @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Integer orderId) {
-        deleteOrderPort.execute(new DeleteOrderPort.Input(orderId));
-        return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    @GetMapping("/filter")
-    public ResponseEntity<GetOrdersByUserIdResponse> getOrdersByUserId(@RequestParam("userId") Integer userId) {
+    public ResponseEntity<GetAllOrdersResponse> getOrders(Integer userId, Integer page, Integer size) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRATOR"));
 
-        Integer authenticatedUserId;
-        try {
-            authenticatedUserId = Integer.parseInt(auth.getName());
-        } catch (NumberFormatException ex) {
-            return ResponseEntity.status(401).build();
+        if (!isAdmin) {
+            Integer authenticatedUserId;
+            try {
+                authenticatedUserId = Integer.parseInt(auth.getName());
+            } catch (NumberFormatException ex) {
+                return ResponseEntity.status(403).build();
+            }
+
+            if (userId == null || !authenticatedUserId.equals(userId)) {
+                return ResponseEntity.status(403).build();
+            }
         }
 
-        if (!isAdmin && !authenticatedUserId.equals(userId)) {
-            return ResponseEntity.status(403).build();
-        }
-
-        var output = getOrdersByUserIdPort.execute(new GetOrdersByUserIdPort.Input(userId));
-        return ResponseEntity.ok(output.orders());
+        return ResponseEntity.ok(getOrdersPort.execute(userId, page, size));
     }
 
-    @GetMapping("/export/{orderId}")
-    public ResponseEntity<byte[]> exportOrder(@PathVariable Integer orderId) {
-        var output = exportOrderPort.execute(new ExportOrderPort.Input(orderId));
+    @Override
+    public ResponseEntity<GetOrderByIdResponse> getOrderById(Integer orderId) {
+        return getOrderByIdPort.execute(orderId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteOrder(Integer orderId) {
+        deleteOrderPort.execute(orderId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<byte[]> exportOrder(Integer orderId) {
+        byte[] pdfData = exportOrderPort.execute(orderId);
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"relatorio.pdf\"")
+                .header("Content-Disposition", "attachment; filename=\"report.pdf\"")
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(output.pdfData());
+                .body(pdfData);
     }
 }

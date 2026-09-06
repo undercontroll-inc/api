@@ -1,6 +1,6 @@
 package com.undercontroll.domain.usecase.announcement;
 
-import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.dto.announcement.AnnouncementDto;
 
 import java.util.Optional;
 

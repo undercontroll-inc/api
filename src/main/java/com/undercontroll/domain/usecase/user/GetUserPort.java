@@ -1,15 +1,9 @@
 package com.undercontroll.domain.usecase.user;
 
-import com.undercontroll.domain.model.User;
+import com.undercontroll.application.dto.user.UserDto;
+
+import java.util.Optional;
 
 public interface GetUserPort {
-    record Input(
-            Integer userId
-    ) {}
-
-    record Output(
-            User user
-    ) {}
-
-    Output execute(Input input);
+    Optional<UserDto> execute(Integer userId);
 }

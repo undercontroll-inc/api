@@ -56,33 +56,33 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**", "/actuator/health/**", "/actuator/prometheus").permitAll()
                         
                         // Public auth endpoints
-                        .requestMatchers(HttpMethod.POST, "/v1/api/users/auth", "/v1/api/users/auth/google", "/v1/api/users/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/api/auth/login", "/v1/api/auth/google", "/v1/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
 
                         // Public announcement endpoints
-                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements/**", "/v1/api/announcements/last").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/api/announcements/**", "/v1/api/announcements/latest").permitAll()
                         
                         // Customer and Admin shared endpoints
                         .requestMatchers(HttpMethod.POST, "/v1/api/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PUT, "/v1/api/users/{userId}").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/v1/api/users/reset-password/{userId}").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/{orderId}", "/v1/api/orders/filter", "/v1/api/orders/export/{orderId}").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/api/users/{userId}", "/v1/api/users/{userId}/password").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders", "/v1/api/orders/{orderId}", "/v1/api/orders/{orderId}/export").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         
                         // Admin-only endpoints
                         .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/dashboard/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/v1/api/analytics/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/v1/api/insights/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/v1/api/chats/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/users").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/users/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PUT, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/v1/api/orders/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/v1/api/orders/{orderId}").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/v1/api/orders/{orderId}").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/v1/api/orders/*/items/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/v1/api/orders/*/demands/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/components/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/service-orders/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/v1/api/order-items/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers("/v1/api/demands/**").hasRole("ADMINISTRATOR")
                         
                         // All other requests require authentication
                         .anyRequest().authenticated()

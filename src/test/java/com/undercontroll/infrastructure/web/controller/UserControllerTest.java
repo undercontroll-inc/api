@@ -3,11 +3,12 @@ package com.undercontroll.infrastructure.web.controller;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.undercontroll.application.dto.*;
-import com.undercontroll.domain.usecase.auth.AuthUserPort;
-import com.undercontroll.domain.usecase.auth.RefreshTokenPort;
+import com.undercontroll.application.dto.user.CreateUserRequest;
+import com.undercontroll.application.dto.user.CreateUserResponse;
+import com.undercontroll.application.dto.auth.ResetPasswordRequest;
+import com.undercontroll.application.dto.user.UpdateUserRequest;
+import com.undercontroll.application.dto.user.UserDto;
 import com.undercontroll.domain.usecase.auth.ResetPasswordPort;
-import com.undercontroll.domain.model.User;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.user.*;
@@ -24,6 +25,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -45,22 +47,10 @@ class UserControllerTest {
     private CreateUserPort createUserPort;
 
     @MockitoBean
-    private AuthUserPort authUserPort;
-
-    @MockitoBean
     private UpdateUserPort updateUserPort;
 
     @MockitoBean
     private GetUsersPort getUsersPort;
-
-    @MockitoBean
-    private GetCustomersPort getCustomersPort;
-
-    @MockitoBean
-    private GetCustomerByIdPort getCustomerByIdPort;
-
-    @MockitoBean
-    private GetCustomersWithEmailPort getCustomersWithEmailPort;
 
     @MockitoBean
     private GetUserPort getUserPort;
@@ -74,9 +64,6 @@ class UserControllerTest {
     // Required because AuthContextFilter depends on TokenPort
     @MockitoBean
     private TokenServce tokenServce;
-
-    @MockitoBean
-    private RefreshTokenPort refreshTokenPort;
 
     private void mockTokenPortWithRole(String role) {
         Claim claim = mock(Claim.class);
@@ -96,12 +83,12 @@ class UserControllerTest {
                 false, false, true, "12345-678"
         );
 
-        CreateUserPort.Output output = new CreateUserPort.Output(
+        CreateUserResponse response = new CreateUserResponse(
                 "John", "john@example.com", "Doe", "Street 123",
                 "12345678900", "12345-678", "11999999999", null, UserType.CUSTOMER
         );
 
-        when(createUserPort.execute(any(CreateUserPort.Input.class))).thenReturn(output);
+        when(createUserPort.execute(any(CreateUserRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -111,73 +98,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email").value("john@example.com"))
                 .andExpect(jsonPath("$.userType").value("CUSTOMER"));
 
-        verify(createUserPort, times(1)).execute(any(CreateUserPort.Input.class));
+        verify(createUserPort, times(1)).execute(any(CreateUserRequest.class));
     }
 
     @Test
-    @DisplayName("POST /v1/api/users/auth - Should authenticate user and return 200 with token")
-    void shouldAuthenticateUserSuccessfully() throws Exception {
-        AuthUserRequest request = new AuthUserRequest("john@example.com", "password123");
-
-        UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
-                "Street 123", "12345678900", "12345-678", "11999999999",
-                null, false, false, true, UserType.CUSTOMER);
-
-        when(authUserPort.execute(any(AuthUserPort.Input.class)))
-                .thenReturn(new AuthUserPort.Output("jwt-token-here", "refresh-token-here", userDto));
-
-        mockMvc.perform(post("/v1/api/users/auth")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token-here"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token-here"))
-                .andExpect(jsonPath("$.user.email").value("john@example.com"));
-
-        verify(authUserPort, times(1)).execute(any(AuthUserPort.Input.class));
-    }
-
-    @Test
-    @DisplayName("POST /v1/api/users/auth/google - Should authenticate with Google and return 200")
-    void shouldAuthenticateWithGoogleSuccessfully() throws Exception {
-        AuthGoogleRequest request = new AuthGoogleRequest("john@example.com", "google-token");
-
-        UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
-                "Street 123", "12345678900", "12345-678", "11999999999",
-                null, false, false, true, UserType.CUSTOMER);
-
-        when(authUserPort.execute(any(AuthUserPort.Input.class)))
-                .thenReturn(new AuthUserPort.Output("jwt-token-here", "refresh-token-here", userDto));
-
-        mockMvc.perform(post("/v1/api/users/auth/google")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token-here"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token-here"))
-                .andExpect(jsonPath("$.user.email").value("john@example.com"));
-
-        verify(authUserPort, times(1)).execute(any(AuthUserPort.Input.class));
-    }
-
-    @Test
-    @DisplayName("PUT /v1/api/users/{userId} - CUSTOMER should update user and return 200")
+    @DisplayName("PATCH /v1/api/users/{userId} - CUSTOMER should update user and return 200")
     void customerShouldUpdateUserSuccessfully() throws Exception {
         UpdateUserRequest request = new UpdateUserRequest(
                 "John Updated", "Doe", null, "New Address", null,
                 "11999999999", null, "12345-678", false, false, true, UserType.CUSTOMER
         );
 
-        when(updateUserPort.execute(any(UpdateUserPort.Input.class)))
-                .thenReturn(new UpdateUserPort.Output(true, "Updated"));
-
-        mockMvc.perform(put("/v1/api/users/1")
+        mockMvc.perform(patch("/v1/api/users/1")
                         .with(user("customer@example.com").roles("CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(updateUserPort, times(1)).execute(any(UpdateUserPort.Input.class));
+        verify(updateUserPort, times(1)).execute(eq(1), any(UpdateUserRequest.class));
     }
 
     @Test
@@ -191,8 +129,7 @@ class UserControllerTest {
                 "Street 456", "98765432100", "54321-987", "11988888888",
                 null, false, false, true, UserType.ADMINISTRATOR);
 
-        when(getUsersPort.execute(any(GetUsersPort.Input.class)))
-                .thenReturn(new GetUsersPort.Output(List.of(user1, user2)));
+        when(getUsersPort.execute(null, null)).thenReturn(List.of(user1, user2));
 
         mockMvc.perform(get("/v1/api/users")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
@@ -201,7 +138,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[1].name").value("Jane"))
                 .andExpect(jsonPath("$.length()").value(2));
 
-        verify(getUsersPort, times(1)).execute(any(GetUsersPort.Input.class));
+        verify(getUsersPort, times(1)).execute(null, null);
     }
 
     @Test
@@ -211,72 +148,63 @@ class UserControllerTest {
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(getUsersPort, never()).execute(any(GetUsersPort.Input.class));
+        verify(getUsersPort, never()).execute(any(), any());
     }
 
     @Test
-    @DisplayName("GET /v1/api/users/customers - ADMINISTRATOR should get customers and return 200")
+    @DisplayName("GET /v1/api/users?type=CUSTOMER - ADMINISTRATOR should get customers and return 200")
     void administratorShouldGetCustomersSuccessfully() throws Exception {
         UserDto customer = new UserDto(1, "John", "john@example.com", "Doe",
                 "Street 123", "12345678900", "12345-678", "11999999999",
                 null, false, false, true, UserType.CUSTOMER);
 
-        when(getCustomersPort.execute(any(GetCustomersPort.Input.class)))
-                .thenReturn(new GetCustomersPort.Output(List.of(customer)));
+        when(getUsersPort.execute(UserType.CUSTOMER, null)).thenReturn(List.of(customer));
 
-        mockMvc.perform(get("/v1/api/users/customers")
+        mockMvc.perform(get("/v1/api/users").param("type", "CUSTOMER")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].userType").value("CUSTOMER"));
 
-        verify(getCustomersPort, times(1)).execute(any(GetCustomersPort.Input.class));
+        verify(getUsersPort, times(1)).execute(UserType.CUSTOMER, null);
     }
 
     @Test
-    @DisplayName("GET /v1/api/users/customers - Should return 204 when no customers found")
-    void shouldReturn204WhenNoCustomersFound() throws Exception {
-        when(getCustomersPort.execute(any(GetCustomersPort.Input.class)))
-                .thenReturn(new GetCustomersPort.Output(List.of()));
+    @DisplayName("GET /v1/api/users?type=CUSTOMER - Should return 200 with an empty list when no customers found")
+    void shouldReturnEmptyListWhenNoCustomersFound() throws Exception {
+        when(getUsersPort.execute(UserType.CUSTOMER, null)).thenReturn(List.of());
 
-        mockMvc.perform(get("/v1/api/users/customers")
+        mockMvc.perform(get("/v1/api/users").param("type", "CUSTOMER")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
 
-        verify(getCustomersPort, times(1)).execute(any(GetCustomersPort.Input.class));
+        verify(getUsersPort, times(1)).execute(UserType.CUSTOMER, null);
     }
 
     @Test
-    @DisplayName("GET /v1/api/users/customers/{customerId} - Should get customer by id and return 200")
-    void shouldGetCustomerByIdSuccessfully() throws Exception {
+    @DisplayName("GET /v1/api/users?type=CUSTOMER&hasEmail=true - ADMINISTRATOR should get customers with email and return 200")
+    void administratorShouldGetCustomersWithEmailSuccessfully() throws Exception {
         UserDto customer = new UserDto(1, "John", "john@example.com", "Doe",
                 "Street 123", "12345678900", "12345-678", "11999999999",
                 null, false, false, true, UserType.CUSTOMER);
 
-        when(getCustomerByIdPort.execute(any(GetCustomerByIdPort.Input.class)))
-                .thenReturn(new GetCustomerByIdPort.Output(customer));
+        when(getUsersPort.execute(UserType.CUSTOMER, true)).thenReturn(List.of(customer));
 
-        mockMvc.perform(get("/v1/api/users/customers/1")
+        mockMvc.perform(get("/v1/api/users").param("type", "CUSTOMER").param("hasEmail", "true")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("John"));
+                .andExpect(jsonPath("$[0].email").value("john@example.com"));
 
-        verify(getCustomerByIdPort, times(1)).execute(any(GetCustomerByIdPort.Input.class));
+        verify(getUsersPort, times(1)).execute(UserType.CUSTOMER, true);
     }
 
     @Test
-    @DisplayName("GET /v1/api/users/{userId} - Should get user by id and return 200")
+    @DisplayName("GET /v1/api/users/{userId} - Should get user by id and return 200 (also covers former customer-by-id lookup)")
     void shouldGetUserByIdSuccessfully() throws Exception {
-        User user = User.builder()
-                .id(1)
-                .name("John")
-                .email("john@example.com")
-                .lastName("Doe")
-                .userType(UserType.CUSTOMER)
-                .build();
+        UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
+                null, null, null, null, null, null, null, null, UserType.CUSTOMER);
 
-        when(getUserPort.execute(any(GetUserPort.Input.class)))
-                .thenReturn(new GetUserPort.Output(user));
+        when(getUserPort.execute(1)).thenReturn(Optional.of(userDto));
 
         mockMvc.perform(get("/v1/api/users/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
@@ -284,20 +212,17 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("John"));
 
-        verify(getUserPort, times(1)).execute(any(GetUserPort.Input.class));
+        verify(getUserPort, times(1)).execute(1);
     }
 
     @Test
-    @DisplayName("DELETE /v1/api/users/{userId} - ADMINISTRATOR should delete user and return 200")
+    @DisplayName("DELETE /v1/api/users/{userId} - ADMINISTRATOR should delete user and return 204")
     void administratorShouldDeleteUserSuccessfully() throws Exception {
-        when(deleteUserPort.execute(any(DeleteUserPort.Input.class)))
-                .thenReturn(new DeleteUserPort.Output(true, "Deleted"));
-
         mockMvc.perform(delete("/v1/api/users/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
-        verify(deleteUserPort, times(1)).execute(any(DeleteUserPort.Input.class));
+        verify(deleteUserPort, times(1)).execute(1);
     }
 
     @Test
@@ -307,44 +232,38 @@ class UserControllerTest {
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(deleteUserPort, never()).execute(any(DeleteUserPort.Input.class));
+        verify(deleteUserPort, never()).execute(anyInt());
     }
 
     @Test
-    @DisplayName("PATCH /v1/api/users/reset-password/{userId} - CUSTOMER should reset password successfully and return 200")
+    @DisplayName("PATCH /v1/api/users/{userId}/password - CUSTOMER should change password successfully and return 200")
     void shouldResetPasswordSuccessfully() throws Exception {
         mockTokenPortWithRole("CUSTOMER");
 
         ResetPasswordRequest request = new ResetPasswordRequest("newPassword123", false);
 
-        when(resetPasswordPort.execute(any(ResetPasswordPort.Input.class)))
-                .thenReturn(new ResetPasswordPort.Output(true, "Password reset"));
-
-        mockMvc.perform(patch("/v1/api/users/reset-password/1")
+        mockMvc.perform(patch("/v1/api/users/1/password")
                         .header("Authorization", "Bearer mock-customer-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(resetPasswordPort, times(1)).execute(any(ResetPasswordPort.Input.class));
+        verify(resetPasswordPort, times(1)).execute(eq(1), any(ResetPasswordRequest.class), eq("mock-customer-token"));
     }
 
     @Test
-    @DisplayName("PATCH /v1/api/users/reset-password/{userId} - ADMINISTRATOR should reset password successfully and return 200")
+    @DisplayName("PATCH /v1/api/users/{userId}/password - ADMINISTRATOR should change password successfully and return 200")
     void administratorShouldResetPasswordSuccessfully() throws Exception {
         mockTokenPortWithRole("ADMINISTRATOR");
 
         ResetPasswordRequest request = new ResetPasswordRequest("newAdminPassword123", true);
 
-        when(resetPasswordPort.execute(any(ResetPasswordPort.Input.class)))
-                .thenReturn(new ResetPasswordPort.Output(true, "Password reset"));
-
-        mockMvc.perform(patch("/v1/api/users/reset-password/2")
+        mockMvc.perform(patch("/v1/api/users/2/password")
                         .header("Authorization", "Bearer mock-admin-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(resetPasswordPort, times(1)).execute(any(ResetPasswordPort.Input.class));
+        verify(resetPasswordPort, times(1)).execute(eq(2), any(ResetPasswordRequest.class), eq("mock-admin-token"));
     }
 }

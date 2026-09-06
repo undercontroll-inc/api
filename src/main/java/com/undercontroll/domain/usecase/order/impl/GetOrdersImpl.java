@@ -1,11 +1,12 @@
 package com.undercontroll.domain.usecase.order.impl;
 
+import com.undercontroll.application.dto.order.GetAllOrdersResponse;
 import com.undercontroll.application.mapper.OrderDtoMapper;
 import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.usecase.order.GetOrdersPort;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.gateway.OrderGateway;
-import com.undercontroll.application.dto.OrderEnrichedDto;
+import com.undercontroll.application.dto.order.OrderEnrichedDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,20 +23,30 @@ public class GetOrdersImpl implements GetOrdersPort {
     private final OrderDtoMapper orderMapper;
 
     @Override
-    @Cacheable(value = "orders", key = "#input.offset() + '-' + #input.limit()")
-    public Output execute(Input input) {
+    @Cacheable(value = "orders", key = "#userId + '-' + #page + '-' + #size")
+    public GetAllOrdersResponse execute(Integer userId, Integer page, Integer size) {
+        if (userId != null) {
+            log.info("Fetching orders for userId: {}", userId);
+
+            List<OrderEnrichedDto> orders = orderGateway.findByUserId(userId).stream()
+                    .map(orderMapper::toEnrichedDto)
+                    .toList();
+
+            return new GetAllOrdersResponse(orders, orders.size(), 1, 0, orders.size());
+        }
+
         log.info("Fetching all orders");
 
-        PaginatedResult<Order> result = orderGateway.findAllPaginated(input.offset(), input.limit());
+        PaginatedResult<Order> result = orderGateway.findAllPaginated(page, size);
 
         List<OrderEnrichedDto> enrichedOrders = result.content().stream()
                 .map(orderMapper::toEnrichedDto)
                 .toList();
 
-        int totalPages = input.limit() > 0
-                ? (int) Math.ceil((double) result.totalElements() / input.limit())
+        int totalPages = size > 0
+                ? (int) Math.ceil((double) result.totalElements() / size)
                 : 0;
 
-        return new Output(enrichedOrders, result.totalElements(), totalPages);
+        return new GetAllOrdersResponse(enrichedOrders, result.totalElements(), totalPages, page, size);
     }
 }

@@ -1,12 +1,12 @@
 package com.undercontroll.domain.usecase.demand.impl;
 
+import com.undercontroll.application.dto.demand.DemandDto;
 import com.undercontroll.domain.usecase.demand.GetDemandsPort;
 import com.undercontroll.domain.model.Demand;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.exception.InvalidDemandException;
 import com.undercontroll.domain.gateway.DemandGateway;
 import com.undercontroll.domain.gateway.OrderGateway;
-import com.undercontroll.application.dto.DemandDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,23 +20,21 @@ public class GetDemandsImpl implements GetDemandsPort {
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        Order order = orderGateway.findById(input.orderId())
-                .orElseThrow(() -> new InvalidDemandException("Order not found with id: " + input.orderId()));
+    public List<DemandDto> execute(Integer orderId, Integer componentId) {
+        Order order = orderGateway.findById(orderId)
+                .orElseThrow(() -> new InvalidDemandException("Order not found with id: " + orderId));
 
-        List<DemandDto> demands = demandGateway.findByOrder(order).stream()
-                .map(this::mapToDto)
+        List<Demand> demands = componentId == null
+                ? demandGateway.findByOrder(order)
+                : demandGateway.findByOrderAndComponentId(order, componentId).stream().toList();
+
+        return demands.stream()
+                .map(demand -> new DemandDto(
+                        demand.getId(),
+                        demand.getComponent().getId(),
+                        demand.getOrder().getId(),
+                        demand.getQuantity()
+                ))
                 .toList();
-
-        return new Output(demands);
-    }
-
-    private DemandDto mapToDto(Demand demand) {
-        return new DemandDto(
-                demand.getId(),
-                demand.getComponent().getId(),
-                demand.getOrder().getId(),
-                demand.getQuantity()
-        );
     }
 }

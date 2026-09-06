@@ -6,7 +6,7 @@ import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.exception.OrderNotFoundException;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.infrastructure.service.PdfExportService;
-import com.undercontroll.application.dto.ExportOrderRequest;
+import com.undercontroll.application.dto.order.ExportOrderRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,14 +29,14 @@ public class ExportOrderImpl implements ExportOrderPort {
     private String pdfBucket;
 
     @Override
-    public Output execute(Input input) {
-        log.info("Exporting order {} to PDF", input.orderId());
+    public byte[] execute(Integer orderId) {
+        log.info("Exporting order {} to PDF", orderId);
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        Order order = orderGateway.findById(input.orderId())
+        Order order = orderGateway.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(
-                        String.format("Order with id %d not found", input.orderId())));
+                        String.format("Order with id %d not found", orderId)));
 
         List<ExportOrderRequest.ProductInfo> produtos = order.getOrderItems().stream()
                 .map(item -> new ExportOrderRequest.ProductInfo(
@@ -83,6 +83,6 @@ public class ExportOrderImpl implements ExportOrderPort {
 
         storageService.putObject(pdfBucket, key, pdfData, Optional.of("application/pdf"));
 
-        return new Output(pdfData);
+        return pdfData;
     }
 }

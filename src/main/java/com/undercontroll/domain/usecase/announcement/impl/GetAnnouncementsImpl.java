@@ -4,7 +4,9 @@ import com.undercontroll.domain.model.PaginatedResult;
 import com.undercontroll.domain.usecase.announcement.GetAnnouncementsPort;
 import com.undercontroll.domain.model.Announcement;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
-import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.dto.announcement.AnnouncementDto;
+import com.undercontroll.application.dto.announcement.GetPaginatedAnnouncementResponse;
+import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,19 +28,19 @@ public class GetAnnouncementsImpl implements GetAnnouncementsPort {
     private Long readExpirationMinutes;
 
     @Override
-    public Output execute(Input input) {
+    public GetPaginatedAnnouncementResponse execute(Integer page, Integer size, AnnouncementType type) {
         PaginatedResult<Announcement> result = announcementGateway
-                .findAllPaginated(input.page(), input.size(), input.type());
+                .findAllPaginated(page, size, type);
 
         List<AnnouncementDto> announcements = result.content().stream()
                 .map(this::mapToDto)
                 .toList();
 
-        int totalPages = input.size() > 0
-                ? (int) Math.ceil((double) result.totalElements() / input.size())
+        int totalPages = size > 0
+                ? (int) Math.ceil((double) result.totalElements() / size)
                 : 0;
 
-        return new Output(announcements, result.totalElements(), totalPages);
+        return new GetPaginatedAnnouncementResponse(announcements, result.totalElements(), totalPages, page, size);
     }
 
     private AnnouncementDto mapToDto(Announcement announcement) {

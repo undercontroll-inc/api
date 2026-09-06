@@ -3,18 +3,20 @@ package com.undercontroll.infrastructure.web.controller;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.undercontroll.application.dto.AnnouncementDto;
-import com.undercontroll.application.dto.AnnouncementImageUploadDto;
-import com.undercontroll.application.dto.GenerateUploadUrlResponse;
-import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.AnnouncementDto;
+import com.undercontroll.application.dto.announcement.AnnouncementImageUploadDto;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.GenerateUploadUrlResponse;
+import com.undercontroll.application.dto.announcement.GetPaginatedAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementResponse;
 import com.undercontroll.domain.exception.InvalidAnnouncementException;
 import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.announcement.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.application.dto.CreateAnnouncementRequest;
-import com.undercontroll.application.dto.UpdateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementRequest;
 import com.undercontroll.application.controller.impl.AnnouncementController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,12 +89,12 @@ class AnnouncementControllerTest {
                 "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY
         );
 
-        CreateAnnouncementPort.Output output = new CreateAnnouncementPort.Output(
+        CreateAnnouncementResponse response = new CreateAnnouncementResponse(
                 1, "New Feature", "We have a new feature available!", null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(createAnnouncement.execute(any(CreateAnnouncementPort.Input.class))).thenReturn(output);
+        when(createAnnouncement.execute(any(CreateAnnouncementRequest.class), anyString())).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/announcements")
                         .header("Authorization", "Bearer admin-token")
@@ -103,7 +105,7 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.title").value("New Feature"))
                 .andExpect(jsonPath("$.type").value("HOLIDAY"));
 
-        verify(createAnnouncement, times(1)).execute(any(CreateAnnouncementPort.Input.class));
+        verify(createAnnouncement, times(1)).execute(any(CreateAnnouncementRequest.class), anyString());
     }
 
     @Test
@@ -121,12 +123,12 @@ class AnnouncementControllerTest {
                 "New Feature", "We have a new feature available!", imageUpload, AnnouncementType.HOLIDAY
         );
 
-        CreateAnnouncementPort.Output output = new CreateAnnouncementPort.Output(
+        CreateAnnouncementResponse response = new CreateAnnouncementResponse(
                 1, "New Feature", "We have a new feature available!", uploadResponse, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(createAnnouncement.execute(any(CreateAnnouncementPort.Input.class))).thenReturn(output);
+        when(createAnnouncement.execute(any(CreateAnnouncementRequest.class), anyString())).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/announcements")
                         .header("Authorization", "Bearer admin-token")
@@ -137,11 +139,11 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.imageUpload.presigned_url").value("https://s3.example/upload"))
                 .andExpect(jsonPath("$.imageUpload.file_key").value("announcements/1/cover.png"));
 
-        verify(createAnnouncement, times(1)).execute(argThat(input ->
-                input.imageUpload() != null
-                        && input.imageUpload().originalName().equals("cover.png")
-                        && input.imageUpload().contentType().equals("image/png")
-        ));
+        verify(createAnnouncement, times(1)).execute(argThat(req ->
+                req.imageUpload() != null
+                        && req.imageUpload().originalName().equals("cover.png")
+                        && req.imageUpload().contentType().equals("image/png")
+        ), anyString());
     }
 
     @Test
@@ -159,7 +161,7 @@ class AnnouncementControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
-        verify(createAnnouncement, never()).execute(any(CreateAnnouncementPort.Input.class));
+        verify(createAnnouncement, never()).execute(any(CreateAnnouncementRequest.class), anyString());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -176,8 +178,8 @@ class AnnouncementControllerTest {
                 2, "Title 2", "Content 2", null, AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement1, announcement2), 2L, 1));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(List.of(announcement1, announcement2), 2L, 1, 0, 10));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -193,14 +195,14 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(10));
 
-        verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+        verify(getAnnouncements, times(1)).execute(any(), any(), any());
     }
 
     @Test
     @DisplayName("GET /v1/api/announcements - should return 200 with empty list when no announcements found")
     void shouldReturn200WithEmptyListWhenNoAnnouncementsFound() throws Exception {
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(), 0L, 0));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(List.of(), 0L, 0, 0, 10));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -212,14 +214,14 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.totalPages").value(0));
 
-        verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+        verify(getAnnouncements, times(1)).execute(any(), any(), any());
     }
 
     @Test
     @DisplayName("GET /v1/api/announcements - should use default pagination values when params not provided")
     void shouldUseDefaultPaginationWhenParamsNotProvided() throws Exception {
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(), 0L, 0));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(List.of(), 0L, 0, 0, 10));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
@@ -227,7 +229,7 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.page").value(0))
                 .andExpect(jsonPath("$.size").value(10));
 
-        verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+        verify(getAnnouncements, times(1)).execute(any(), any(), any());
     }
 
     @Test
@@ -237,8 +239,8 @@ class AnnouncementControllerTest {
                 1, "Promoção", "50% off", null, AnnouncementType.PROMOTIONS, LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement), 1L, 1));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(List.of(announcement), 1L, 1, 0, 10));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -249,24 +251,22 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.announcements[0].type").value("PROMOTIONS"))
                 .andExpect(jsonPath("$.totalElements").value(1));
 
-        verify(getAnnouncements, times(1)).execute(argThat(input ->
-                input.type() == AnnouncementType.PROMOTIONS
+        verify(getAnnouncements, times(1)).execute(any(), any(), argThat(type ->
+                type == AnnouncementType.PROMOTIONS
         ));
     }
 
     @Test
     @DisplayName("GET /v1/api/announcements - should pass null type when type param is not provided")
     void shouldPassNullTypeWhenTypeParamNotProvided() throws Exception {
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(), 0L, 0));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(List.of(), 0L, 0, 0, 10));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isOk());
 
-        verify(getAnnouncements, times(1)).execute(argThat(input ->
-                input.type() == null
-        ));
+        verify(getAnnouncements, times(1)).execute(any(), any(), isNull());
     }
 
     @Test
@@ -276,8 +276,8 @@ class AnnouncementControllerTest {
                 1, "Title 1", "Content 1", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(List.of(announcement), 1L, 1));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(List.of(announcement), 1L, 1, 0, 10));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
@@ -288,7 +288,7 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+        verify(getAnnouncements, times(1)).execute(any(), any(), any());
     }
 
     @Test
@@ -300,8 +300,8 @@ class AnnouncementControllerTest {
                 new AnnouncementDto(3, "T3", "C3", null, AnnouncementType.HOLIDAY, LocalDateTime.now(), LocalDateTime.now())
         );
 
-        when(getAnnouncements.execute(any(GetAnnouncementsPort.Input.class)))
-                .thenReturn(new GetAnnouncementsPort.Output(pageContent, 9L, 3));
+        when(getAnnouncements.execute(any(), any(), any()))
+                .thenReturn(new GetPaginatedAnnouncementResponse(pageContent, 9L, 3, 0, 3));
 
         mockMvc.perform(get("/v1/api/announcements")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -313,7 +313,7 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.totalPages").value(3))
                 .andExpect(jsonPath("$.size").value(3));
 
-        verify(getAnnouncements, times(1)).execute(any(GetAnnouncementsPort.Input.class));
+        verify(getAnnouncements, times(1)).execute(any(), any(), any());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -327,12 +327,12 @@ class AnnouncementControllerTest {
                 "Updated Title", "Updated Content", null, false, AnnouncementType.HOLIDAY
         );
 
-        UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
+        UpdateAnnouncementResponse response = new UpdateAnnouncementResponse(
                 1, "Updated Title", "Updated Content", null, null, AnnouncementType.HOLIDAY,
                 LocalDateTime.now(), LocalDateTime.now()
         );
 
-        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class))).thenReturn(output);
+        when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/announcements/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -343,7 +343,7 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.content").value("Updated Content"))
                 .andExpect(jsonPath("$.type").value("HOLIDAY"));
 
-        verify(updateAnnouncement, times(1)).execute(any(UpdateAnnouncementPort.Input.class));
+        verify(updateAnnouncement, times(1)).execute(anyInt(), any(UpdateAnnouncementRequest.class));
     }
 
     @Test
@@ -359,7 +359,7 @@ class AnnouncementControllerTest {
                 456L
         );
 
-        UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
+        UpdateAnnouncementResponse response = new UpdateAnnouncementResponse(
                 1,
                 "Updated Title",
                 "Updated Content",
@@ -370,7 +370,7 @@ class AnnouncementControllerTest {
                 LocalDateTime.now()
         );
 
-        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class))).thenReturn(output);
+        when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/announcements/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -381,10 +381,10 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.imageUpload.presigned_url").value("https://s3.example/update"))
                 .andExpect(jsonPath("$.imageUpload.file_key").value("announcements/1/new-cover.webp"));
 
-        verify(updateAnnouncement, times(1)).execute(argThat(input ->
-                input.imageUpload() != null
-                        && input.imageUpload().originalName().equals("new-cover.webp")
-                        && !Boolean.TRUE.equals(input.removeImage())
+        verify(updateAnnouncement, times(1)).execute(anyInt(), argThat(req ->
+                req.imageUpload() != null
+                        && req.imageUpload().originalName().equals("new-cover.webp")
+                        && !Boolean.TRUE.equals(req.removeImage())
         ));
     }
 
@@ -395,7 +395,7 @@ class AnnouncementControllerTest {
                 "Updated Title", "Updated Content", null, true, AnnouncementType.HOLIDAY
         );
 
-        UpdateAnnouncementPort.Output output = new UpdateAnnouncementPort.Output(
+        UpdateAnnouncementResponse response = new UpdateAnnouncementResponse(
                 1,
                 "Updated Title",
                 "Updated Content",
@@ -406,7 +406,7 @@ class AnnouncementControllerTest {
                 LocalDateTime.now()
         );
 
-        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class))).thenReturn(output);
+        when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/announcements/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -416,8 +416,8 @@ class AnnouncementControllerTest {
                 .andExpect(jsonPath("$.imageUrl").doesNotExist())
                 .andExpect(jsonPath("$.imageUpload").doesNotExist());
 
-        verify(updateAnnouncement, times(1)).execute(argThat(input ->
-                Boolean.TRUE.equals(input.removeImage()) && input.imageUpload() == null
+        verify(updateAnnouncement, times(1)).execute(anyInt(), argThat(req ->
+                Boolean.TRUE.equals(req.removeImage()) && req.imageUpload() == null
         ));
     }
 
@@ -429,7 +429,7 @@ class AnnouncementControllerTest {
                 "Updated Title", "Updated Content", imageUpload, true, AnnouncementType.HOLIDAY
         );
 
-        when(updateAnnouncement.execute(any(UpdateAnnouncementPort.Input.class)))
+        when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class)))
                 .thenThrow(new InvalidAnnouncementException("Cannot upload and remove an image at the same time"));
 
         mockMvc.perform(put("/v1/api/announcements/1")
@@ -438,7 +438,7 @@ class AnnouncementControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
-        verify(updateAnnouncement, times(1)).execute(any(UpdateAnnouncementPort.Input.class));
+        verify(updateAnnouncement, times(1)).execute(anyInt(), any(UpdateAnnouncementRequest.class));
     }
 
     @Test
@@ -454,7 +454,7 @@ class AnnouncementControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
-        verify(updateAnnouncement, never()).execute(any(UpdateAnnouncementPort.Input.class));
+        verify(updateAnnouncement, never()).execute(anyInt(), any(UpdateAnnouncementRequest.class));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -462,15 +462,15 @@ class AnnouncementControllerTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("DELETE /v1/api/announcements/{announcementId} - ADMINISTRATOR should delete announcement and return 200")
+    @DisplayName("DELETE /v1/api/announcements/{announcementId} - ADMINISTRATOR should delete announcement and return 204")
     void administratorShouldDeleteAnnouncementSuccessfully() throws Exception {
-        doNothing().when(deleteAnnouncement).execute(any(DeleteAnnouncementPort.Input.class));
+        doNothing().when(deleteAnnouncement).execute(anyInt());
 
         mockMvc.perform(delete("/v1/api/announcements/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
-        verify(deleteAnnouncement, times(1)).execute(any(DeleteAnnouncementPort.Input.class));
+        verify(deleteAnnouncement, times(1)).execute(anyInt());
     }
 
     @Test
@@ -480,15 +480,15 @@ class AnnouncementControllerTest {
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(deleteAnnouncement, never()).execute(any(DeleteAnnouncementPort.Input.class));
+        verify(deleteAnnouncement, never()).execute(anyInt());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // GET /v1/api/announcements/last
+    // GET /v1/api/announcements/latest
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("GET /v1/api/announcements/last - should return 200 with last announcement")
+    @DisplayName("GET /v1/api/announcements/latest - should return 200 with latest announcement")
     void shouldReturnLastAnnouncementSuccessfully() throws Exception {
         AnnouncementDto last = new AnnouncementDto(
                 5, "Last", "Last content", "https://s3.example/last", AnnouncementType.UPDATES, LocalDateTime.now(), LocalDateTime.now()
@@ -496,7 +496,7 @@ class AnnouncementControllerTest {
 
         when(getLastAnnouncement.execute()).thenReturn(Optional.of(last));
 
-        mockMvc.perform(get("/v1/api/announcements/last")
+        mockMvc.perform(get("/v1/api/announcements/latest")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(5))
@@ -508,13 +508,13 @@ class AnnouncementControllerTest {
     }
 
     @Test
-    @DisplayName("GET /v1/api/announcements/last - should return 204 when no announcement exists")
-    void shouldReturn204WhenNoLastAnnouncementExists() throws Exception {
+    @DisplayName("GET /v1/api/announcements/latest - should return 404 when no announcement exists")
+    void shouldReturn404WhenNoLastAnnouncementExists() throws Exception {
         when(getLastAnnouncement.execute()).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/v1/api/announcements/last")
+        mockMvc.perform(get("/v1/api/announcements/latest")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNotFound());
 
         verify(getLastAnnouncement, times(1)).execute();
     }

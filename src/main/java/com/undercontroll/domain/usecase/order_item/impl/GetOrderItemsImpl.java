@@ -1,9 +1,11 @@
 package com.undercontroll.domain.usecase.order_item.impl;
 
+import com.undercontroll.application.dto.orderitem.OrderItemDto;
+import com.undercontroll.application.mapper.OrderItemDtoMapper;
 import com.undercontroll.domain.usecase.order_item.GetOrderItemsPort;
-import com.undercontroll.domain.model.OrderItem;
-import com.undercontroll.domain.gateway.OrderItemGateway;
-import com.undercontroll.application.dto.OrderItemDto;
+import com.undercontroll.domain.model.Order;
+import com.undercontroll.domain.exception.OrderNotFoundException;
+import com.undercontroll.domain.gateway.OrderGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,29 +15,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GetOrderItemsImpl implements GetOrderItemsPort {
 
-    private final OrderItemGateway orderItemGateway;
+    private final OrderGateway orderGateway;
+    private final OrderItemDtoMapper orderItemDtoMapper;
 
     @Override
-    public Output execute(Input input) {
-        List<OrderItemDto> orderItems = orderItemGateway.findAll()
-                .stream()
-                .map(this::mapToDto)
-                .toList();
-        return new Output(orderItems);
-    }
+    public List<OrderItemDto> execute(Integer orderId) {
+        Order order = orderGateway.findDetailById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
-    private OrderItemDto mapToDto(OrderItem orderItem) {
-        return new OrderItemDto(
-                orderItem.getId(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        List<OrderItemDto> items = order.getOrderItems() == null
+                ? List.of()
+                : order.getOrderItems().stream().map(orderItemDtoMapper::toDto).toList();
+
+        return items;
     }
 }

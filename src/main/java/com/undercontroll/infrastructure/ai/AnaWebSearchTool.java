@@ -1,0 +1,94 @@
+package com.undercontroll.infrastructure.ai;
+
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class AnaWebSearchTool {
+
+    private final RestClient restClient;
+
+    public AnaWebSearchTool(RestClient.Builder restClientBuilder) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofSeconds(3));
+        this.restClient = restClientBuilder.clone()
+                .requestFactory(factory)
+                .baseUrl("https://api.duckduckgo.com")
+                .build();
+    }
+
+    @Tool(description = "Busca na internet (manuais, recall, dica de eletrodoméstico). Não use para dados da oficina.")
+    public String searchWeb(String query) {
+        if (query == null || query.isBlank()) {
+            return "Busca vazia.";
+        }
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = restClient.get()
+                    .uri(uri -> uri
+                            .queryParam("q", query)
+                            .queryParam("format", "json")
+                            .queryParam("no_html", "1")
+                            .queryParam("skip_disambig", "1")
+                            .build())
+                    .retrieve()
+                    .body(Map.class);
+            if (body == null) {
+                return "Nenhum resultado.";
+            }
+            return format(body);
+        } catch (RuntimeException ex) {
+            return "Busca indisponível no momento.";
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String format(Map<String, Object> body) {
+        String heading = stringValue(body.get("Heading"));
+        String abstractText = stringValue(body.get("AbstractText"));
+        if (abstractText.isBlank()) {
+            abstractText = stringValue(body.get("Abstract"));
+        }
+        String url = stringValue(body.get("AbstractURL"));
+        String related = "";
+        Object relatedTopics = body.get("RelatedTopics");
+        if (relatedTopics instanceof List<?> topics) {
+            related = topics.stream()
+                    .filter(Map.class::isInstance)
+                    .map(item -> stringValue(((Map<String, Object>) item).get("Text")))
+                    .filter(text -> !text.isBlank())
+                    .limit(3)
+                    .collect(Collectors.joining(" | "));
+        }
+        if (abstractText.isBlank() && related.isBlank()) {
+            return "Nenhum resultado útil para essa busca.";
+        }
+        StringBuilder result = new StringBuilder();
+        if (!heading.isBlank()) {
+            result.append(heading).append(". ");
+        }
+        if (!abstractText.isBlank()) {
+            result.append(abstractText);
+        }
+        if (!related.isBlank()) {
+            if (!result.isEmpty()) {
+                result.append(" ");
+            }
+            result.append(related);
+        }
+        if (!url.isBlank()) {
+            result.append(" Fonte: ").append(url);
+        }
+        return result.toString().trim();
+    }
+
+    private static String stringValue(Object value) {
+        return value == null ? "" : value.toString().trim();
+    }
+}

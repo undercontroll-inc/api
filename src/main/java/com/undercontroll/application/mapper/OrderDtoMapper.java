@@ -1,6 +1,6 @@
 package com.undercontroll.application.mapper;
 
-import com.undercontroll.application.dto.OrderEnrichedDto;
+import com.undercontroll.application.dto.order.OrderEnrichedDto;
 import com.undercontroll.domain.model.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

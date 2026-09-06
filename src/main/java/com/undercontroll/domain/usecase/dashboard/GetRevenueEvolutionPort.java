@@ -2,17 +2,8 @@ package com.undercontroll.domain.usecase.dashboard;
 
 import com.undercontroll.domain.enums.PeriodFilter;
 import com.undercontroll.domain.enums.StatusFilter;
-import com.undercontroll.application.dto.RevenueEvolutionResponse;
+import com.undercontroll.application.dto.dashboard.RevenueEvolutionResponse;
 
 public interface GetRevenueEvolutionPort {
-    record Input(
-            PeriodFilter period,
-            StatusFilter status
-    ) {}
-
-    record Output(
-            RevenueEvolutionResponse response
-    ) {}
-
-    Output execute(Input input);
+    RevenueEvolutionResponse execute(PeriodFilter period, StatusFilter status);
 }

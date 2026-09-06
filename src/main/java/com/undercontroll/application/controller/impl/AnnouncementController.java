@@ -5,21 +5,19 @@ import com.undercontroll.domain.usecase.announcement.DeleteAnnouncementPort;
 import com.undercontroll.domain.usecase.announcement.GetAnnouncementsPort;
 import com.undercontroll.domain.usecase.announcement.GetLastAnnouncementPort;
 import com.undercontroll.domain.usecase.announcement.UpdateAnnouncementPort;
-import com.undercontroll.application.dto.AnnouncementDto;
+import com.undercontroll.application.dto.announcement.AnnouncementDto;
 import com.undercontroll.application.controller.AnnouncementApi;
-import com.undercontroll.application.dto.CreateAnnouncementRequest;
-import com.undercontroll.application.dto.CreateAnnouncementResponse;
-import com.undercontroll.application.dto.GetPaginatedAnnouncementResponse;
-import com.undercontroll.application.dto.UpdateAnnouncementRequest;
-import com.undercontroll.application.dto.UpdateAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.GetPaginatedAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementResponse;
 import com.undercontroll.domain.enums.AnnouncementType;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@RequestMapping(value = "/v1/api/announcements")
 @RestController
 public class AnnouncementController implements AnnouncementApi {
 
@@ -30,92 +28,41 @@ public class AnnouncementController implements AnnouncementApi {
     private final GetLastAnnouncementPort getLastAnnouncement;
 
     @Override
-    @PostMapping
     public ResponseEntity<CreateAnnouncementResponse> createAnnouncement(
-            @Valid @RequestBody CreateAnnouncementRequest request,
-            @RequestHeader("Authorization") String auth
+            CreateAnnouncementRequest request,
+            String auth
     ) {
         String token = auth.split("Bearer ")[1];
-
-        CreateAnnouncementPort.Output output = createAnnouncement.execute(
-                new CreateAnnouncementPort.Input(request.title(), request.description(), token, request.imageUpload(), request.type())
-        );
-        return ResponseEntity.status(201).body(
-                new CreateAnnouncementResponse(
-                        output.id(),
-                        output.title(),
-                        output.content(),
-                        output.imageUpload(),
-                        output.type(),
-                        output.publishedAt(),
-                        output.updatedAt()
-                )
-        );
+        return ResponseEntity.status(201).body(createAnnouncement.execute(request, token));
     }
 
     @Override
-    @GetMapping
     public ResponseEntity<GetPaginatedAnnouncementResponse> getAllAnnouncements(
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) AnnouncementType type
+            Integer page,
+            Integer size,
+            AnnouncementType type
     ) {
-        GetAnnouncementsPort.Output output = getAnnouncements.execute(
-                new GetAnnouncementsPort.Input(page, size, type)
-        );
-        return ResponseEntity.ok(
-                new GetPaginatedAnnouncementResponse(
-                        output.announcements(),
-                        output.totalElements(),
-                        output.totalPages(),
-                        page,
-                        size
-                )
-        );
+        return ResponseEntity.ok(getAnnouncements.execute(page, size, type));
     }
 
     @Override
-    @PutMapping(value = "/{announcementId}")
     public ResponseEntity<UpdateAnnouncementResponse> updateAnnouncement(
-            @Valid @RequestBody UpdateAnnouncementRequest request,
-            @PathVariable Integer announcementId
+            UpdateAnnouncementRequest request,
+            Integer announcementId
     ) {
-        UpdateAnnouncementPort.Output output = updateAnnouncement.execute(
-                new UpdateAnnouncementPort.Input(
-                        announcementId,
-                        request.title(),
-                        request.content(),
-                        request.imageUpload(),
-                        request.removeImage(),
-                        request.type()
-                )
-        );
-        return ResponseEntity.ok(
-                new UpdateAnnouncementResponse(
-                        output.id(),
-                        output.title(),
-                        output.content(),
-                        output.imageUrl(),
-                        output.imageUpload(),
-                        output.type(),
-                        output.publishedAt(),
-                        output.updatedAt()
-                )
-        );
+        return ResponseEntity.ok(updateAnnouncement.execute(announcementId, request));
     }
 
     @Override
-    @DeleteMapping("/{announcementId}")
-    public ResponseEntity<Void> deleteAnnouncement(@PathVariable Integer announcementId) {
-        deleteAnnouncement.execute(new DeleteAnnouncementPort.Input(announcementId));
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> deleteAnnouncement(Integer announcementId) {
+        deleteAnnouncement.execute(announcementId);
+        return ResponseEntity.noContent().build();
     }
 
     @Override
-    @GetMapping("/last")
-    public ResponseEntity<AnnouncementDto> getLastAnnouncement() {
+    public ResponseEntity<AnnouncementDto> getLatestAnnouncement() {
         return getLastAnnouncement.execute()
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

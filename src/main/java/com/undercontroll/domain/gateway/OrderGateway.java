@@ -1,5 +1,6 @@
 package com.undercontroll.domain.gateway;
 
+import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.PaginatedResult;
 import java.time.LocalDate;
@@ -15,6 +16,14 @@ public interface OrderGateway {
     Optional<Order> findById(Integer id);
 
     List<Order> findAll();
+
+    List<Order> findRecent(OrderStatus status, int limit);
+
+    List<Order> findOpenRepairs(int limit);
+
+    List<Order> findReadyForPickup(int limit);
+
+    Optional<Order> findDetailById(Integer id);
 
     PaginatedResult<Order> findAllPaginated(Integer offset, Integer limit);
 
@@ -45,5 +54,7 @@ public interface OrderGateway {
     List<Object[]> getTopAppliances(LocalDate startDate, List<String> statuses);
 
     List<Object[]> getTopComponents(LocalDate startDate, List<String> statuses);
+
+    List<Object[]> getRepairCatalog(LocalDate startDate);
 
 }

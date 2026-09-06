@@ -1,8 +1,9 @@
 package com.undercontroll.domain.usecase.user.impl;
 
+import com.undercontroll.application.dto.user.UpdateUserRequest;
 import com.undercontroll.domain.usecase.user.UpdateUserPort;
 import com.undercontroll.domain.model.User;
-import com.undercontroll.domain.exception.InvalidUserException;
+import com.undercontroll.domain.exception.UserNotFoundException;
 import com.undercontroll.domain.gateway.UserGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,54 +19,52 @@ public class UpdateUserImpl implements UpdateUserPort {
 
     @Override
     @CacheEvict(value = {"users", "customers", "user"}, allEntries = true)
-    public Output execute(Input input) {
-        Optional<User> user = userGateway.findById(input.userId());
+    public void execute(Integer userId, UpdateUserRequest request) {
+        Optional<User> user = userGateway.findById(userId);
 
         if (user.isEmpty()) {
-            throw new InvalidUserException("Could not found the user for update with id: %d".formatted(input.userId()));
+            throw new UserNotFoundException("Could not find the user to update with id: %d".formatted(userId));
         }
 
         User userFound = user.get();
 
-        if (input.name() != null) {
-            userFound.setName(input.name());
+        if (request.name() != null) {
+            userFound.setName(request.name());
         }
-        if (input.lastName() != null) {
-            userFound.setLastName(input.lastName());
+        if (request.lastName() != null) {
+            userFound.setLastName(request.lastName());
         }
-        if (input.address() != null) {
-            userFound.setAddress(input.address());
+        if (request.address() != null) {
+            userFound.setAddress(request.address());
         }
-        if (input.userType() != null) {
-            userFound.setUserType(input.userType());
+        if (request.userType() != null) {
+            userFound.setUserType(request.userType());
         }
-        if (input.cpf() != null) {
-            userFound.setCpf(input.cpf());
+        if (request.cpf() != null) {
+            userFound.setCpf(request.cpf());
         }
-        if (input.password() != null) {
-            userFound.setPassword(input.password());
+        if (request.password() != null) {
+            userFound.setPassword(request.password());
         }
-        if (input.hasWhatsApp() != null) {
-            userFound.setHasWhatsApp(input.hasWhatsApp());
+        if (request.hasWhatsApp() != null) {
+            userFound.setHasWhatsApp(request.hasWhatsApp());
         }
-        if (input.CEP() != null) {
-            userFound.setCEP(input.CEP());
+        if (request.CEP() != null) {
+            userFound.setCEP(request.CEP());
         }
-        if (input.alreadyRecurrent() != null) {
-            userFound.setAlreadyRecurrent(input.alreadyRecurrent());
+        if (request.alreadyRecurrent() != null) {
+            userFound.setAlreadyRecurrent(request.alreadyRecurrent());
         }
-        if (input.inFirstLogin() != null) {
-            userFound.setInFirstLogin(input.inFirstLogin());
+        if (request.inFirstLogin() != null) {
+            userFound.setInFirstLogin(request.inFirstLogin());
         }
-        if (input.phone() != null) {
-            userFound.setPhone(input.phone());
+        if (request.phone() != null) {
+            userFound.setPhone(request.phone());
         }
-        if (input.avatarUrl() != null) {
-            userFound.setAvatarUrl(input.avatarUrl());
+        if (request.avatarUrl() != null) {
+            userFound.setAvatarUrl(request.avatarUrl());
         }
 
         userGateway.save(userFound);
-
-        return new Output(true, "User updated successfully");
     }
 }

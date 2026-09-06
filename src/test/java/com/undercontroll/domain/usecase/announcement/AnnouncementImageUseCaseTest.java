@@ -1,7 +1,12 @@
 package com.undercontroll.domain.usecase.announcement;
 
-import com.undercontroll.application.dto.AnnouncementImageUploadDto;
-import com.undercontroll.application.dto.GenerateUploadUrlResponse;
+import com.undercontroll.application.dto.announcement.AnnouncementImageUploadDto;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.CreateAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.GenerateUploadUrlResponse;
+import com.undercontroll.application.dto.announcement.GetPaginatedAnnouncementResponse;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementRequest;
+import com.undercontroll.application.dto.announcement.UpdateAnnouncementResponse;
 import com.undercontroll.domain.enums.AnnouncementType;
 import com.undercontroll.domain.exception.InvalidAnnouncementException;
 import com.undercontroll.domain.gateway.AnnouncementGateway;
@@ -67,13 +72,12 @@ class AnnouncementImageUseCaseTest {
                         123L
                 ));
 
-        CreateAnnouncementPort.Output output = useCase.execute(new CreateAnnouncementPort.Input(
+        CreateAnnouncementResponse output = useCase.execute(new CreateAnnouncementRequest(
                 "Title",
                 "Content",
-                "token",
                 new AnnouncementImageUploadDto("cover.png", "image/png", 1024L),
                 AnnouncementType.UPDATES
-        ));
+        ), "token");
 
         assertThat(output.imageUpload()).isNotNull();
         assertThat(output.imageUpload().fileKey()).startsWith("announcements/9/");
@@ -106,13 +110,12 @@ class AnnouncementImageUseCaseTest {
             return announcement;
         });
 
-        CreateAnnouncementPort.Output output = useCase.execute(new CreateAnnouncementPort.Input(
+        CreateAnnouncementResponse output = useCase.execute(new CreateAnnouncementRequest(
                 "Title",
                 "Content",
-                "token",
                 null,
                 AnnouncementType.UPDATES
-        ));
+        ), "token");
 
         assertThat(output.imageUpload()).isNull();
         verify(storageService, never()).generatePresignedUploadUrl(any(), any(), any());
@@ -150,7 +153,7 @@ class AnnouncementImageUseCaseTest {
         when(storageService.generateReadPresignedUrl("announcement-bucket", "announcements/1/cover.png", 1440L))
                 .thenReturn("https://s3.example/read");
 
-        GetAnnouncementsPort.Output output = useCase.execute(new GetAnnouncementsPort.Input(0, 10, null));
+        GetPaginatedAnnouncementResponse output = useCase.execute(0, 10, null);
 
         assertThat(output.announcements()).hasSize(2);
         assertThat(output.announcements().get(0).imageUrl()).isEqualTo("https://s3.example/read");
@@ -181,8 +184,7 @@ class AnnouncementImageUseCaseTest {
         when(announcementGateway.findById(3)).thenReturn(Optional.of(announcement));
         when(announcementGateway.save(any(Announcement.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UpdateAnnouncementPort.Output output = useCase.execute(new UpdateAnnouncementPort.Input(
-                3,
+        UpdateAnnouncementResponse output = useCase.execute(3, new UpdateAnnouncementRequest(
                 null,
                 null,
                 null,
@@ -201,8 +203,7 @@ class AnnouncementImageUseCaseTest {
     void shouldRejectUploadAndRemoveImageTogether() {
         UpdateAnnouncementImpl useCase = new UpdateAnnouncementImpl(mock(AnnouncementGateway.class), mock(StorageService.class));
 
-        assertThatThrownBy(() -> useCase.execute(new UpdateAnnouncementPort.Input(
-                1,
+        assertThatThrownBy(() -> useCase.execute(1, new UpdateAnnouncementRequest(
                 null,
                 null,
                 new AnnouncementImageUploadDto("cover.png", "image/png", 1024L),

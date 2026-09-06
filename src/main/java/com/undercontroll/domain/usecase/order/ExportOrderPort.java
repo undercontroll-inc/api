@@ -1,13 +1,5 @@
 package com.undercontroll.domain.usecase.order;
 
 public interface ExportOrderPort {
-    record Input(
-            Integer orderId
-    ) {}
-
-    record Output(
-            byte[] pdfData
-    ) {}
-
-    Output execute(Input input);
+    byte[] execute(Integer orderId);
 }

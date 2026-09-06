@@ -15,8 +15,16 @@ public interface ComponentGateway {
 
     List<ComponentPart> findAll();
 
+    List<ComponentPart> findLowStock(long maxQuantity, int limit);
+
+    List<ComponentPart> findLowestStock(int limit);
+
     List<ComponentPart> findByName(String name);
 
+    List<ComponentPart> searchByName(String name, int limit);
+
     List<ComponentPart> findByCategory(String category);
+
+    List<ComponentPart> searchByCategory(String category, int limit);
 
 }

@@ -1,5 +1,8 @@
 package com.undercontroll.domain.usecase.component.impl;
 
+import com.undercontroll.application.dto.component.ComponentDto;
+import com.undercontroll.application.dto.component.RegisterComponentRequest;
+import com.undercontroll.application.mapper.ComponentPartDtoMapper;
 import com.undercontroll.domain.usecase.component.RegisterComponentPort;
 import com.undercontroll.domain.model.ComponentPart;
 import com.undercontroll.domain.exception.InvalidComponentCreationException;
@@ -15,42 +18,36 @@ public class RegisterComponentImpl implements RegisterComponentPort {
 
     private final ComponentGateway componentGateway;
     private final MetricsService metricsService;
+    private final ComponentPartDtoMapper componentPartDtoMapper;
 
     @Override
     @CacheEvict(value = {"components", "componentsByCategory", "componentsByName", "component"}, allEntries = true)
-    public Output execute(Input input) {
-        validateCreate(input);
+    public ComponentDto execute(RegisterComponentRequest request) {
+        validateCreate(request);
 
         ComponentPart component = ComponentPart.builder()
-                .name(input.item())
-                .description(input.description())
-                .brand(input.brand())
-                .price(input.price())
-                .supplier(input.supplier())
-                .category(input.category())
-                .quantity(input.quantity() != null ? input.quantity() : 0L)
+                .name(request.item())
+                .description(request.description())
+                .brand(request.brand())
+                .price(request.price())
+                .supplier(request.supplier())
+                .category(request.category())
+                .quantity(request.quantity() != null ? request.quantity() : 0L)
                 .build();
 
-        componentGateway.save(component);
+        ComponentPart savedComponent = componentGateway.save(component);
         metricsService.incrementComponentCreated();
 
-        return new Output(
-                input.item(),
-                input.description(),
-                input.brand(),
-                input.price(),
-                input.supplier(),
-                input.category()
-        );
+        return componentPartDtoMapper.toDto(savedComponent);
     }
 
-    private void validateCreate(Input input) {
-        if (input.item() == null || input.item().isEmpty() ||
-            input.description() == null || input.description().isEmpty() ||
-            input.brand() == null || input.brand().isEmpty() ||
-            input.price() == null || input.price() <= 0 ||
-            input.supplier() == null || input.supplier().isEmpty() ||
-            input.category() == null || input.category().isEmpty()) {
+    private void validateCreate(RegisterComponentRequest request) {
+        if (request.item() == null || request.item().isEmpty() ||
+            request.description() == null || request.description().isEmpty() ||
+            request.brand() == null || request.brand().isEmpty() ||
+            request.price() == null || request.price() <= 0 ||
+            request.supplier() == null || request.supplier().isEmpty() ||
+            request.category() == null || request.category().isEmpty()) {
             throw new InvalidComponentCreationException("Invalid data for the component creation");
         }
     }

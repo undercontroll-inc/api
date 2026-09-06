@@ -1,28 +1,7 @@
 package com.undercontroll.domain.usecase.user;
 
-import com.undercontroll.domain.enums.UserType;
+import com.undercontroll.application.dto.user.UpdateUserRequest;
 
 public interface UpdateUserPort {
-    record Input(
-            Integer userId,
-            String name,
-            String lastName,
-            String address,
-            String cpf,
-            String password,
-            Boolean hasWhatsApp,
-            String CEP,
-            Boolean alreadyRecurrent,
-            Boolean inFirstLogin,
-            String phone,
-            String avatarUrl,
-            UserType userType
-    ) {}
-
-    record Output(
-            Boolean success,
-            String message
-    ) {}
-
-    Output execute(Input input);
+    void execute(Integer userId, UpdateUserRequest request);
 }

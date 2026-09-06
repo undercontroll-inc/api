@@ -1,7 +1,9 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
-import com.undercontroll.application.dto.DashboardMetricsResponse;
+import com.undercontroll.application.dto.dashboard.DashboardMetricsResponse;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.enums.PeriodFilter;
+import com.undercontroll.domain.enums.StatusFilter;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.dashboard.GetAverageRepairTimePort;
@@ -18,14 +20,14 @@ public class GetAverageRepairTimeImpl implements GetAverageRepairTimePort {
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
-        List<String> statuses = input.status().getStatuses().stream()
+    public DashboardMetricsResponse execute(PeriodFilter period, StatusFilter status) {
+        LocalDate startDate = DashboardDateFilter.from(period);
+        List<String> statuses = status.getStatuses().stream()
                 .map(OrderStatus::name)
                 .toList();
 
         Double avgHours = orderGateway.calculateAverageRepairTimeFiltered(startDate, statuses);
 
-        return new Output(new DashboardMetricsResponse(avgHours));
+        return new DashboardMetricsResponse(avgHours);
     }
 }

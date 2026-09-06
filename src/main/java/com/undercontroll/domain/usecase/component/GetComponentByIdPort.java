@@ -1,15 +1,9 @@
 package com.undercontroll.domain.usecase.component;
 
-import com.undercontroll.application.dto.ComponentDto;
+import com.undercontroll.application.dto.component.ComponentDto;
+
+import java.util.Optional;
 
 public interface GetComponentByIdPort {
-    record Input(
-            Integer componentId
-    ) {}
-
-    record Output(
-            ComponentDto component
-    ) {}
-
-    Output execute(Input input);
+    Optional<ComponentDto> execute(Integer componentId);
 }

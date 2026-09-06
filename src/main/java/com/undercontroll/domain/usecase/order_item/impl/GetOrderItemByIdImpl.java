@@ -1,9 +1,11 @@
 package com.undercontroll.domain.usecase.order_item.impl;
 
+import com.undercontroll.application.dto.orderitem.OrderItemDto;
+import com.undercontroll.application.mapper.OrderItemDtoMapper;
 import com.undercontroll.domain.usecase.order_item.GetOrderItemByIdPort;
-import com.undercontroll.domain.model.OrderItem;
+import com.undercontroll.domain.model.Order;
+import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.OrderItemGateway;
-import com.undercontroll.application.dto.OrderItemDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,25 +16,16 @@ import java.util.Optional;
 public class GetOrderItemByIdImpl implements GetOrderItemByIdPort {
 
     private final OrderItemGateway orderItemGateway;
+    private final OrderGateway orderGateway;
+    private final OrderItemDtoMapper orderItemDtoMapper;
 
     @Override
-    public Output execute(Input input) {
-        Optional<OrderItem> orderItem = orderItemGateway.findById(input.orderItemId());
-        if (orderItem.isEmpty()) {
-            return new Output(null);
+    public Optional<OrderItemDto> execute(Integer orderId, Integer orderItemId) {
+        Optional<Order> owner = orderGateway.findOrderByOrderItemId(orderItemId);
+        if (owner.isEmpty() || !orderId.equals(owner.get().getId())) {
+            return Optional.empty();
         }
-        OrderItem oi = orderItem.get();
-        return new Output(new OrderItemDto(
-                oi.getId(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        ));
+        return orderItemGateway.findById(orderItemId)
+                .map(orderItemDtoMapper::toDto);
     }
 }

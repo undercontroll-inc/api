@@ -1,18 +1,8 @@
 package com.undercontroll.domain.usecase.auth;
 
-import com.undercontroll.application.dto.UserDto;
+import com.undercontroll.application.dto.auth.AuthUserRequest;
+import com.undercontroll.application.dto.auth.AuthUserResponse;
 
 public interface AuthUserPort {
-    record Input(
-            String email,
-            String password
-    ) {}
-
-    record Output(
-            String token,
-            String refreshToken,
-            UserDto user
-    ) {}
-
-    Output execute(Input input);
+    AuthUserResponse execute(AuthUserRequest request);
 }

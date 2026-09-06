@@ -1,13 +1,13 @@
 package com.undercontroll.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.undercontroll.application.dto.ComponentDto;
+import com.undercontroll.application.dto.component.ComponentDto;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.component.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.application.dto.RegisterComponentRequest;
-import com.undercontroll.application.dto.UpdateComponentRequest;
+import com.undercontroll.application.dto.component.RegisterComponentRequest;
+import com.undercontroll.application.dto.component.UpdateComponentRequest;
 import com.undercontroll.application.controller.impl.ComponentController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -49,12 +50,6 @@ class ComponentControllerTest {
     private GetComponentByIdPort getComponentByIdPort;
 
     @MockitoBean
-    private GetComponentsByCategoryPort getComponentsByCategoryPort;
-
-    @MockitoBean
-    private GetComponentsByNamePort getComponentsByNamePort;
-
-    @MockitoBean
     private UpdateComponentPort updateComponentPort;
 
     @MockitoBean
@@ -72,21 +67,19 @@ class ComponentControllerTest {
                 "Resistor", "10k Ohm resistor", "Brand A", "Electronics", 100, 1.50, "Supplier X"
         );
 
-        RegisterComponentPort.Output output = new RegisterComponentPort.Output(
-                "Resistor", "10k Ohm resistor", "Brand A", 1.50, "Supplier X", "Electronics"
-        );
+        ComponentDto response = new ComponentDto(1, "Resistor", "10k Ohm resistor", "Brand A", 1.50, 100L, "Supplier X", "Electronics");
 
-        when(registerComponentPort.execute(any(RegisterComponentPort.Input.class))).thenReturn(output);
+        when(registerComponentPort.execute(any(RegisterComponentRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/components")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Resistor"))
+                .andExpect(jsonPath("$.item").value("Resistor"))
                 .andExpect(jsonPath("$.price").value(1.50))
                 .andExpect(jsonPath("$.category").value("Electronics"));
 
-        verify(registerComponentPort, times(1)).execute(any(RegisterComponentPort.Input.class));
+        verify(registerComponentPort, times(1)).execute(any(RegisterComponentRequest.class));
     }
 
     @Test
@@ -102,7 +95,7 @@ class ComponentControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
-        verify(registerComponentPort, never()).execute(any(RegisterComponentPort.Input.class));
+        verify(registerComponentPort, never()).execute(any(RegisterComponentRequest.class));
     }
 
     @Test
@@ -112,7 +105,7 @@ class ComponentControllerTest {
         ComponentDto component1 = new ComponentDto(1, "Resistor", "10k Ohm", "Brand A", 1.50, 100L, "Supplier X", "Electronics");
         ComponentDto component2 = new ComponentDto(2, "Capacitor", "100uF", "Brand B", 2.00, 50L, "Supplier Y", "Electronics");
 
-        when(getComponentsPort.execute()).thenReturn(new GetComponentsPort.Output(List.of(component1, component2)));
+        when(getComponentsPort.execute(null, null)).thenReturn(List.of(component1, component2));
 
         mockMvc.perform(get("/v1/api/components"))
                 .andExpect(status().isOk())
@@ -120,19 +113,20 @@ class ComponentControllerTest {
                 .andExpect(jsonPath("$[1].item").value("Capacitor"))
                 .andExpect(jsonPath("$.length()").value(2));
 
-        verify(getComponentsPort, times(1)).execute();
+        verify(getComponentsPort, times(1)).execute(null, null);
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATOR")
-    @DisplayName("GET /v1/api/components - Should return 204 when no components found")
-    void shouldReturn204WhenNoComponentsFound() throws Exception {
-        when(getComponentsPort.execute()).thenReturn(new GetComponentsPort.Output(List.of()));
+    @DisplayName("GET /v1/api/components - Should return 200 with empty list when no components found")
+    void shouldReturn200WhenNoComponentsFound() throws Exception {
+        when(getComponentsPort.execute(null, null)).thenReturn(List.of());
 
         mockMvc.perform(get("/v1/api/components"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
 
-        verify(getComponentsPort, times(1)).execute();
+        verify(getComponentsPort, times(1)).execute(null, null);
     }
 
     @Test
@@ -142,7 +136,7 @@ class ComponentControllerTest {
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(getComponentsPort, never()).execute();
+        verify(getComponentsPort, never()).execute(any(), any());
     }
 
     @Test
@@ -151,47 +145,48 @@ class ComponentControllerTest {
     void shouldGetComponentByIdSuccessfully() throws Exception {
         ComponentDto component = new ComponentDto(1, "Resistor", "10k Ohm", "Brand A", 1.50, 100L, "Supplier X", "Electronics");
 
-        when(getComponentByIdPort.execute(any(GetComponentByIdPort.Input.class)))
-                .thenReturn(new GetComponentByIdPort.Output(component));
+        when(getComponentByIdPort.execute(any(Integer.class)))
+                .thenReturn(Optional.of(component));
 
         mockMvc.perform(get("/v1/api/components/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.item").value("Resistor"));
 
-        verify(getComponentByIdPort, times(1)).execute(any(GetComponentByIdPort.Input.class));
+        verify(getComponentByIdPort, times(1)).execute(any(Integer.class));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATOR")
-    @DisplayName("GET /v1/api/components/category/{category} - Should get components by category and return 200")
+    @DisplayName("GET /v1/api/components?category=Electronics - Should get components by category and return 200")
     void shouldGetComponentsByCategorySuccessfully() throws Exception {
         ComponentDto component1 = new ComponentDto(1, "Resistor", "10k Ohm", "Brand A", 1.50, 100L, "Supplier X", "Electronics");
         ComponentDto component2 = new ComponentDto(2, "Capacitor", "100uF", "Brand B", 2.00, 50L, "Supplier Y", "Electronics");
 
-        when(getComponentsByCategoryPort.execute(any(GetComponentsByCategoryPort.Input.class)))
-                .thenReturn(new GetComponentsByCategoryPort.Output(List.of(component1, component2)));
+        when(getComponentsPort.execute(eq("Electronics"), isNull()))
+                .thenReturn(List.of(component1, component2));
 
-        mockMvc.perform(get("/v1/api/components/category/Electronics"))
+        mockMvc.perform(get("/v1/api/components").param("category", "Electronics"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].category").value("Electronics"))
                 .andExpect(jsonPath("$[1].category").value("Electronics"))
                 .andExpect(jsonPath("$.length()").value(2));
 
-        verify(getComponentsByCategoryPort, times(1)).execute(any(GetComponentsByCategoryPort.Input.class));
+        verify(getComponentsPort, times(1)).execute("Electronics", null);
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATOR")
-    @DisplayName("GET /v1/api/components/category/{category} - Should return 204 when no components in category")
-    void shouldReturn204WhenNoCategoryComponentsFound() throws Exception {
-        when(getComponentsByCategoryPort.execute(any(GetComponentsByCategoryPort.Input.class)))
-                .thenReturn(new GetComponentsByCategoryPort.Output(List.of()));
+    @DisplayName("GET /v1/api/components?category=NonExistent - Should return 200 with empty list")
+    void shouldReturn200WhenNoCategoryComponentsFound() throws Exception {
+        when(getComponentsPort.execute(eq("NonExistent"), isNull()))
+                .thenReturn(List.of());
 
-        mockMvc.perform(get("/v1/api/components/category/NonExistent"))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/v1/api/components").param("category", "NonExistent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
 
-        verify(getComponentsByCategoryPort, times(1)).execute(any(GetComponentsByCategoryPort.Input.class));
+        verify(getComponentsPort, times(1)).execute("NonExistent", null);
     }
 
     @Test
@@ -202,11 +197,11 @@ class ComponentControllerTest {
                 "Resistor Updated", "20k Ohm resistor", "Brand A", 1.75, "Supplier X", "Electronics"
         );
 
-        UpdateComponentPort.Output output = new UpdateComponentPort.Output(
+        ComponentDto response = new ComponentDto(
                 1, "Resistor Updated", "20k Ohm resistor", "Brand A", 1.75, 100L, "Supplier X", "Electronics"
         );
 
-        when(updateComponentPort.execute(any(UpdateComponentPort.Input.class))).thenReturn(output);
+        when(updateComponentPort.execute(anyInt(), any(UpdateComponentRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/components/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -215,7 +210,7 @@ class ComponentControllerTest {
                 .andExpect(jsonPath("$.item").value("Resistor Updated"))
                 .andExpect(jsonPath("$.price").value(1.75));
 
-        verify(updateComponentPort, times(1)).execute(any(UpdateComponentPort.Input.class));
+        verify(updateComponentPort, times(1)).execute(anyInt(), any(UpdateComponentRequest.class));
     }
 
     @Test
@@ -231,20 +226,19 @@ class ComponentControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
 
-        verify(updateComponentPort, never()).execute(any(UpdateComponentPort.Input.class));
+        verify(updateComponentPort, never()).execute(anyInt(), any(UpdateComponentRequest.class));
     }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATOR")
-    @DisplayName("DELETE /v1/api/components/{componentId} - ADMINISTRATOR should delete component and return 200")
+    @DisplayName("DELETE /v1/api/components/{componentId} - ADMINISTRATOR should delete component and return 204")
     void administratorShouldDeleteComponentSuccessfully() throws Exception {
-        when(deleteComponentPort.execute(any(DeleteComponentPort.Input.class)))
-                .thenReturn(new DeleteComponentPort.Output(true, "Deleted"));
+        doNothing().when(deleteComponentPort).execute(any(Integer.class));
 
         mockMvc.perform(delete("/v1/api/components/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
-        verify(deleteComponentPort, times(1)).execute(any(DeleteComponentPort.Input.class));
+        verify(deleteComponentPort, times(1)).execute(any(Integer.class));
     }
 
     @Test
@@ -254,6 +248,6 @@ class ComponentControllerTest {
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(deleteComponentPort, never()).execute(any(DeleteComponentPort.Input.class));
+        verify(deleteComponentPort, never()).execute(any(Integer.class));
     }
 }

@@ -1,6 +1,6 @@
 package com.undercontroll.infrastructure.handler;
 
-import com.undercontroll.application.dto.ExceptionHandlerResponse;
+import com.undercontroll.application.dto.common.ExceptionHandlerResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -18,9 +20,34 @@ public class GlobalExceptionHandler extends GenericExceptionHandler {
             MethodArgumentNotValidException e,
             HttpServletRequest request
     ) {
-        log.error("Validation error: {}", e.getMessage());
+        List<ExceptionHandlerResponse.FieldError> fieldErrors = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> new ExceptionHandlerResponse.FieldError(error.getField(), error.getDefaultMessage()))
+                .toList();
 
-        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), request.getRequestURI());
+        log.error("Validation error on {}: {}", request.getRequestURI(), fieldErrors);
+
+        return this.buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Request validation failed",
+                request.getRequestURI(),
+                VALIDATION_ERROR,
+                fieldErrors
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ExceptionHandlerResponse> handleUnexpectedException(
+            Exception e,
+            HttpServletRequest request
+    ) {
+        log.error("Unexpected error on {}", request.getRequestURI(), e);
+
+        return this.buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred while processing the request",
+                request.getRequestURI(),
+                INTERNAL_SERVER_ERROR
+        );
     }
 
 }

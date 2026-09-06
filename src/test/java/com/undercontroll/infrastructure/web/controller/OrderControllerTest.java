@@ -1,15 +1,18 @@
 package com.undercontroll.infrastructure.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.undercontroll.application.dto.*;
+import com.undercontroll.application.dto.order.CreateOrderRequest;
+import com.undercontroll.application.dto.order.GetAllOrdersResponse;
+import com.undercontroll.application.dto.order.GetOrderByIdResponse;
+import com.undercontroll.application.dto.order.OrderEnrichedDto;
+import com.undercontroll.application.dto.order.UpdateOrderRequest;
+import com.undercontroll.application.dto.user.UserDto;
 import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.enums.UserType;
 import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.usecase.order.*;
 import com.undercontroll.infrastructure.config.SecurityConfig;
 import com.undercontroll.infrastructure.config.RateLimitProperties;
-import com.undercontroll.application.dto.CreateOrderRequest;
-import com.undercontroll.application.dto.UpdateOrderRequest;
 import com.undercontroll.application.controller.impl.OrderController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +25,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -56,9 +60,6 @@ class OrderControllerTest {
     private DeleteOrderPort deleteOrderPort;
 
     @MockitoBean
-    private GetOrdersByUserIdPort getOrdersByUserIdPort;
-
-    @MockitoBean
     private ExportOrderPort exportOrderPort;
 
     // Required because AuthContextFilter depends on TokenPort
@@ -73,8 +74,13 @@ class OrderControllerTest {
                 "Service description", "Notes", "PENDING", false, true, "NF123"
         );
 
-        when(createOrderPort.execute(any(CreateOrderPort.Input.class)))
-                .thenReturn(new CreateOrderPort.Output(1, 1, "PENDING", 0.0));
+        OrderEnrichedDto response = new OrderEnrichedDto(
+                1, null, List.of(), List.of(), 0.0, 0.0, 0.0, 0.0,
+                "20/11/2025", "25/11/2025", "NF123", false, "Service description",
+                "Notes", OrderStatus.PENDING, null
+        );
+
+        when(createOrderPort.execute(any(CreateOrderRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/orders")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -82,7 +88,7 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        verify(createOrderPort, times(1)).execute(any(CreateOrderPort.Input.class));
+        verify(createOrderPort, times(1)).execute(any(CreateOrderRequest.class));
     }
 
     @Test
@@ -93,8 +99,13 @@ class OrderControllerTest {
                 "Service description", "Notes", "PENDING", false, true, "NF123"
         );
 
-        when(createOrderPort.execute(any(CreateOrderPort.Input.class)))
-                .thenReturn(new CreateOrderPort.Output(1, 1, "PENDING", 0.0));
+        OrderEnrichedDto response = new OrderEnrichedDto(
+                1, null, List.of(), List.of(), 0.0, 0.0, 0.0, 0.0,
+                "20/11/2025", "25/11/2025", "NF123", false, "Service description",
+                "Notes", OrderStatus.PENDING, null
+        );
+
+        when(createOrderPort.execute(any(CreateOrderRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/orders")
                         .with(user("customer@example.com").roles("CUSTOMER"))
@@ -102,18 +113,15 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        verify(createOrderPort, times(1)).execute(any(CreateOrderPort.Input.class));
+        verify(createOrderPort, times(1)).execute(any(CreateOrderRequest.class));
     }
 
     @Test
-    @DisplayName("PATCH /v1/api/orders/{id} - ADMINISTRATOR should update order and return 200")
+    @DisplayName("PATCH /v1/api/orders/{orderId} - ADMINISTRATOR should update order and return 200")
     void administratorShouldUpdateOrderSuccessfully() throws Exception {
         UpdateOrderRequest request = new UpdateOrderRequest(
                 OrderStatus.COMPLETED, List.of(), List.of(), "Updated description"
         );
-
-        when(updateOrderPort.execute(any(UpdateOrderPort.Input.class)))
-                .thenReturn(new UpdateOrderPort.Output(true, "OK"));
 
         mockMvc.perform(patch("/v1/api/orders/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -121,7 +129,23 @@ class OrderControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
 
-        verify(updateOrderPort, times(1)).execute(any(UpdateOrderPort.Input.class));
+        verify(updateOrderPort, times(1)).execute(eq(1), any(UpdateOrderRequest.class));
+    }
+
+    @Test
+    @DisplayName("PATCH /v1/api/orders/{orderId} - CUSTOMER should be forbidden and return 403")
+    void customerShouldBeForbiddenToUpdateOrder() throws Exception {
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.COMPLETED, List.of(), List.of(), "Updated description"
+        );
+
+        mockMvc.perform(patch("/v1/api/orders/1")
+                        .with(user("customer@example.com").roles("CUSTOMER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+        verify(updateOrderPort, never()).execute(any(), any());
     }
 
     @Test
@@ -137,8 +161,8 @@ class OrderControllerTest {
                 null, OrderStatus.PENDING, "20/11/2025"
         );
 
-        when(getOrdersPort.execute(any(GetOrdersPort.Input.class)))
-                .thenReturn(new GetOrdersPort.Output(List.of(order), 1L, 1));
+        when(getOrdersPort.execute(isNull(), anyInt(), anyInt()))
+                .thenReturn(new GetAllOrdersResponse(List.of(order), 1L, 1, 0, 10));
 
         mockMvc.perform(get("/v1/api/orders")
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
@@ -150,17 +174,17 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(getOrdersPort, times(1)).execute(any(GetOrdersPort.Input.class));
+        verify(getOrdersPort, times(1)).execute(isNull(), anyInt(), anyInt());
     }
 
     @Test
-    @DisplayName("GET /v1/api/orders - CUSTOMER should be forbidden and return 403")
+    @DisplayName("GET /v1/api/orders - CUSTOMER without userId should be forbidden and return 403")
     void customerShouldBeForbiddenToGetAllOrders() throws Exception {
         mockMvc.perform(get("/v1/api/orders")
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(getOrdersPort, never()).execute(any(GetOrdersPort.Input.class));
+        verify(getOrdersPort, never()).execute(any(), anyInt(), anyInt());
     }
 
     @Test
@@ -178,8 +202,7 @@ class OrderControllerTest {
 
         GetOrderByIdResponse response = new GetOrderByIdResponse(enrichedDto);
 
-        when(getOrderByIdPort.execute(any(GetOrderByIdPort.Input.class)))
-                .thenReturn(new GetOrderByIdPort.Output(response));
+        when(getOrderByIdPort.execute(1)).thenReturn(Optional.of(response));
 
         mockMvc.perform(get("/v1/api/orders/1")
                         .with(user("customer@example.com").roles("CUSTOMER")))
@@ -187,20 +210,17 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.status").value("PENDING"));
 
-        verify(getOrderByIdPort, times(1)).execute(any(GetOrderByIdPort.Input.class));
+        verify(getOrderByIdPort, times(1)).execute(1);
     }
 
     @Test
     @DisplayName("DELETE /v1/api/orders/{orderId} - ADMINISTRATOR should delete order and return 204")
     void administratorShouldDeleteOrderSuccessfully() throws Exception {
-        when(deleteOrderPort.execute(any(DeleteOrderPort.Input.class)))
-                .thenReturn(new DeleteOrderPort.Output(true, "Deleted"));
-
         mockMvc.perform(delete("/v1/api/orders/1")
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isNoContent());
 
-        verify(deleteOrderPort, times(1)).execute(any(DeleteOrderPort.Input.class));
+        verify(deleteOrderPort, times(1)).execute(1);
     }
 
     @Test
@@ -210,11 +230,11 @@ class OrderControllerTest {
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isForbidden());
 
-        verify(deleteOrderPort, never()).execute(any(DeleteOrderPort.Input.class));
+        verify(deleteOrderPort, never()).execute(any());
     }
 
     @Test
-    @DisplayName("GET /v1/api/orders/filter?userId=X - CUSTOMER should get orders by userId and return 200")
+    @DisplayName("GET /v1/api/orders?userId=X - CUSTOMER should get their own orders and return 200")
     void customerShouldGetOrdersByUserIdSuccessfully() throws Exception {
         UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
                 "Street 123", "12345678900", "12345-678", "11999999999",
@@ -226,23 +246,32 @@ class OrderControllerTest {
                 null, OrderStatus.PENDING, "20/11/2025"
         );
 
-        GetOrdersByUserIdResponse response = new GetOrdersByUserIdResponse(List.of(order));
+        when(getOrdersPort.execute(eq(1), anyInt(), anyInt()))
+                .thenReturn(new GetAllOrdersResponse(List.of(order), 1L, 1, 0, 1));
 
-        when(getOrdersByUserIdPort.execute(any(GetOrdersByUserIdPort.Input.class)))
-                .thenReturn(new GetOrdersByUserIdPort.Output(response));
-
-        mockMvc.perform(get("/v1/api/orders/filter")
+        mockMvc.perform(get("/v1/api/orders")
                         .with(user("1").roles("CUSTOMER"))
                         .param("userId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1))
                 .andExpect(jsonPath("$.data[0].user.id").value(1));
 
-        verify(getOrdersByUserIdPort, times(1)).execute(any(GetOrdersByUserIdPort.Input.class));
+        verify(getOrdersPort, times(1)).execute(eq(1), anyInt(), anyInt());
     }
 
     @Test
-    @DisplayName("GET /v1/api/orders/filter?userId=X - ADMINISTRATOR should get orders by userId and return 200")
+    @DisplayName("GET /v1/api/orders?userId=X - CUSTOMER requesting another user's orders should be forbidden")
+    void customerShouldBeForbiddenToGetAnotherUsersOrders() throws Exception {
+        mockMvc.perform(get("/v1/api/orders")
+                        .with(user("1").roles("CUSTOMER"))
+                        .param("userId", "2"))
+                .andExpect(status().isForbidden());
+
+        verify(getOrdersPort, never()).execute(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("GET /v1/api/orders?userId=X - ADMINISTRATOR should get orders by userId and return 200")
     void administratorShouldGetOrdersByUserIdSuccessfully() throws Exception {
         UserDto userDto = new UserDto(1, "John", "john@example.com", "Doe",
                 "Street 123", "12345678900", "12345-678", "11999999999",
@@ -254,17 +283,29 @@ class OrderControllerTest {
                 null, OrderStatus.PENDING, "20/11/2025"
         );
 
-        GetOrdersByUserIdResponse response = new GetOrdersByUserIdResponse(List.of(order));
+        when(getOrdersPort.execute(eq(1), anyInt(), anyInt()))
+                .thenReturn(new GetAllOrdersResponse(List.of(order), 1L, 1, 0, 1));
 
-        when(getOrdersByUserIdPort.execute(any(GetOrdersByUserIdPort.Input.class)))
-                .thenReturn(new GetOrdersByUserIdPort.Output(response));
-
-        mockMvc.perform(get("/v1/api/orders/filter")
-                        .with(user("1").roles("ADMINISTRATOR", "SCOPE_ADMINISTRATOR"))
+        mockMvc.perform(get("/v1/api/orders")
+                        .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .param("userId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1));
 
-        verify(getOrdersByUserIdPort, times(1)).execute(any(GetOrdersByUserIdPort.Input.class));
+        verify(getOrdersPort, times(1)).execute(eq(1), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("GET /v1/api/orders/{orderId}/export - CUSTOMER should export order as PDF and return 200")
+    void customerShouldExportOrderSuccessfully() throws Exception {
+        byte[] pdf = "pdf-bytes".getBytes();
+
+        when(exportOrderPort.execute(1)).thenReturn(pdf);
+
+        mockMvc.perform(get("/v1/api/orders/1/export")
+                        .with(user("customer@example.com").roles("CUSTOMER")))
+                .andExpect(status().isOk());
+
+        verify(exportOrderPort, times(1)).execute(1);
     }
 }

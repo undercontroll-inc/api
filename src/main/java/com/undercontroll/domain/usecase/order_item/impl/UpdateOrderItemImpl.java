@@ -1,73 +1,79 @@
 package com.undercontroll.domain.usecase.order_item.impl;
 
+import com.undercontroll.application.dto.orderitem.UpdateOrderItemRequest;
 import com.undercontroll.domain.usecase.order_item.UpdateOrderItemPort;
+import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.OrderItem;
 import com.undercontroll.domain.exception.InvalidOrderItemException;
 import com.undercontroll.domain.exception.OrderItemNotFoundException;
+import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.OrderItemGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UpdateOrderItemImpl implements UpdateOrderItemPort {
 
     private final OrderItemGateway orderItemGateway;
+    private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        validateUpdateOrderItem(input);
-
-        Optional<OrderItem> orderItem = orderItemGateway.findById(input.orderItemId());
-
-        if (orderItem.isEmpty()) {
-            throw new OrderItemNotFoundException("Could not found the order for update with id: %s".formatted(input.orderItemId()));
+    public void execute(Integer orderId, Integer orderItemId, UpdateOrderItemRequest request) {
+        if (orderItemId == null) {
+            throw new InvalidOrderItemException("Order item ID cannot be null for update");
+        }
+        if (request.labor() != null && request.labor() < 0) {
+            throw new InvalidOrderItemException("Order item labor cannot be negative");
         }
 
-        OrderItem orderFound = orderItem.get();
+        requireItemBelongsToOrder(orderId, orderItemId);
 
-        if (input.imageUrl() != null) {
-            orderFound.setImageUrl(input.imageUrl());
+        OrderItem orderFound = orderItemGateway.findById(orderItemId)
+                .orElseThrow(() -> new OrderItemNotFoundException(
+                        "Could not find the order item for update with id: %s".formatted(orderItemId)
+                ));
+
+        if (request.imageUrl() != null) {
+            orderFound.setImageUrl(request.imageUrl());
         }
-        if (input.observation() != null) {
-            orderFound.setObservation(input.observation());
+        if (request.observation() != null) {
+            orderFound.setObservation(request.observation());
         }
-        if (input.volt() != null) {
-            orderFound.setVolt(input.volt());
+        if (request.volt() != null) {
+            orderFound.setVolt(request.volt());
         }
-        if (input.series() != null) {
-            orderFound.setSeries(input.series());
+        if (request.series() != null) {
+            orderFound.setSeries(request.series());
         }
-        if (input.completedAt() != null) {
-            orderFound.setCompletedAt(input.completedAt());
+        if (request.completedAt() != null) {
+            orderFound.setCompletedAt(request.completedAt());
         }
-        if (input.labor() != null) {
-            orderFound.setLaborValue(input.labor());
+        if (request.labor() != null) {
+            orderFound.setLaborValue(request.labor());
         }
-        if (input.type() != null) {
-            orderFound.setType(input.type());
+        if (request.type() != null) {
+            orderFound.setType(request.type());
         }
-        if (input.brand() != null) {
-            orderFound.setBrand(input.brand());
+        if (request.brand() != null) {
+            orderFound.setBrand(request.brand());
         }
-        if (input.model() != null) {
-            orderFound.setModel(input.model());
+        if (request.model() != null) {
+            orderFound.setModel(request.model());
         }
 
         orderItemGateway.save(orderFound);
-
-        return new Output(true, "Order item updated successfully");
     }
 
-    private void validateUpdateOrderItem(Input input) {
-        if (input.orderItemId() == null) {
-            throw new InvalidOrderItemException("Order item ID cannot be null for update");
-        }
-
-        if (input.labor() != null && input.labor() < 0) {
-            throw new InvalidOrderItemException("Order item labor cannot be negative");
+    private void requireItemBelongsToOrder(Integer orderId, Integer orderItemId) {
+        Order order = orderGateway.findOrderByOrderItemId(orderItemId)
+                .orElseThrow(() -> new OrderItemNotFoundException(
+                        "Could not find the order item with id: %s".formatted(orderItemId)
+                ));
+        if (!orderId.equals(order.getId())) {
+            throw new OrderItemNotFoundException(
+                    "Order item %s does not belong to order %s".formatted(orderItemId, orderId)
+            );
         }
     }
 }

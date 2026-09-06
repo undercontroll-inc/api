@@ -1,7 +1,9 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
-import com.undercontroll.application.dto.TopAppliancesResponse;
+import com.undercontroll.application.dto.dashboard.TopAppliancesResponse;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.enums.PeriodFilter;
+import com.undercontroll.domain.enums.StatusFilter;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
 import com.undercontroll.domain.usecase.dashboard.GetTopAppliancesPort;
@@ -18,9 +20,9 @@ public class GetTopAppliancesImpl implements GetTopAppliancesPort {
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
-        List<String> statuses = input.status().getStatuses().stream()
+    public TopAppliancesResponse execute(PeriodFilter period, StatusFilter status) {
+        LocalDate startDate = DashboardDateFilter.from(period);
+        List<String> statuses = status.getStatuses().stream()
                 .map(OrderStatus::name)
                 .toList();
 
@@ -34,7 +36,7 @@ public class GetTopAppliancesImpl implements GetTopAppliancesPort {
                 ))
                 .toList();
 
-        return new Output(new TopAppliancesResponse(appliances));
+        return new TopAppliancesResponse(appliances);
     }
 
     private Long toLong(Object value) {

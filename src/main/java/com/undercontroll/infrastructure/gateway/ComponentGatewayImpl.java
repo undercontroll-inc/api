@@ -6,6 +6,7 @@ import com.undercontroll.infrastructure.mapper.ComponentPartMapper;
 import com.undercontroll.infrastructure.persistence.entity.ComponentPartJpaEntity;
 import com.undercontroll.infrastructure.persistence.repository.ComponentJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +48,33 @@ public class ComponentGatewayImpl implements ComponentGateway {
     }
 
     @Override
+    public List<ComponentPart> findLowStock(long maxQuantity, int limit) {
+        return componentJpaRepository.findLowStock(maxQuantity, PageRequest.of(0, Math.max(1, limit))).stream()
+                .map(componentPartMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<ComponentPart> findLowestStock(int limit) {
+        return componentJpaRepository.findLowestStock(PageRequest.of(0, Math.max(1, limit))).stream()
+                .map(componentPartMapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<ComponentPart> findByName(String name) {
         return componentJpaRepository.findByName(name).stream()
+                .map(componentPartMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<ComponentPart> searchByName(String name, int limit) {
+        String term = sanitizeLike(name);
+        if (term.isBlank()) {
+            return List.of();
+        }
+        return componentJpaRepository.searchByName(term, PageRequest.of(0, Math.max(1, limit))).stream()
                 .map(componentPartMapper::toDomain)
                 .toList();
     }
@@ -58,6 +84,24 @@ public class ComponentGatewayImpl implements ComponentGateway {
         return componentJpaRepository.findByCategory(category).stream()
                 .map(componentPartMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<ComponentPart> searchByCategory(String category, int limit) {
+        String term = sanitizeLike(category);
+        if (term.isBlank()) {
+            return List.of();
+        }
+        return componentJpaRepository.searchByCategory(term, PageRequest.of(0, Math.max(1, limit))).stream()
+                .map(componentPartMapper::toDomain)
+                .toList();
+    }
+
+    private static String sanitizeLike(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("%", "").replace("_", "").strip();
     }
 
 }

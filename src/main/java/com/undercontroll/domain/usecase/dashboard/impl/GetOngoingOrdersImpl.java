@@ -1,7 +1,8 @@
 package com.undercontroll.domain.usecase.dashboard.impl;
 
-import com.undercontroll.application.dto.DashboardMetricsResponse;
+import com.undercontroll.application.dto.dashboard.DashboardMetricsResponse;
 import com.undercontroll.domain.enums.OrderStatus;
+import com.undercontroll.domain.enums.PeriodFilter;
 import com.undercontroll.domain.enums.StatusFilter;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.usecase.dashboard.DashboardDateFilter;
@@ -19,12 +20,12 @@ public class GetOngoingOrdersImpl implements GetOngoingOrdersPort {
     private final OrderGateway orderGateway;
 
     @Override
-    public Output execute(Input input) {
-        LocalDate startDate = DashboardDateFilter.from(input.period());
+    public DashboardMetricsResponse execute(PeriodFilter period) {
+        LocalDate startDate = DashboardDateFilter.from(period);
         List<String> statuses = StatusFilter.ONGOING.getStatuses().stream()
                 .map(OrderStatus::name)
                 .toList();
         Long count = orderGateway.countOngoingOrdersFiltered(startDate, statuses);
-        return new Output(new DashboardMetricsResponse(count.doubleValue()));
+        return new DashboardMetricsResponse(count.doubleValue());
     }
 }

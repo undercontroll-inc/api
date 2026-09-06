@@ -1,24 +1,8 @@
 package com.undercontroll.domain.usecase.component;
 
+import com.undercontroll.application.dto.component.ComponentDto;
+import com.undercontroll.application.dto.component.RegisterComponentRequest;
+
 public interface RegisterComponentPort {
-    record Input(
-            String item,
-            String description,
-            String brand,
-            Double price,
-            String supplier,
-            String category,
-            Integer quantity
-    ) {}
-
-    record Output(
-            String item,
-            String description,
-            String brand,
-            Double price,
-            String supplier,
-            String category
-    ) {}
-
-    Output execute(Input input);
+    ComponentDto execute(RegisterComponentRequest request);
 }

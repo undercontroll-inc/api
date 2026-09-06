@@ -1,7 +1,7 @@
 package com.undercontroll.infrastructure.handler;
 
 import com.undercontroll.domain.exception.InvalidDemandException;
-import com.undercontroll.application.dto.ExceptionHandlerResponse;
+import com.undercontroll.application.dto.common.ExceptionHandlerResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +15,9 @@ public class DemandExceptionHandler extends GenericExceptionHandler {
     public ResponseEntity<ExceptionHandlerResponse> handleInvalidDemandException(
             InvalidDemandException ex, HttpServletRequest request
     ) {
-
-        return this.buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+        return this.buildErrorResponse(
+                HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI(), InvalidDemandException.CODE
+        );
     }
 
 }
-

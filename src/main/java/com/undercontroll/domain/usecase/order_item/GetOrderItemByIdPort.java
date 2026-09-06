@@ -1,15 +1,9 @@
 package com.undercontroll.domain.usecase.order_item;
 
-import com.undercontroll.application.dto.OrderItemDto;
+import com.undercontroll.application.dto.orderitem.OrderItemDto;
+
+import java.util.Optional;
 
 public interface GetOrderItemByIdPort {
-    record Input(
-            Integer orderItemId
-    ) {}
-
-    record Output(
-            OrderItemDto orderItem
-    ) {}
-
-    Output execute(Input input);
+    Optional<OrderItemDto> execute(Integer orderId, Integer orderItemId);
 }

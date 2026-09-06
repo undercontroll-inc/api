@@ -1,6 +1,6 @@
 package com.undercontroll.infrastructure.storage;
 
-import com.undercontroll.application.dto.GenerateUploadUrlResponse;
+import com.undercontroll.application.dto.announcement.GenerateUploadUrlResponse;
 import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
