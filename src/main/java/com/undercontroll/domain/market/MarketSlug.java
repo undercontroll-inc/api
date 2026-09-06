@@ -24,7 +24,9 @@ public final class MarketSlug {
         }
         String decomposed = Normalizer.normalize(value.toLowerCase(), Normalizer.Form.NFKD);
         String withoutAccents = COMBINING_MARKS.matcher(decomposed).replaceAll("");
-        String slug = SLUG_STRIP.matcher(withoutAccents).replaceAll("-").replaceAll("^-+|-+$", "");
+        String slug = SLUG_STRIP.matcher(withoutAccents).replaceAll("-")
+                .replaceAll("^-+", "")
+                .replaceAll("-+$", "");
         if (slug.isEmpty()) {
             return null;
         }

@@ -590,7 +590,7 @@ public final class ShopSuggestionComposer {
         if (raw == null) {
             return "";
         }
-        String trimmed = raw.strip().replaceAll("^[\"']|[\"']$", "");
+        String trimmed = raw.strip().replaceAll("^[\"']", "").replaceAll("[\"']$", "");
         if (trimmed.endsWith("..")) {
             return trimmed;
         }

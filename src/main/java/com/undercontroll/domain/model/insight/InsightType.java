@@ -32,7 +32,7 @@ public enum InsightType {
             case "MARCA" -> DESTAQUE_MARCA.name();
             case "CONCENTRACAO_CONCORRENCIA" -> ALERTA_MERCADO.name();
             case "PERFIL_TECNICO", "CATEGORIA_NAO_ATENDIDA" -> OPORTUNIDADE_REPARO.name();
-            default -> isAllowed(raw) ? raw : raw;
+            default -> raw;
         };
     }
 }
