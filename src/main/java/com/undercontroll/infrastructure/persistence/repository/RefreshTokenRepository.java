@@ -4,6 +4,7 @@ import com.undercontroll.infrastructure.persistence.entity.RefreshTokenJpaEntity
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -13,8 +14,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshTokenJpaEnt
 
     Optional<RefreshTokenJpaEntity> findByToken(String token);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE RefreshTokenJpaEntity r SET r.revoked = true WHERE r.userId = :userId AND r.revoked = false")
-    void revokeAllByUserId(Integer userId);
-}
+    void revokeAllByUserId(@Param("userId") Integer userId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE RefreshTokenJpaEntity r SET r.revoked = true WHERE r.token = :token AND r.revoked = false")
+    int revokeIfActive(@Param("token") String token);
+}

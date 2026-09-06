@@ -28,9 +28,6 @@ public class RefreshTokenAdapter implements RefreshTokenService {
     @Override
     @Transactional
     public String createRefreshToken(Integer userId, String userEmail, UserType userType) {
-        // Revoke all existing tokens for this user before issuing a new one
-        refreshTokenRepository.revokeAllByUserId(userId);
-
         byte[] randomBytes = new byte[64];
         SECURE_RANDOM.nextBytes(randomBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
@@ -49,17 +46,30 @@ public class RefreshTokenAdapter implements RefreshTokenService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public RefreshTokenData validateRefreshToken(String token) {
+    @Transactional
+    public RefreshTokenData consumeRefreshToken(String token) {
         RefreshTokenJpaEntity entity = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
 
-        if (entity.isRevoked()) {
-            throw new InvalidTokenException("Refresh token has been revoked");
-        }
-
         if (entity.getExpiresAt().isBefore(Instant.now())) {
             throw new InvalidTokenException("Refresh token has expired");
+        }
+
+        if (entity.isRevoked()) {
+            refreshTokenRepository.revokeAllByUserId(entity.getUserId());
+            throw new InvalidTokenException(
+                    "Refresh token has been reused",
+                    InvalidTokenException.REFRESH_TOKEN_REUSED
+            );
+        }
+
+        int updated = refreshTokenRepository.revokeIfActive(token);
+        if (updated == 0) {
+            refreshTokenRepository.revokeAllByUserId(entity.getUserId());
+            throw new InvalidTokenException(
+                    "Refresh token has been reused",
+                    InvalidTokenException.REFRESH_TOKEN_REUSED
+            );
         }
 
         return new RefreshTokenData(
@@ -77,4 +87,3 @@ public class RefreshTokenAdapter implements RefreshTokenService {
         refreshTokenRepository.revokeAllByUserId(userId);
     }
 }
-

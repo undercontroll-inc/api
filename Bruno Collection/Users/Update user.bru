@@ -1,0 +1,32 @@
+meta {
+  name: Update user
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/v1/api/users/{{userId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+{
+  "name": "John",
+  "lastName": "Silva",
+  "address": "Av. Paulista, 1000",
+  "cpf": "12345678900",
+  "phone": "11987654321",
+  "avatarUrl": "https://i.pravatar.cc/150?img=12",
+  "CEP": "01310200",
+  "alreadyRecurrent": true,
+  "hasWhatsApp": true,
+  "inFirstLogin": false,
+  "userType": "CUSTOMER"
+}
+}
+

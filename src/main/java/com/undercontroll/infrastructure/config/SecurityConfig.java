@@ -1,6 +1,9 @@
 package com.undercontroll.infrastructure.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.infrastructure.security.AuthContextFilter;
+import com.undercontroll.infrastructure.security.JsonAccessDeniedHandler;
+import com.undercontroll.infrastructure.security.JsonAuthenticationEntryPoint;
 import com.undercontroll.infrastructure.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,22 +20,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfFilter;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -42,26 +34,24 @@ public class SecurityConfig {
 
     private static final String ORDER_BY_ID = "/v1/api/orders/{orderId}";
     private static final String ANNOUNCEMENTS = "/v1/api/announcements/**";
-    private static final String CSRF_HEADER = "X-XSRF-TOKEN";
     private static final IpAddressMatcher LOCALHOST_IPV4 = new IpAddressMatcher("127.0.0.1");
     private static final IpAddressMatcher LOCALHOST_IPV6 = new IpAddressMatcher("::1");
 
     private final AuthContextFilter authFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${undercontroll.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
     private List<String> allowedOrigins;
 
     @Bean
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
                 )
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(new CookieCsrfTokenRepository())
-                        .csrfTokenRequestHandler(csrfRequestHandler())
-                )
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/v1/api/**", "/h2-console/**")) // NOSONAR - Bearer JWT, no cookies
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/h2-console/**").access((authentication, context) -> {
@@ -98,9 +88,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new JsonAuthenticationEntryPoint(objectMapper))
+                        .accessDeniedHandler(new JsonAccessDeniedHandler(objectMapper))
+                )
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
                 .build();
     }
 
@@ -124,38 +117,14 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of(
                 HttpHeaders.AUTHORIZATION,
                 HttpHeaders.CONTENT_TYPE,
-                HttpHeaders.ACCEPT,
-                CSRF_HEADER
+                HttpHeaders.ACCEPT
         ));
-        configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE, CSRF_HEADER));
-        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE));
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource origin = new UrlBasedCorsConfigurationSource();
         origin.registerCorsConfiguration("/**", configuration);
         return origin;
-    }
-
-    private static CsrfTokenRequestAttributeHandler csrfRequestHandler() {
-        CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
-        handler.setCsrfRequestAttributeName(null);
-        return handler;
-    }
-
-    private static OncePerRequestFilter csrfHeaderFilter() {
-        return new OncePerRequestFilter() {
-            @Override
-            protected void doFilterInternal(
-                    HttpServletRequest request,
-                    HttpServletResponse response,
-                    FilterChain filterChain
-            ) throws ServletException, IOException {
-                Object attribute = request.getAttribute(CsrfToken.class.getName());
-                if (attribute instanceof CsrfToken csrfToken) {
-                    response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
-                }
-                filterChain.doFilter(request, response);
-            }
-        };
     }
 
 }

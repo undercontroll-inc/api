@@ -1,0 +1,53 @@
+type: http_request
+model: http_request
+id: rq_uc00000003
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucAuth0001
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "name": "John",
+      "email": "john.silva@email.com",
+      "phone": "11987654321",
+      "lastName": "Silva",
+      "password": "123",
+      "address": "123 Flower Street - Sao Paulo/SP",
+      "cpf": "12345678900",
+      "avatarUrl": "https://i.pravatar.cc/150?img=12",
+      "userType": "CUSTOMER",
+      "hasWhatsApp": true,
+      "alreadyRecurrent": false,
+      "inFirstLogin": true,
+      "CEP": "01234-567"
+    }
+bodyType: application/json
+description: ""
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: ct00000003
+method: POST
+name: Create user
+sortPriority: 4000.0
+url: ${[ base_url ]}/v1/api/users
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

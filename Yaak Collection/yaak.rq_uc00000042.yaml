@@ -1,0 +1,41 @@
+type: http_request
+model: http_request
+id: rq_uc00000042
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucDash0001
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ""
+headers: []
+method: GET
+name: Get top appliances
+sortPriority: 9000.0
+url: ${[ base_url ]}/v1/api/dashboard/charts/top-appliances
+urlParameters:
+- enabled: true
+  name: period
+  value: "ALL"
+  id: p00004201
+- enabled: true
+  name: status
+  value: "ALL"
+  id: p00004202
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

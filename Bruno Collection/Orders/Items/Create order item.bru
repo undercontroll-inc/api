@@ -1,0 +1,29 @@
+meta {
+  name: Create order item
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/v1/api/orders/{{orderId}}/items
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+{
+  "brand": "Electrolux",
+  "model": "DF80",
+  "type": "Geladeira",
+  "imageUrl": "https://i.pravatar.cc/150?img=1",
+  "observation": "Reparo solicitado",
+  "volt": "220V",
+  "series": "SN12345",
+  "laborValue": 80.0
+}
+}
+

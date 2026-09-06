@@ -1,0 +1,12 @@
+meta {
+  name: Export order
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/v1/api/orders/{{orderId}}/export
+  body: none
+  auth: inherit
+}
+

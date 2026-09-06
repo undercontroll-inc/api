@@ -1,0 +1,29 @@
+meta {
+  name: Update order item
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/v1/api/orders/{{orderId}}/items/{{orderItemId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+{
+  "imageUrl": "https://i.pravatar.cc/150?img=2",
+  "labor": 90.0,
+  "observation": "Atualizado",
+  "volt": "220V",
+  "series": "SN12345",
+  "type": "Geladeira",
+  "brand": "Electrolux",
+  "model": "DF80"
+}
+}
+

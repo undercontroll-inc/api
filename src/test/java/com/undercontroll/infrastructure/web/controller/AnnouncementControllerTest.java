@@ -35,7 +35,6 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -98,7 +97,6 @@ class AnnouncementControllerTest {
         when(createAnnouncement.execute(any(CreateAnnouncementRequest.class), anyString())).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/announcements")
-                        .with(csrf())
                         .header("Authorization", "Bearer admin-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -133,7 +131,6 @@ class AnnouncementControllerTest {
         when(createAnnouncement.execute(any(CreateAnnouncementRequest.class), anyString())).thenReturn(response);
 
         mockMvc.perform(post("/v1/api/announcements")
-                        .with(csrf())
                         .header("Authorization", "Bearer admin-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -159,7 +156,6 @@ class AnnouncementControllerTest {
         );
 
         mockMvc.perform(post("/v1/api/announcements")
-                        .with(csrf())
                         .header("Authorization", "Bearer customer-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -339,7 +335,6 @@ class AnnouncementControllerTest {
         when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -378,7 +373,6 @@ class AnnouncementControllerTest {
         when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -415,7 +409,6 @@ class AnnouncementControllerTest {
         when(updateAnnouncement.execute(anyInt(), any(UpdateAnnouncementRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -440,7 +433,6 @@ class AnnouncementControllerTest {
                 .thenThrow(new InvalidAnnouncementException("Cannot upload and remove an image at the same time"));
 
         mockMvc.perform(put("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -457,7 +449,6 @@ class AnnouncementControllerTest {
         );
 
         mockMvc.perform(put("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -476,7 +467,6 @@ class AnnouncementControllerTest {
         doNothing().when(deleteAnnouncement).execute(anyInt());
 
         mockMvc.perform(delete("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("admin@example.com").roles("ADMINISTRATOR")))
                 .andExpect(status().isNoContent());
 
@@ -487,7 +477,6 @@ class AnnouncementControllerTest {
     @DisplayName("DELETE /v1/api/announcements/{announcementId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToDeleteAnnouncement() throws Exception {
         mockMvc.perform(delete("/v1/api/announcements/1")
-                        .with(csrf())
                         .with(user("customer@example.com").roles("SCOPE_CUSTOMER")))
                 .andExpect(status().isForbidden());
 

@@ -1,0 +1,16 @@
+meta {
+  name: Get orders by status
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/v1/api/dashboard/charts/orders-by-status
+  body: none
+  auth: inherit
+}
+
+params:query {
+  period: ALL
+}
+

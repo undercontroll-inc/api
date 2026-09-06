@@ -1,0 +1,15 @@
+type: workspace
+model: workspace
+id: wk_ucCoreApi1
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+authentication: {}
+authenticationType: null
+description: Undercontroll Core API
+headers: []
+name: Yaak Collection
+settingValidateCertificates: true
+settingFollowRedirects: true
+settingRequestTimeout: 0
+settingSendCookies: true
+settingStoreCookies: true

@@ -1,0 +1,45 @@
+type: http_request
+model: http_request
+id: rq_uc00000010
+createdAt: 2026-09-06T22:00:00.000000
+updatedAt: 2026-09-06T22:00:00.000000
+workspaceId: wk_ucCoreApi1
+folderId: fl_ucOrders01
+authentication: {}
+authenticationType: null
+body: {}
+bodyType: null
+description: ""
+headers: []
+method: GET
+name: List orders
+sortPriority: 2000.0
+url: ${[ base_url ]}/v1/api/orders
+urlParameters:
+- enabled: false
+  name: userId
+  value: "${[ user_id ]}"
+  id: p00001001
+- enabled: true
+  name: page
+  value: "0"
+  id: p00001002
+- enabled: true
+  name: size
+  value: "10"
+  id: p00001003
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0

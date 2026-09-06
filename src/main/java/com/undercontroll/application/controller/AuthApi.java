@@ -25,5 +25,5 @@ public interface AuthApi {
     @Operation(summary = "Exchange a refresh token for a new access token")
     @PostApiResponses
     @PostMapping("/refresh")
-    ResponseEntity<RefreshTokenResponse> refresh(@RequestBody RefreshTokenRequest request);
+    ResponseEntity<RefreshTokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request);
 }

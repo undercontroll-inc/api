@@ -1,6 +1,7 @@
 package com.undercontroll.infrastructure.security;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.infrastructure.service.TokenServce;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,7 +25,6 @@ public class AuthContextFilter extends OncePerRequestFilter {
 
     private final TokenServce tokenServce;
 
-
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -40,25 +40,36 @@ public class AuthContextFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        DecodedJWT decoded = tokenServce.validateToken(token);
+        try {
+            DecodedJWT decoded = tokenServce.validateToken(token);
+            if (decoded == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-        String userId = decoded.getSubject();
-        String role = decoded.getClaim("roles").asString();
+            String userId = decoded.getSubject();
+            String role = decoded.getClaim("roles").asString();
 
-        if (role == null || role.isBlank()) {
-            log.warn("No roles claim found in token for user: {}", userId);
-            filterChain.doFilter(request, response);
-            return;
+            if (role == null || role.isBlank()) {
+                log.warn("No roles claim found in token for user: {}", userId);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            log.debug("User id: {} resolved with roles: {}", userId, role);
+
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(userId, null, List.of(authority));
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        } catch (InvalidTokenException e) {
+            SecurityContextHolder.clearContext();
+            request.setAttribute(JsonAuthenticationEntryPoint.FAILURE_CODE_ATTRIBUTE, e.getErrorCode());
+            request.setAttribute(JsonAuthenticationEntryPoint.FAILURE_MESSAGE_ATTRIBUTE, e.getMessage());
+            log.debug("JWT rejected for {}: {}", request.getRequestURI(), e.getMessage());
         }
-
-        log.info("User id: {} resolved with roles: {}", userId, role);
-
-        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(userId, null, List.of(authority));
-
-        SecurityContextHolder.getContext().setAuthentication(auth);
 
         filterChain.doFilter(request, response);
     }

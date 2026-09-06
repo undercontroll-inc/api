@@ -16,8 +16,7 @@ public interface RefreshTokenService {
 
     String createRefreshToken(Integer userId, String userEmail, UserType userType);
 
-    RefreshTokenData validateRefreshToken(String token);
+    RefreshTokenData consumeRefreshToken(String token);
 
     void revokeAllUserTokens(Integer userId);
 }
-
