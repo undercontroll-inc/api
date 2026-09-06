@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -44,14 +43,9 @@ public class S3StorageAdapter implements StorageService {
     @Override
     public GenerateUploadUrlResponse generatePresignedUploadUrl(String bucket, String key, Integer expirationMinutes) {
         try (S3Presigner presigner = buildPresigner()) {
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build();
-
             PutObjectPresignRequest presignedRequest = PutObjectPresignRequest.builder()
                     .signatureDuration(Duration.ofMinutes(expirationMinutes))
-                    .putObjectRequest(putObjectRequest)
+                    .putObjectRequest(builder -> builder.bucket(bucket).key(key))
                     .build();
 
             var presignedPutRequest = presigner.presignPutObject(presignedRequest);
@@ -75,14 +69,9 @@ public class S3StorageAdapter implements StorageService {
     @Override
     public String generateReadPresignedUrl(String bucket, String key, long expirationMinutes) {
         try (S3Presigner presigner = buildPresigner()) {
-            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build();
-
             GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
                     .signatureDuration(Duration.ofMinutes(expirationMinutes))
-                    .getObjectRequest(getObjectRequest)
+                    .getObjectRequest(builder -> builder.bucket(bucket).key(key))
                     .build();
 
             final var result = presigner.presignGetObject(getObjectPresignRequest);

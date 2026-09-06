@@ -9,7 +9,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "undercontroll.insights")
 public class InsightsProperties {
 
-    private String provider = "none";
+    private static final String PROVIDER_NONE = "none";
+    private static final String PROVIDER_GEMINI = "gemini";
+    private static final String PROVIDER_OPENAI = "openai";
+
+    private String provider = PROVIDER_NONE;
     private String promptVersion = "4";
     private String cron = "0 0 4 1 * *";
     private String openaiModel = "gpt-4.1-mini";
@@ -19,16 +23,16 @@ public class InsightsProperties {
 
     public String resolvedProvider() {
         if (provider == null) {
-            return "none";
+            return PROVIDER_NONE;
         }
         return switch (provider.toLowerCase().trim()) {
-            case "gemini", "google-genai", "google_genai" -> "gemini";
-            case "openai" -> "openai";
-            default -> "none";
+            case PROVIDER_GEMINI, "google-genai", "google_genai" -> PROVIDER_GEMINI;
+            case PROVIDER_OPENAI -> PROVIDER_OPENAI;
+            default -> PROVIDER_NONE;
         };
     }
 
     public String activeModel() {
-        return "gemini".equals(resolvedProvider()) ? geminiModel : openaiModel;
+        return PROVIDER_GEMINI.equals(resolvedProvider()) ? geminiModel : openaiModel;
     }
 }

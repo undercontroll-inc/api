@@ -27,13 +27,15 @@ public class InsightPayloadValidator {
             "vendeu\\s+\\d+|unidades vendidas|l[ií]der de vendas em unidades|volume de vendas",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
-
-    private static final Pattern TECHNICAL_JARGON = Pattern.compile(
-            "\\bbuckets?\\b|bucket[_\\s-]?key|bucket[_\\s-]?atual|bucket[_\\s-]?comparacao"
-                    + "|domain_id|vw_market_|get_repair_catalog|get_match_coverage|get_market_snapshot"
-                    + "|\\b\\d{4}-\\d{2}\\b",
+    private static final Pattern BUCKET_JARGON = Pattern.compile(
+            "\\bbuckets?\\b|bucket[_\\s-]?key|bucket[_\\s-]?atual|bucket[_\\s-]?comparacao",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
+    private static final Pattern SCHEMA_JARGON = Pattern.compile(
+            "domain_id|vw_market_|get_repair_catalog|get_match_coverage|get_market_snapshot",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+    private static final Pattern ISO_MONTH = Pattern.compile("\\b\\d{4}-\\d{2}\\b");
 
     private final int maxInsights;
 
@@ -42,6 +44,26 @@ public class InsightPayloadValidator {
     }
 
     public void validate(InsightsPayload payload, InsightPromptContext context, EvidenceIndex evidence) {
+        validateHeader(payload, context);
+        Set<String> types = new HashSet<>();
+        for (InsightsPayload.InsightItem insight : payload.insights()) {
+            if (insight.tipo() != null && !types.add(insight.tipo())) {
+                throw new IllegalArgumentException("Duplicate insight tipo: " + insight.tipo());
+            }
+            validateInsight(insight, evidence);
+        }
+        for (String limitation : payload.limitacoes()) {
+            validateReadableLanguage(limitation);
+        }
+        if (payload.produtosEmAlta() != null) {
+            for (InsightsPayload.ProdutoEmAlta product : payload.produtosEmAlta()) {
+                validateSalesLanguage(product.nome());
+                validateReadableLanguage(product.nome());
+            }
+        }
+    }
+
+    private void validateHeader(InsightsPayload payload, InsightPromptContext context) {
         if (payload == null) {
             throw new IllegalArgumentException("Insights payload is required");
         }
@@ -61,22 +83,6 @@ public class InsightPayloadValidator {
         InsightsPayload.CoberturaMatch expected = InsightsPayload.CoberturaMatch.from(context.coverage());
         if (payload.coberturaMatch() == null || !payload.coberturaMatch().equals(expected)) {
             throw new IllegalArgumentException("cobertura_match must copy get_match_coverage");
-        }
-        Set<String> types = new HashSet<>();
-        for (InsightsPayload.InsightItem insight : payload.insights()) {
-            if (insight.tipo() != null && !types.add(insight.tipo())) {
-                throw new IllegalArgumentException("Duplicate insight tipo: " + insight.tipo());
-            }
-            validateInsight(insight, evidence);
-        }
-        for (String limitation : payload.limitacoes()) {
-            validateReadableLanguage(limitation);
-        }
-        if (payload.produtosEmAlta() != null) {
-            for (InsightsPayload.ProdutoEmAlta product : payload.produtosEmAlta()) {
-                validateSalesLanguage(product.nome());
-                validateReadableLanguage(product.nome());
-            }
         }
     }
 
@@ -100,15 +106,20 @@ public class InsightPayloadValidator {
         validateSalesLanguage(insight.acaoSugerida());
         validateReadableLanguage(insight.texto());
         validateReadableLanguage(insight.acaoSugerida());
+        validateEvidence(insight, evidence);
+    }
+
+    private void validateEvidence(InsightsPayload.InsightItem insight, EvidenceIndex evidence) {
         if (insight.evidencia() == null || insight.evidencia().campos() == null || insight.evidencia().campos().isEmpty()) {
             throw new IllegalArgumentException("Insight evidence is required");
         }
         for (Map.Entry<String, Object> field : insight.evidencia().campos().entrySet()) {
-            if (!evidence.contains(field.getValue()) && !evidence.contains(field.getKey())) {
-                if (field.getValue() != null && !evidence.contains(String.valueOf(field.getValue()))) {
-                    throw new IllegalArgumentException(
-                            "Evidence field is not traceable: " + field.getKey() + "=" + field.getValue());
-                }
+            if (!evidence.contains(field.getValue())
+                    && !evidence.contains(field.getKey())
+                    && field.getValue() != null
+                    && !evidence.contains(String.valueOf(field.getValue()))) {
+                throw new IllegalArgumentException(
+                        "Evidence field is not traceable: " + field.getKey() + "=" + field.getValue());
             }
         }
     }
@@ -126,7 +137,9 @@ public class InsightPayloadValidator {
         if (text == null) {
             return;
         }
-        if (TECHNICAL_JARGON.matcher(text).find()) {
+        if (BUCKET_JARGON.matcher(text).find()
+                || SCHEMA_JARGON.matcher(text).find()
+                || ISO_MONTH.matcher(text).find()) {
             throw new IllegalArgumentException("Insight uses internal jargon (write mês de agosto de 2026, not 2026-08 or bucket)");
         }
     }

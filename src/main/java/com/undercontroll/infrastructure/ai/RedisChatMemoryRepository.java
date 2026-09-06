@@ -9,14 +9,14 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-@Component("anaChatMemoryRepository")
+@Repository("anaChatMemoryRepository")
 public class RedisChatMemoryRepository implements ChatMemoryRepository {
 
     static final String KEY_PREFIX = "ana:memory:";

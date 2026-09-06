@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 public abstract class GenericExceptionHandler {
@@ -37,7 +38,7 @@ public abstract class GenericExceptionHandler {
                 status.getReasonPhrase(),
                 message,
                 path,
-                LocalDateTime.now(),
+                LocalDateTime.now(ZoneOffset.UTC),
                 code,
                 errors);
 
