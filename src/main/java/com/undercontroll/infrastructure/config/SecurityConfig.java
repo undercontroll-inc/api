@@ -18,12 +18,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -33,6 +42,7 @@ public class SecurityConfig {
 
     private static final String ORDER_BY_ID = "/v1/api/orders/{orderId}";
     private static final String ANNOUNCEMENTS = "/v1/api/announcements/**";
+    private static final String CSRF_HEADER = "X-XSRF-TOKEN";
     private static final IpAddressMatcher LOCALHOST_IPV4 = new IpAddressMatcher("127.0.0.1");
     private static final IpAddressMatcher LOCALHOST_IPV6 = new IpAddressMatcher("::1");
 
@@ -49,7 +59,7 @@ public class SecurityConfig {
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
                 )
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(new CookieCsrfTokenRepository())
                         .csrfTokenRequestHandler(csrfRequestHandler())
                 )
                 .cors(Customizer.withDefaults())
@@ -90,6 +100,7 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
                 .build();
     }
 
@@ -114,9 +125,9 @@ public class SecurityConfig {
                 HttpHeaders.AUTHORIZATION,
                 HttpHeaders.CONTENT_TYPE,
                 HttpHeaders.ACCEPT,
-                "X-XSRF-TOKEN"
+                CSRF_HEADER
         ));
-        configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE));
+        configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE, CSRF_HEADER));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource origin = new UrlBasedCorsConfigurationSource();
@@ -128,6 +139,23 @@ public class SecurityConfig {
         CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
         handler.setCsrfRequestAttributeName(null);
         return handler;
+    }
+
+    private static OncePerRequestFilter csrfHeaderFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(
+                    HttpServletRequest request,
+                    HttpServletResponse response,
+                    FilterChain filterChain
+            ) throws ServletException, IOException {
+                Object attribute = request.getAttribute(CsrfToken.class.getName());
+                if (attribute instanceof CsrfToken csrfToken) {
+                    response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
+                }
+                filterChain.doFilter(request, response);
+            }
+        };
     }
 
 }
