@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +34,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort {
+
+    private static final String UNKNOWN_ERROR = "unknown error";
 
     private final MarketViewGateway marketViewGateway;
     private final MarketInsightGateway marketInsightGateway;
@@ -68,7 +71,7 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
         String comparison = marketViewGateway.findPreviousBucketKey(bucketKey).orElse(null);
         List<MarketCategorySummary> categories = marketViewGateway.findCategorySummary(bucketKey);
         List<RepairCatalogItem> catalog = RepairCatalogFactory.fromRows(
-                orderGateway.getRepairCatalog(LocalDate.now().minusDays(insightsProperties.getRepairCatalogDays())),
+                orderGateway.getRepairCatalog(LocalDate.now(ZoneOffset.UTC).minusDays(insightsProperties.getRepairCatalogDays())),
                 categories
         );
         List<MarketProductCurrent> products = marketViewGateway.findAllCurrentProducts();
@@ -96,7 +99,7 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
         persistFailure(existing.orElse(null), bucketKey, comparison, lastError);
         return InsightGenerationResult.failed(
                 bucketKey,
-                lastError == null ? "unknown error" : lastError.getMessage()
+                lastError == null ? UNKNOWN_ERROR : lastError.getMessage()
         );
     }
 
@@ -110,7 +113,7 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
         insight.setStatus(InsightGenerationStatus.SUCCESS);
         insight.setPayload(objectMapper.writeValueAsString(payload));
         insight.setErrorMessage(null);
-        insight.setGeneratedAt(LocalDateTime.now());
+        insight.setGeneratedAt(LocalDateTime.now(ZoneOffset.UTC));
         marketInsightGateway.save(insight);
     }
 
@@ -122,8 +125,8 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
     ) {
         MarketMonthlyInsight insight = base(existing, bucketKey, comparison);
         insight.setStatus(InsightGenerationStatus.FAILED);
-        insight.setErrorMessage(error == null ? "unknown error" : truncate(error.getMessage()));
-        insight.setGeneratedAt(LocalDateTime.now());
+        insight.setErrorMessage(error == null ? UNKNOWN_ERROR : truncate(error.getMessage()));
+        insight.setGeneratedAt(LocalDateTime.now(ZoneOffset.UTC));
         marketInsightGateway.save(insight);
     }
 
@@ -139,7 +142,7 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
 
     private static String truncate(String message) {
         if (message == null) {
-            return "unknown error";
+            return UNKNOWN_ERROR;
         }
         return message.length() > 1000 ? message.substring(0, 1000) : message;
     }

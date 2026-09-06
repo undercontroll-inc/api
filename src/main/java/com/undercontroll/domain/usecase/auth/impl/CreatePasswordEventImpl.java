@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Service
@@ -24,7 +25,7 @@ public class CreatePasswordEventImpl implements CreatePasswordEventPort {
         String value = request.userPhone();
 
         if (request.type().equals(PasswordEventType.RESET)) {
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
             LocalDateTime lastWeek = now.minusDays(7);
 
             boolean alreadyChangedThePasswordInTheLastWeek = !passwordEventGateway

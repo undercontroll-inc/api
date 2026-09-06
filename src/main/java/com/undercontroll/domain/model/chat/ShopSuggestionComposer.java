@@ -44,6 +44,8 @@ public final class ShopSuggestionComposer {
     private static final int ORDER_DETAIL_LIMIT = 8;
     private static final Pattern NON_LETTERS = Pattern.compile("[^a-z0-9\\s]");
     private static final Pattern MENTIONED_ORDER = Pattern.compile("\\bpedidos?\\s+(\\d+)\\b");
+    private static final String LOOKED_AT_SUFFIX = " já foi olhado?";
+    private static final String PART_PREFIX = "A peça ";
     private static final Set<String> STOPWORDS = Set.of(
             "o", "a", "os", "as", "de", "do", "da", "dos", "das", "no", "na", "nos", "nas",
             "um", "uma", "uns", "umas", "e", "ou", "que", "qual", "quais", "como", "tem",
@@ -95,23 +97,12 @@ public final class ShopSuggestionComposer {
         int size = Math.max(1, count);
         List<String> selected = new ArrayList<>();
         for (String candidate : candidates(snapshot)) {
-            if (candidate == null || candidate.isBlank()) {
-                continue;
-            }
-            if (similarToAny(candidate, selected)) {
-                continue;
-            }
-            selected.add(candidate);
-            if (selected.size() == size) {
+            if (addIfUnique(selected, candidate, size)) {
                 return List.copyOf(selected);
             }
         }
         for (String generic : GENERIC) {
-            if (similarToAny(generic, selected)) {
-                continue;
-            }
-            selected.add(generic);
-            if (selected.size() == size) {
+            if (addIfUnique(selected, generic, size)) {
                 break;
             }
         }
@@ -216,41 +207,66 @@ public final class ShopSuggestionComposer {
         int size = Math.max(1, count);
         List<String> selected = new ArrayList<>();
         List<String> blocked = avoid == null ? List.of() : avoid;
-        boolean requireFact = hasFacts(snapshot);
-        if (generated != null) {
-            for (String raw : generated) {
-                String question = clean(raw);
-                if (!acceptable(question, snapshot, requireFact)) {
-                    continue;
-                }
-                if (similarToAny(question, selected) || similarToAny(question, blocked)) {
-                    continue;
-                }
-                selected.add(question);
-                if (selected.size() == size) {
-                    return List.copyOf(selected);
-                }
-            }
+        if (addGenerated(generated, snapshot, selected, blocked, size)
+                || addUnblocked(groundedQuestions(snapshot, size), selected, blocked, size)) {
+            return List.copyOf(selected);
         }
-        for (String question : groundedQuestions(snapshot, size)) {
-            if (similarToAny(question, selected) || similarToAny(question, blocked)) {
-                continue;
-            }
-            selected.add(question);
-            if (selected.size() == size) {
-                return List.copyOf(selected);
-            }
-        }
-        for (String question : GENERIC) {
-            if (similarToAny(question, selected)) {
-                continue;
-            }
-            selected.add(question);
-            if (selected.size() == size) {
-                break;
-            }
-        }
+        addUnblocked(GENERIC, selected, List.of(), size);
         return List.copyOf(selected);
+    }
+
+    private static boolean addGenerated(
+            List<String> generated,
+            ShopSnapshot snapshot,
+            List<String> selected,
+            List<String> blocked,
+            int size
+    ) {
+        if (generated == null) {
+            return false;
+        }
+        boolean requireFact = hasFacts(snapshot);
+        for (String raw : generated) {
+            String question = clean(raw);
+            if (acceptable(question, snapshot, requireFact)
+                    && addIfUnique(selected, question, blocked, size)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean addUnblocked(
+            List<String> questions,
+            List<String> selected,
+            List<String> blocked,
+            int size
+    ) {
+        for (String question : questions) {
+            if (addIfUnique(selected, question, blocked, size)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean addIfUnique(List<String> selected, String candidate, int size) {
+        return addIfUnique(selected, candidate, List.of(), size);
+    }
+
+    private static boolean addIfUnique(
+            List<String> selected,
+            String candidate,
+            List<String> blocked,
+            int size
+    ) {
+        if (candidate != null
+                && !candidate.isBlank()
+                && !similarToAny(candidate, selected)
+                && !similarToAny(candidate, blocked)) {
+            selected.add(candidate);
+        }
+        return selected.size() >= size;
     }
 
     private static List<String> candidates(ShopSnapshot snapshot) {
@@ -285,18 +301,18 @@ public final class ShopSuggestionComposer {
         boolean pending = "ainda não olhado".equals(repair.statusLabel());
         if (who != null && appliance != null) {
             if (pending) {
-                return "O " + appliance + " de " + who + " já foi olhado?";
+                return "O " + appliance + " de " + who + LOOKED_AT_SUFFIX;
             }
             return "Como está o conserto do " + appliance + " de " + who + "?";
         }
         if (who != null) {
             return pending
-                    ? "O conserto de " + who + " já foi olhado?"
+                    ? "O conserto de " + who + LOOKED_AT_SUFFIX
                     : "Como está o conserto de " + who + "?";
         }
         if (appliance != null) {
             return pending
-                    ? "O " + appliance + " já foi olhado?"
+                    ? "O " + appliance + LOOKED_AT_SUFFIX
                     : "Como está o conserto do " + appliance + "?";
         }
         if (repair.orderId() != null) {
@@ -307,19 +323,19 @@ public final class ShopSuggestionComposer {
 
     private static String stockQuestion(StockFact part) {
         if (part.quantity() <= 0) {
-            return "A peça " + part.name() + " acabou no estoque?";
+            return PART_PREFIX + part.name() + " acabou no estoque?";
         }
         if (part.quantity() <= 2) {
-            return "A peça " + part.name() + " está acabando?";
+            return PART_PREFIX + part.name() + " está acabando?";
         }
         return "Ainda tem " + part.name() + " no estoque?";
     }
 
     private static String demandQuestion(DemandFact demand) {
         if (demand.orderId() != null) {
-            return "A peça " + demand.partName() + " do pedido " + demand.orderId() + " já chegou?";
+            return PART_PREFIX + demand.partName() + " do pedido " + demand.orderId() + " já chegou?";
         }
-        return "A peça " + demand.partName() + " pedida já chegou?";
+        return PART_PREFIX + demand.partName() + " pedida já chegou?";
     }
 
     private static String pickupQuestion(RepairFact repair) {

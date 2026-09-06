@@ -51,16 +51,18 @@ public class CreateUserImpl implements CreateUserPort {
                 throw new InvalidUserException("CPF is already in use");
             }
 
-            String password = request.userType().equals(UserType.ADMINISTRATOR)
-                    ? passwordEncoder.encode(request.password())
-                    : passwordEncoder.encode(createPasswordEventPort.execute(
-                            new CreatePasswordEventRequest(
-                                    PasswordEventType.CREATE,
-                                    null,
-                                    request.phone(),
-                                    null
-                            )
-                    ).getValue());
+            String password = passwordEncoder.encode(
+                    request.userType().equals(UserType.ADMINISTRATOR)
+                            ? request.password()
+                            : createPasswordEventPort.execute(
+                                    new CreatePasswordEventRequest(
+                                            PasswordEventType.CREATE,
+                                            null,
+                                            request.phone(),
+                                            null
+                                    )
+                            ).getValue()
+            );
 
             User user = User.builder()
                     .name(request.name())

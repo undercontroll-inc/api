@@ -23,10 +23,8 @@ public class GetOrderItemsImpl implements GetOrderItemsPort {
         Order order = orderGateway.findDetailById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
-        List<OrderItemDto> items = order.getOrderItems() == null
+        return order.getOrderItems() == null
                 ? List.of()
                 : order.getOrderItems().stream().map(orderItemDtoMapper::toDto).toList();
-
-        return items;
     }
 }

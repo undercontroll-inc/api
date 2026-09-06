@@ -9,15 +9,17 @@ import java.util.Set;
 
 public final class ApplianceTypeDomainMap {
 
+    private static final String DOMAIN_MICROWAVES = "MLB-MICROWAVES";
+    private static final String DOMAIN_AIR_FRYERS = "MLB-AIR_FRYERS";
     private static final Map<String, String> TYPE_TO_DOMAIN = new LinkedHashMap<>();
 
     static {
-        put("microondas", "MLB-MICROWAVES");
-        put("micro-ondas", "MLB-MICROWAVES");
-        put("microwave", "MLB-MICROWAVES");
-        put("airfryer", "MLB-AIR_FRYERS");
-        put("air-fryer", "MLB-AIR_FRYERS");
-        put("fritadeira", "MLB-AIR_FRYERS");
+        put("microondas", DOMAIN_MICROWAVES);
+        put("micro-ondas", DOMAIN_MICROWAVES);
+        put("microwave", DOMAIN_MICROWAVES);
+        put("airfryer", DOMAIN_AIR_FRYERS);
+        put("air-fryer", DOMAIN_AIR_FRYERS);
+        put("fritadeira", DOMAIN_AIR_FRYERS);
         put("liquidificador", "MLB-BLENDERS");
         put("blender", "MLB-BLENDERS");
         put("cafeteira", "MLB-COFFEE_MAKERS");

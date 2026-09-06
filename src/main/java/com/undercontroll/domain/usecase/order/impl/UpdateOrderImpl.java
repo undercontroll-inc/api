@@ -23,6 +23,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -48,74 +49,85 @@ public class UpdateOrderImpl implements UpdateOrderPort {
             Order order = orderGateway.findById(orderId)
                     .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
 
-            if (request.status() != null) {
-                order.setStatus(request.status());
-                log.info("Order {} status updated to {}", orderId, request.status());
-                if (request.status() == OrderStatus.COMPLETED) {
-                    metricsService.incrementOrderCompleted();
-                }
-            }
-
+            applyStatus(order, orderId, request.status());
             if (request.serviceDescription() != null) {
                 order.setDescription(request.serviceDescription());
             }
-
-            if (request.appliances() != null) {
-                for (UpdateOrderItemDto dto : request.appliances()) {
-                    if (dto.id() != null) {
-                        updateOrderItemPort.execute(orderId, dto.id(), new UpdateOrderItemRequest(
-                                null,
-                                dto.laborValue(),
-                                dto.customerNote(),
-                                dto.volt(),
-                                dto.series(),
-                                dto.type(),
-                                dto.brand(),
-                                dto.model(),
-                                null
-                        ));
-                    } else {
-                        OrderItem novo = OrderItem.builder()
-                                .type(dto.type())
-                                .brand(dto.brand())
-                                .model(dto.model())
-                                .volt(dto.volt())
-                                .series(dto.series())
-                                .observation(dto.customerNote())
-                                .laborValue(dto.laborValue() != null ? dto.laborValue() : 0.0)
-                                .build();
-                        order.addOrderItem(novo);
-                    }
-                }
-            }
-
-            if (request.parts() != null) {
-                for (PartDto p : request.parts()) {
-                    if (p.componentId() == null) continue;
-                    Optional<Demand> existing = demandGateway.findByOrderAndComponentId(order, p.componentId());
-                    boolean keep = p.quantity() != null && p.quantity() > 0;
-                    if (existing.isPresent()) {
-                        if (keep) {
-                            Demand d = existing.get();
-                            d.setQuantity(p.quantity().longValue());
-                            demandGateway.save(d);
-                        } else {
-                            demandGateway.deleteById(existing.get().getId());
-                        }
-                    } else if (keep) {
-                        createDemandPort.execute(order.getId(), new CreateDemandRequest(
-                                p.componentId(),
-                                p.quantity().longValue()
-                        ));
-                    }
-                }
-            }
+            applyAppliances(order, orderId, request.appliances());
+            applyParts(order, request.parts());
 
             orderGateway.save(order);
             log.info("Order {} updated successfully", orderId);
         } catch (Exception e) {
             metricsService.incrementOrderUpdateFailed();
             throw e;
+        }
+    }
+
+    private void applyStatus(Order order, Integer orderId, OrderStatus status) {
+        if (status == null) {
+            return;
+        }
+        order.setStatus(status);
+        log.info("Order {} status updated to {}", orderId, status);
+        if (status == OrderStatus.COMPLETED) {
+            metricsService.incrementOrderCompleted();
+        }
+    }
+
+    private void applyAppliances(Order order, Integer orderId, List<UpdateOrderItemDto> appliances) {
+        if (appliances == null) {
+            return;
+        }
+        for (UpdateOrderItemDto dto : appliances) {
+            if (dto.id() != null) {
+                updateOrderItemPort.execute(orderId, dto.id(), new UpdateOrderItemRequest(
+                        null,
+                        dto.laborValue(),
+                        dto.customerNote(),
+                        dto.volt(),
+                        dto.series(),
+                        dto.type(),
+                        dto.brand(),
+                        dto.model(),
+                        null
+                ));
+            } else {
+                order.addOrderItem(OrderItem.builder()
+                        .type(dto.type())
+                        .brand(dto.brand())
+                        .model(dto.model())
+                        .volt(dto.volt())
+                        .series(dto.series())
+                        .observation(dto.customerNote())
+                        .laborValue(dto.laborValue() != null ? dto.laborValue() : 0.0)
+                        .build());
+            }
+        }
+    }
+
+    private void applyParts(Order order, List<PartDto> parts) {
+        if (parts == null) {
+            return;
+        }
+        for (PartDto part : parts) {
+            if (part.componentId() == null) {
+                continue;
+            }
+            Optional<Demand> existing = demandGateway.findByOrderAndComponentId(order, part.componentId());
+            boolean keep = part.quantity() != null && part.quantity() > 0;
+            if (existing.isPresent() && keep) {
+                Demand demand = existing.get();
+                demand.setQuantity(part.quantity().longValue());
+                demandGateway.save(demand);
+            } else if (existing.isPresent()) {
+                demandGateway.deleteById(existing.get().getId());
+            } else if (keep) {
+                createDemandPort.execute(order.getId(), new CreateDemandRequest(
+                        part.componentId(),
+                        part.quantity().longValue()
+                ));
+            }
         }
     }
 
