@@ -203,12 +203,13 @@ class AnnouncementImageUseCaseTest {
     void shouldRejectUploadAndRemoveImageTogether() {
         UpdateAnnouncementImpl useCase = new UpdateAnnouncementImpl(mock(AnnouncementGateway.class), mock(StorageService.class));
 
-        assertThatThrownBy(() -> useCase.execute(1, new UpdateAnnouncementRequest(
+        UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
                 null,
                 null,
                 new AnnouncementImageUploadDto("cover.png", "image/png", 1024L),
                 true,
                 null
-        ))).isInstanceOf(InvalidAnnouncementException.class);
+        );
+        assertThatThrownBy(() -> useCase.execute(1, request)).isInstanceOf(InvalidAnnouncementException.class);
     }
 }

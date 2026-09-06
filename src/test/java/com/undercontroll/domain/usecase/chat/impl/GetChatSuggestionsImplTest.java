@@ -30,7 +30,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -105,7 +104,7 @@ class GetChatSuggestionsImplTest {
         verify(orderGateway, never()).findAll();
         verify(componentGateway, never()).findAll();
         verify(demandGateway, never()).findAll();
-        verify(anaSuggestionStore).save(eq(3), eq(response.suggestions()));
+        verify(anaSuggestionStore).save(3, response.suggestions());
     }
 
     @Test
@@ -118,7 +117,7 @@ class GetChatSuggestionsImplTest {
 
         assertTrue(response.suggestions().getFirst().contains("Maria")
                 || String.join(" ", response.suggestions()).contains("Maria"));
-        verify(anaSuggestionStore).save(eq(3), eq(response.suggestions()));
+        verify(anaSuggestionStore).save(3, response.suggestions());
     }
 
     @Test

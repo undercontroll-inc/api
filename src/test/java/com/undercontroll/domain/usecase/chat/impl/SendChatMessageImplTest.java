@@ -107,8 +107,8 @@ class SendChatMessageImplTest {
     void missingLlm() {
         when(anaChatGateway.getIfAvailable()).thenReturn(null);
 
-        assertThrows(AnaUnavailableException.class, () -> useCase.execute(
-                new SendChatMessageRequest("Oi")));
+        SendChatMessageRequest request = new SendChatMessageRequest("Oi");
+        assertThrows(AnaUnavailableException.class, () -> useCase.execute(request));
     }
 
     @Test

@@ -17,7 +17,6 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +41,7 @@ class RedisChatMemoryRepositoryTest {
 
     @Test
     @DisplayName("round-trips user and assistant messages")
-    void roundTrip() throws Exception {
+    void roundTrip() {
         when(values.get("ana:memory:12")).thenReturn(
                 "[{\"type\":\"USER\",\"text\":\"Oi\"},{\"type\":\"ASSISTANT\",\"text\":\"Olá\"}]"
         );
@@ -53,15 +52,15 @@ class RedisChatMemoryRepositoryTest {
 
         repository.saveAll("12", List.of(new UserMessage("Oi"), new AssistantMessage("Olá")));
         verify(values).set(
-                eq("ana:memory:12"),
-                eq("[{\"type\":\"USER\",\"text\":\"Oi\"},{\"type\":\"ASSISTANT\",\"text\":\"Olá\"}]"),
-                eq(Duration.ofHours(24))
+                "ana:memory:12",
+                "[{\"type\":\"USER\",\"text\":\"Oi\"},{\"type\":\"ASSISTANT\",\"text\":\"Olá\"}]",
+                Duration.ofHours(24)
         );
     }
 
     @Test
     @DisplayName("does not persist system briefing messages")
-    void skipsSystem() throws Exception {
+    void skipsSystem() {
         when(values.get("ana:memory:12")).thenReturn(
                 "[{\"type\":\"SYSTEM\",\"text\":\"briefing\"},{\"type\":\"USER\",\"text\":\"Oi\"}]"
         );
@@ -76,9 +75,9 @@ class RedisChatMemoryRepositoryTest {
                 new AssistantMessage("Olá")
         ));
         verify(values).set(
-                eq("ana:memory:12"),
-                eq("[{\"type\":\"USER\",\"text\":\"Oi\"},{\"type\":\"ASSISTANT\",\"text\":\"Olá\"}]"),
-                eq(Duration.ofHours(24))
+                "ana:memory:12",
+                "[{\"type\":\"USER\",\"text\":\"Oi\"},{\"type\":\"ASSISTANT\",\"text\":\"Olá\"}]",
+                Duration.ofHours(24)
         );
     }
 }

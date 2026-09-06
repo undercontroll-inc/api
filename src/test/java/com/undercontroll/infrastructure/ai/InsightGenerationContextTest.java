@@ -18,8 +18,9 @@ class InsightGenerationContextTest {
     @Test
     @DisplayName("throws when tools are used outside a generation run")
     void requiresActiveContext() {
+        ToolContext empty = new ToolContext(Map.of());
         assertThrows(IllegalStateException.class, () -> InsightGenerationContext.require(null));
-        assertThrows(IllegalStateException.class, () -> InsightGenerationContext.require(new ToolContext(Map.of())));
+        assertThrows(IllegalStateException.class, () -> InsightGenerationContext.require(empty));
     }
 
     @Test
