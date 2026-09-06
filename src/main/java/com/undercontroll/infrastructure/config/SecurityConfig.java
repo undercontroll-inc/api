@@ -3,6 +3,7 @@ package com.undercontroll.infrastructure.config;
 import com.undercontroll.infrastructure.security.AuthContextFilter;
 import com.undercontroll.infrastructure.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -10,7 +11,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,7 +22,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -30,11 +29,15 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final String ORDER_BY_ID = "/v1/api/orders/{orderId}";
     private static final IpAddressMatcher LOCALHOST_IPV4 = new IpAddressMatcher("127.0.0.1");
     private static final IpAddressMatcher LOCALHOST_IPV6 = new IpAddressMatcher("::1");
 
     private final AuthContextFilter authFilter;
     private final RateLimitFilter rateLimitFilter;
+
+    @Value("${undercontroll.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private List<String> allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,10 +45,16 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
                 )
-                .csrf(CsrfConfigurer<HttpSecurity>::disable)
+                .csrf(csrf -> csrf.ignoringRequestMatchers(
+                        "/v1/api/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/actuator/**",
+                        "/h2-console/**"
+                ))
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                            // H2 console: localhost only (dev profile)
                             .requestMatchers("/h2-console/**").access((authentication, context) -> {
                             String remoteAddr = context.getRequest().getRemoteAddr();
                             boolean isLocalhost = LOCALHOST_IPV4.matches(remoteAddr)
@@ -54,20 +63,12 @@ public class SecurityConfig {
                         })
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/**", "/actuator/health/**", "/actuator/prometheus").permitAll()
-                        
-                        // Public auth endpoints
                         .requestMatchers(HttpMethod.POST, "/v1/api/auth/login", "/v1/api/auth/google", "/v1/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/api/users").permitAll()
-
-                        // Public announcement endpoints
                         .requestMatchers(HttpMethod.GET, "/v1/api/announcements/**", "/v1/api/announcements/latest").permitAll()
-                        
-                        // Customer and Admin shared endpoints
                         .requestMatchers(HttpMethod.POST, "/v1/api/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/v1/api/users/{userId}", "/v1/api/users/{userId}/password").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.GET, "/v1/api/orders", "/v1/api/orders/{orderId}", "/v1/api/orders/{orderId}/export").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        
-                        // Admin-only endpoints
+                        .requestMatchers(HttpMethod.GET, "/v1/api/orders", ORDER_BY_ID, ORDER_BY_ID + "/export").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.POST, "/v1/api/announcements").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PUT, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/announcements/**").hasRole("ADMINISTRATOR")
@@ -77,14 +78,12 @@ public class SecurityConfig {
                         .requestMatchers("/v1/api/chats/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/users").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/users/**").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/v1/api/orders/{orderId}").hasRole("ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/v1/api/orders/{orderId}").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, ORDER_BY_ID).hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, ORDER_BY_ID).hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/orders/*/items/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/orders/*/demands/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/components/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/service-orders/**").hasRole("ADMINISTRATOR")
-                        
-                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -103,26 +102,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        configuration.applyPermitDefaultValues();
-        configuration.setAllowedMethods(
-                Arrays.asList(
-                        HttpMethod.GET.name(),
-                        HttpMethod.POST.name(),
-                        HttpMethod.PUT.name(),
-                        HttpMethod.DELETE.name(),
-                        HttpMethod.OPTIONS.name(),
-                        HttpMethod.PATCH.name(),
-                        HttpMethod.HEAD.name(),
-                        HttpMethod.TRACE.name()
-                )
-        );
-
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(List.of(
+                HttpMethod.GET.name(),
+                HttpMethod.POST.name(),
+                HttpMethod.PUT.name(),
+                HttpMethod.PATCH.name(),
+                HttpMethod.DELETE.name(),
+                HttpMethod.OPTIONS.name()
+        ));
+        configuration.setAllowedHeaders(List.of(
+                HttpHeaders.AUTHORIZATION,
+                HttpHeaders.CONTENT_TYPE,
+                HttpHeaders.ACCEPT
+        ));
         configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource origin = new UrlBasedCorsConfigurationSource();
         origin.registerCorsConfiguration("/**", configuration);
-
         return origin;
     }
 
