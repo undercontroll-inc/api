@@ -24,9 +24,7 @@ public final class MarketSlug {
         }
         String decomposed = Normalizer.normalize(value.toLowerCase(), Normalizer.Form.NFKD);
         String withoutAccents = COMBINING_MARKS.matcher(decomposed).replaceAll("");
-        String slug = SLUG_STRIP.matcher(withoutAccents).replaceAll("-")
-                .replaceAll("^-+", "")
-                .replaceAll("-+$", "");
+        String slug = stripEdgeDashes(SLUG_STRIP.matcher(withoutAccents).replaceAll("-"));
         if (slug.isEmpty()) {
             return null;
         }
@@ -41,5 +39,17 @@ public final class MarketSlug {
         }
         String key = brandSlug + ":" + modelSlug;
         return key.length() > MAX_PRODUCT_KEY_LENGTH ? key.substring(0, MAX_PRODUCT_KEY_LENGTH) : key;
+    }
+
+    private static String stripEdgeDashes(String slug) {
+        int start = 0;
+        int end = slug.length();
+        while (start < end && slug.charAt(start) == '-') {
+            start++;
+        }
+        while (end > start && slug.charAt(end - 1) == '-') {
+            end--;
+        }
+        return slug.substring(start, end);
     }
 }
