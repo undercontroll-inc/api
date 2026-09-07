@@ -30,17 +30,21 @@ public class MarketInsightTools {
 
     private final MarketViewGateway marketViewGateway;
 
-    @Tool(description = "Cobertura do cruzamento entre produtos do Mercado Livre e o catálogo de consertos. Copie estes números; não recalcule.")
-    public InsightsPayload.CoberturaMatch getMatchCoverage(ToolContext toolContext) {
-        InsightsPayload.CoberturaMatch coverage = InsightsPayload.CoberturaMatch.from(
-                InsightGenerationContext.require(toolContext).coverage());
-        InsightGenerationContext.require(toolContext).evidence().ingest(coverage);
+    public InsightGrounding grounding(InsightGenerationContext.State state) {
+        InsightsPayload.CoberturaMatch coverage = matchCoverage(state);
+        List<RepairCatalogLine> catalog = repairCatalog(state);
+        List<RepairMixItem> mix = repairMix(state);
+        MarketSnapshot snapshot = marketSnapshot(state);
+        return new InsightGrounding(coverage, catalog, mix, InsightGrounding.Snapshot.from(snapshot));
+    }
+
+    InsightsPayload.CoberturaMatch matchCoverage(InsightGenerationContext.State state) {
+        InsightsPayload.CoberturaMatch coverage = InsightsPayload.CoberturaMatch.from(state.coverage());
+        state.evidence().ingest(coverage);
         return coverage;
     }
 
-    @Tool(description = "Catálogo de consertos dos últimos 90 dias: até 25 linhas (marca, modelo, tipo CRM, domain_id, volume), ordenadas por volume.")
-    public List<RepairCatalogLine> getRepairCatalog(ToolContext toolContext) {
-        InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
+    List<RepairCatalogLine> repairCatalog(InsightGenerationContext.State state) {
         List<RepairCatalogLine> rows = state.catalog().stream()
                 .sorted(Comparator.comparingLong(RepairCatalogItem::volume).reversed())
                 .limit(REPAIR_CATALOG_LIMIT)
@@ -56,9 +60,7 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Mix do catálogo de consertos agregado por domain_id e tipo CRM: volume e share percentual. Cruze com list_category_summary.")
-    public List<RepairMixItem> getRepairMix(ToolContext toolContext) {
-        InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
+    List<RepairMixItem> repairMix(InsightGenerationContext.State state) {
         List<RepairCatalogItem> catalog = state.catalog();
         long total = catalog.stream().mapToLong(RepairCatalogItem::volume).sum();
         record MixKey(String domainId, String type) {
@@ -80,9 +82,7 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Snapshot do mercado no bucket corrente: totais, top 5 marcas e top 5 categorias. Mesmos KPIs do GET /analytics.")
-    public MarketSnapshot getMarketSnapshot(ToolContext toolContext) {
-        InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
+    MarketSnapshot marketSnapshot(InsightGenerationContext.State state) {
         String bucketKey = state.bucketKey();
         List<MarketSnapshot.BrandLine> brands = marketViewGateway.findTopBrands(bucketKey, SNAPSHOT_TOP_N).stream()
                 .map(row -> new MarketSnapshot.BrandLine(
@@ -113,7 +113,10 @@ public class MarketInsightTools {
         return snapshot;
     }
 
-    @Tool(description = "Altas e quedas de preço por categoria. Já filtrado: histórico presente e product_count >= 2.")
+    @Tool(name = "list_price_movements", description = """
+            Altas e quedas de preço por categoria. Já filtrado: histórico presente e product_count >= 2.
+            Use para ALERTA_PRECO. Não use para cobrir catálogo, cobertura ou snapshot — isso já está no contexto.
+            """)
     public List<MarketPriceMovement> listPriceMovements(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketPriceMovement> rows = marketViewGateway.findPriceMovements(state.bucketKey());
@@ -121,7 +124,10 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Oportunidade de estoque: preço caindo com volume de ofertas subindo.")
+    @Tool(name = "list_stock_opportunities", description = """
+            Oportunidade de estoque: preço caindo com volume de ofertas subindo.
+            Use para OPORTUNIDADE_ESTOQUE.
+            """)
     public List<MarketPriceMovement> listStockOpportunities(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketPriceMovement> rows = marketViewGateway.findStockOpportunities(state.bucketKey());
@@ -129,7 +135,10 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Produtos em alta com confidence HIGH. Não descreva subida para produtos LOW.")
+    @Tool(name = "list_rising_products", description = """
+            Produtos em alta com confidence HIGH. Não descreva subida para produtos LOW.
+            Use para TENDENCIA_ALTA.
+            """)
     public List<MarketRisingProduct> listRisingProducts(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketRisingProduct> rows = marketViewGateway.findRisingProductsHighConfidence();
@@ -137,7 +146,10 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Resumo de marcas no bucket corrente: presença no ranking, rising_count e faixa de preço.")
+    @Tool(name = "list_brand_momentum", description = """
+            Resumo de marcas no mês corrente: presença no ranking, rising_count e faixa de preço.
+            Use para DESTAQUE_MARCA.
+            """)
     public List<MarketBrandSummary> listBrandMomentum(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketBrandSummary> rows = marketViewGateway.findBrandMomentum(state.bucketKey());
@@ -145,7 +157,10 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Resumo por tipo de aparelho (domain_id) no bucket corrente.")
+    @Tool(name = "list_category_summary", description = """
+            Resumo por tipo de aparelho (domain_id) no mês corrente. Mais completo que o top 5 do snapshot.
+            Use para ALERTA_MERCADO ou para cruzar mix de consertos com o mercado.
+            """)
     public List<MarketCategorySummary> listCategorySummary(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketCategorySummary> rows = marketViewGateway.findCategorySummary(state.bucketKey());
@@ -153,7 +168,10 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Dispersão de preço de produtos PRODUCT com offer_count >= 3.")
+    @Tool(name = "list_price_dispersion", description = """
+            Dispersão de preço de produtos PRODUCT com offer_count >= 3.
+            Use para ALERTA_MERCADO quando o ponto for faixa de preço, não ranking.
+            """)
     public List<MarketProductCurrent> listPriceDispersion(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketProductCurrent> rows = marketViewGateway.findPriceDispersion();
@@ -161,7 +179,10 @@ public class MarketInsightTools {
         return rows;
     }
 
-    @Tool(description = "Categorias em alta que o cliente ainda não atende (sem match de domain_id no catálogo de consertos).")
+    @Tool(name = "list_uncovered_categories", description = """
+            Categorias em alta que a assistência ainda não atende (sem match de domain_id no catálogo).
+            Use para OPORTUNIDADE_REPARO. O catálogo já está no contexto.
+            """)
     public List<MarketCategorySummary> listUncoveredCategories(ToolContext toolContext) {
         InsightGenerationContext.State state = InsightGenerationContext.require(toolContext);
         List<MarketCategorySummary> rows = marketViewGateway.findUncoveredCategories(

@@ -135,4 +135,29 @@ class SendChatMessageImplTest {
         assertTrue(briefing.getValue().contains("Maria"));
         assertTrue(briefing.getValue().contains("liquidificador"));
     }
+
+    @Test
+    @DisplayName("inlines an order cited in a previous turn of the conversation")
+    void inlinesCitedOrderFromHistory() {
+        when(anaChatGateway.getIfAvailable()).thenReturn(gateway);
+        when(currentUserIdPort.require()).thenReturn(7);
+        when(shopSnapshotLoader.load()).thenReturn(ShopSnapshot.empty());
+        when(gateway.recentConversationTexts("7")).thenReturn(List.of("Me fala do pedido 12"));
+        when(orderGateway.findDetailById(12)).thenReturn(Optional.of(
+                Order.builder()
+                        .id(12)
+                        .status(OrderStatus.PENDING)
+                        .user(User.builder().name("Maria").lastName("Souza").build())
+                        .orderItems(List.of(OrderItem.builder().type("liquidificador").brand("Mondial").build()))
+                        .build()
+        ));
+        ArgumentCaptor<String> briefing = ArgumentCaptor.forClass(String.class);
+        when(gateway.reply(eq("7"), eq("Quanto custa?"), briefing.capture()))
+                .thenReturn("O conserto da Maria ainda não tem valor.");
+
+        useCase.execute(new SendChatMessageRequest("Quanto custa?"));
+
+        assertTrue(briefing.getValue().contains("pedido 12"));
+        assertTrue(briefing.getValue().contains("Maria"));
+    }
 }

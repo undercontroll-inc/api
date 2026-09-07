@@ -11,6 +11,7 @@ import com.undercontroll.domain.model.OrderItem;
 import com.undercontroll.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,8 +27,14 @@ public class AnaShopTools {
     private final ComponentGateway componentGateway;
     private final AnnouncementGateway announcementGateway;
 
-    @Tool(description = "Detalhe de um conserto/pedido pelo id, com itens e peças pedidas.")
-    public OrderDetail getOrder(Integer orderId) {
+    @Tool(name = "get_order", description = """
+            Detalhe de um conserto/pedido pelo id, com itens, peças pedidas, total e loja.
+            Use só se o resumo da oficina não tiver esse pedido, ou se o dono pedir um pedido específico.
+            Não use para listar consertos em andamento — isso já está no resumo.
+            """)
+    public OrderDetail getOrder(
+            @ToolParam(description = "Id numérico do conserto/pedido") Integer orderId
+    ) {
         try {
             return orderGateway.findDetailById(orderId)
                     .map(AnaShopTools::toOrderDetail)
@@ -37,8 +44,15 @@ public class AnaShopTools {
         }
     }
 
-    @Tool(description = "Busca peças do estoque por nome ou categoria. Se ambos vazios, lista as de menor estoque.")
-    public List<PartLine> searchComponents(String name, String category) {
+    @Tool(name = "search_components", description = """
+            Busca peças do estoque por nome ou categoria. Se ambos vazios, lista as de menor estoque.
+            Use quando o dono perguntar de uma peça ou categoria que o resumo não cobre.
+            O resumo já traz as peças com pouco estoque; não chame só para repetir isso.
+            """)
+    public List<PartLine> searchComponents(
+            @ToolParam(required = false, description = "Nome da peça; vazio se for buscar por categoria ou listar estoque baixo") String name,
+            @ToolParam(required = false, description = "Categoria da peça; vazio se o nome já foi informado") String category
+    ) {
         List<ComponentPart> parts;
         if (name != null && !name.isBlank()) {
             parts = componentGateway.searchByName(name, LIMIT);
@@ -50,7 +64,10 @@ public class AnaShopTools {
         return parts.stream().limit(LIMIT).map(AnaShopTools::toPartLine).toList();
     }
 
-    @Tool(description = "Último aviso do aplicativo.")
+    @Tool(name = "get_last_announcement", description = """
+            Conteúdo completo do último aviso do aplicativo (título, texto e tipo).
+            O resumo só tem o título. Use se pedirem o que o aviso diz.
+            """)
     public AnnouncementLine getLastAnnouncement() {
         return announcementGateway.findLastAnnouncement()
                 .map(AnaShopTools::toAnnouncementLine)

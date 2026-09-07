@@ -29,7 +29,7 @@ class InsightsPropertiesAndEnvTest {
         assertEquals("none", properties.resolvedProvider());
         InsightsProperties defaults = new InsightsProperties();
         assertEquals(7, defaults.getMaxInsights());
-        assertEquals("4", defaults.getPromptVersion());
+        assertEquals("5", defaults.getPromptVersion());
     }
 
     @Test

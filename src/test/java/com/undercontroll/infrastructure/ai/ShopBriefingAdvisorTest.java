@@ -10,10 +10,12 @@ import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,10 +35,13 @@ class ShopBriefingAdvisorTest {
     private ChatClientResponse response;
 
     @Test
-    @DisplayName("appends the shop briefing as a system message")
+    @DisplayName("inserts the shop briefing after existing system messages")
     void appendsBriefing() {
         ChatClientRequest request = new ChatClientRequest(
-                new Prompt(new UserMessage("Quais consertos estão abertos?")),
+                new Prompt(List.of(
+                        new SystemMessage("persona"),
+                        new UserMessage("Quais consertos estão abertos?")
+                )),
                 Map.of(ShopBriefingAdvisor.PARAM, "pedido 12, cliente Maria")
         );
         ArgumentCaptor<ChatClientRequest> forwarded = ArgumentCaptor.forClass(ChatClientRequest.class);
@@ -45,9 +50,12 @@ class ShopBriefingAdvisorTest {
         ShopBriefingAdvisor advisor = new ShopBriefingAdvisor();
         assertSame(response, advisor.adviseCall(request, chain));
 
-        Message last = forwarded.getValue().prompt().getInstructions().getLast();
-        assertInstanceOf(SystemMessage.class, last);
-        assertTrue(last.getText().contains("Maria"));
+        List<Message> messages = forwarded.getValue().prompt().getInstructions();
+        assertEquals(3, messages.size());
+        assertEquals("persona", messages.get(0).getText());
+        assertInstanceOf(SystemMessage.class, messages.get(1));
+        assertEquals(MessageType.SYSTEM, messages.get(1).getMessageType());
+        assertTrue(messages.get(1).getText().contains("Maria"));
         assertEquals("Quais consertos estão abertos?", forwarded.getValue().prompt().getUserMessage().getText());
     }
 

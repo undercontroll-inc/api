@@ -27,7 +27,8 @@ class InsightsUserPromptTemplateTest {
                         "mesComparacao", "mês de julho de 2026",
                         "bucketAtual", "2026-08",
                         "bucketComparacao", "2026-07",
-                        "maxInsights", 7
+                        "maxInsights", 7,
+                        "grounding", "{\"cobertura_match\":{\"nivel_1_exato\":2}}"
                 ))
                 .renderer(StTemplateRenderer.builder()
                         .startDelimiterToken('<')
@@ -40,9 +41,12 @@ class InsightsUserPromptTemplateTest {
         assertTrue(rendered.contains("mês de julho de 2026"));
         assertTrue(rendered.contains("periodo.bucket_atual = 2026-08"));
         assertTrue(rendered.contains("7"));
-        assertTrue(rendered.contains("get_repair_catalog"));
+        assertTrue(rendered.contains("CONTEXTO_OBRIGATORIO"));
+        assertTrue(rendered.contains("\"nivel_1_exato\":2"));
+        assertFalse(rendered.contains("get_repair_catalog"));
         assertFalse(rendered.contains("<mesAtual>"));
         assertFalse(rendered.contains("<bucketAtual>"));
+        assertFalse(rendered.contains("<grounding>"));
         assertFalse(rendered.contains("do mês 2026-08"));
         assertFalse(rendered.contains("do bucket"));
     }

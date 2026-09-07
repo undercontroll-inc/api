@@ -42,13 +42,15 @@ public class AnaChatMemoryAdvisor implements CallAdvisor {
         ordered.addAll(history);
         if (userMessage != null) {
             ordered.add(userMessage);
-            chatMemory.add(conversationId, userMessage);
         }
 
         ChatClientRequest next = request.mutate()
                 .prompt(new Prompt(ordered, request.prompt().getOptions()))
                 .build();
         ChatClientResponse response = chain.nextCall(next);
+        if (userMessage != null) {
+            chatMemory.add(conversationId, userMessage);
+        }
         if (response.chatResponse() != null) {
             List<Message> assistant = response.chatResponse()
                     .getResults()

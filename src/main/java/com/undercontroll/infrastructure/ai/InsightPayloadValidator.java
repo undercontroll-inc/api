@@ -32,7 +32,10 @@ public class InsightPayloadValidator {
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
     private static final Pattern SCHEMA_JARGON = Pattern.compile(
-            "domain_id|vw_market_|get_repair_catalog|get_match_coverage|get_market_snapshot",
+            "domain_id|vw_market_|get_repair_catalog|get_match_coverage|get_market_snapshot"
+                    + "|list_price_movements|list_stock_opportunities|list_rising_products"
+                    + "|list_brand_momentum|list_category_summary|list_price_dispersion"
+                    + "|list_uncovered_categories|CONTEXTO_OBRIGATORIO",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
     private static final Pattern ISO_MONTH = Pattern.compile("\\b\\d{4}-\\d{2}\\b");
@@ -82,7 +85,7 @@ public class InsightPayloadValidator {
         }
         InsightsPayload.CoberturaMatch expected = InsightsPayload.CoberturaMatch.from(context.coverage());
         if (payload.coberturaMatch() == null || !payload.coberturaMatch().equals(expected)) {
-            throw new IllegalArgumentException("cobertura_match must copy get_match_coverage");
+            throw new IllegalArgumentException("cobertura_match must copy the grounded coverage");
         }
     }
 

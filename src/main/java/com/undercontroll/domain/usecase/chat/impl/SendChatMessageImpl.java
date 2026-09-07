@@ -32,13 +32,23 @@ public class SendChatMessageImpl implements SendChatMessagePort {
             throw new AnaUnavailableException();
         }
         Integer userId = currentUserIdPort.require();
+        String conversationId = String.valueOf(userId);
         String briefing = ShopSuggestionComposer.chatBriefing(shopSnapshotLoader.load());
-        List<Order> cited = ShopSuggestionComposer.mentionedOrderIds(request.content()).stream()
+        String scope = conversationScope(request.content(), llm.recentConversationTexts(conversationId));
+        List<Order> cited = ShopSuggestionComposer.mentionedOrderIds(scope).stream()
                 .map(orderGateway::findDetailById)
                 .flatMap(Optional::stream)
                 .toList();
         briefing = ShopSuggestionComposer.appendOrderDetails(briefing, cited);
-        String content = llm.reply(String.valueOf(userId), request.content(), briefing);
+        String content = llm.reply(conversationId, request.content(), briefing);
         return new SendChatMessageResponse(content);
+    }
+
+    private static String conversationScope(String current, List<String> history) {
+        String message = current == null ? "" : current;
+        if (history == null || history.isEmpty()) {
+            return message;
+        }
+        return message + "\n" + String.join("\n", history);
     }
 }

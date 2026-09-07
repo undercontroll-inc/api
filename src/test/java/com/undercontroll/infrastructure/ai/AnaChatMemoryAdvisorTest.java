@@ -22,8 +22,10 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,5 +70,20 @@ class AnaChatMemoryAdvisorTest {
         assertEquals("ok", messages.get(2).getText());
         assertEquals("agora", messages.get(3).getText());
         verify(chatMemory).add(eq("7"), any(UserMessage.class));
+    }
+
+    @Test
+    @DisplayName("does not persist the user message when the model call fails")
+    void skipsMemoryWhenCallFails() {
+        when(chatMemory.get("7")).thenReturn(List.of());
+        ChatClientRequest request = new ChatClientRequest(
+                new Prompt(List.of(new UserMessage("agora"))),
+                Map.of(ChatMemory.CONVERSATION_ID, "7")
+        );
+        when(chain.nextCall(any())).thenThrow(new IllegalStateException("model down"));
+
+        AnaChatMemoryAdvisor advisor = new AnaChatMemoryAdvisor(chatMemory);
+        assertThrows(IllegalStateException.class, () -> advisor.adviseCall(request, chain));
+        verify(chatMemory, never()).add(any(), any(Message.class));
     }
 }
