@@ -75,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/v1/api/analytics/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/insights/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/v1/api/chats/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/v1/api/transcriptions").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/v1/api/users").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/v1/api/users/**").hasRole("ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, ORDER_BY_ID).hasRole("ADMINISTRATOR")
