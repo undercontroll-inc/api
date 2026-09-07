@@ -124,7 +124,7 @@ rate-limit:
 undercontroll:
   insights:
     provider: ${INSIGHTS_PROVIDER:none}
-    prompt-version: "4"
+    prompt-version: "5"
     cron: "0 0 4 1 * *"
     openai-model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
     gemini-model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}

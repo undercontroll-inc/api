@@ -72,9 +72,10 @@ public class AnaChatClientConfig {
     @Bean
     AnaChatGateway anaChatGateway(
             @Qualifier("anaChatClient") ChatClient anaChatClient,
+            @Qualifier("anaChatMemory") ChatMemory anaChatMemory,
             AnaWebSearchTool anaWebSearchTool,
             AnaShopTools anaShopTools
     ) {
-        return new SpringAiAnaChatAdapter(anaChatClient, anaWebSearchTool, anaShopTools);
+        return new SpringAiAnaChatAdapter(anaChatClient, anaChatMemory, anaWebSearchTool, anaShopTools);
     }
 }

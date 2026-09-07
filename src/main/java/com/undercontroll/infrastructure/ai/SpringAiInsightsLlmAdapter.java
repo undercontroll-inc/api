@@ -1,5 +1,6 @@
 package com.undercontroll.infrastructure.ai;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.domain.gateway.InsightsLlmGateway;
 import com.undercontroll.domain.model.insight.InsightMonthLabel;
@@ -19,19 +20,22 @@ public class SpringAiInsightsLlmAdapter implements InsightsLlmGateway {
     private final InsightPayloadValidator insightPayloadValidator;
     private final InsightsProperties insightsProperties;
     private final Resource userPrompt;
+    private final MarketInsightTools marketInsightTools;
 
     public SpringAiInsightsLlmAdapter(
             ChatClient insightsChatClient,
             ObjectMapper objectMapper,
             InsightPayloadValidator insightPayloadValidator,
             InsightsProperties insightsProperties,
-            Resource userPrompt
+            Resource userPrompt,
+            MarketInsightTools marketInsightTools
     ) {
         this.insightsChatClient = insightsChatClient;
         this.objectMapper = objectMapper;
         this.insightPayloadValidator = insightPayloadValidator;
         this.insightsProperties = insightsProperties;
         this.userPrompt = userPrompt;
+        this.marketInsightTools = marketInsightTools;
     }
 
     @Override
@@ -64,12 +68,21 @@ public class SpringAiInsightsLlmAdapter implements InsightsLlmGateway {
                         .param("mesComparacao", InsightMonthLabel.of(comparisonKey))
                         .param("bucketAtual", context.bucketKey())
                         .param("bucketComparacao", comparisonKey == null ? "null" : comparisonKey)
-                        .param("maxInsights", insightsProperties.getMaxInsights()))
+                        .param("maxInsights", insightsProperties.getMaxInsights())
+                        .param("grounding", groundingJson(state)))
                 .call()
                 .entity(InsightsPayload.class);
         if (payload == null) {
             throw new IllegalStateException("LLM returned an empty insights payload");
         }
         return payload;
+    }
+
+    private String groundingJson(InsightGenerationContext.State state) {
+        try {
+            return objectMapper.writeValueAsString(marketInsightTools.grounding(state));
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to serialize insight grounding", ex);
+        }
     }
 }

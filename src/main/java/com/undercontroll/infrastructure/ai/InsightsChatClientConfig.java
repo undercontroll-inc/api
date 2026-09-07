@@ -46,6 +46,7 @@ public class InsightsChatClientConfig {
             ObjectMapper objectMapper,
             InsightPayloadValidator insightPayloadValidator,
             InsightsProperties insightsProperties,
+            MarketInsightTools marketInsightTools,
             @Value("classpath:prompts/insights-user-prompt.txt") Resource userPrompt
     ) {
         return new SpringAiInsightsLlmAdapter(
@@ -53,7 +54,8 @@ public class InsightsChatClientConfig {
                 objectMapper,
                 insightPayloadValidator,
                 insightsProperties,
-                userPrompt
+                userPrompt,
+                marketInsightTools
         );
     }
 

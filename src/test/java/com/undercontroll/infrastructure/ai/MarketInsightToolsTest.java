@@ -4,11 +4,9 @@ import com.undercontroll.domain.gateway.MarketViewGateway;
 import com.undercontroll.domain.model.insight.InsightPromptContext;
 import com.undercontroll.domain.model.market.MarketBrandSummary;
 import com.undercontroll.domain.model.market.MarketCategorySummary;
-import com.undercontroll.domain.model.market.MarketSnapshot;
 import com.undercontroll.domain.model.market.MatchCoverage;
 import com.undercontroll.domain.model.market.RepairCatalogItem;
 import com.undercontroll.domain.model.market.RepairCatalogLine;
-import com.undercontroll.domain.model.market.RepairMixItem;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,13 +14,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ai.chat.model.ToolContext;
+import org.springframework.ai.tool.annotation.Tool;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +37,7 @@ class MarketInsightToolsTest {
     private MarketInsightTools tools;
 
     @Test
-    @DisplayName("tools read the generation context and ingest evidence")
+    @DisplayName("grounding loads required facts and tools stay for optional deepening")
     void usesContext() {
         InsightPromptContext prompt = new InsightPromptContext(
                 "2026-08",
@@ -49,21 +51,8 @@ class MarketInsightToolsTest {
                 )
         );
         EvidenceIndex evidence = new EvidenceIndex(new com.fasterxml.jackson.databind.ObjectMapper());
-        ToolContext toolContext = toolContext(prompt, evidence);
-
-        var coverage = tools.getMatchCoverage(toolContext);
-        assertEquals(2, coverage.nivel1Exato());
-
-        List<RepairCatalogLine> catalog = tools.getRepairCatalog(toolContext);
-        assertEquals(3, catalog.size());
-        assertEquals("Electrolux", catalog.get(0).brand());
-        assertEquals(12, catalog.get(0).volume());
-
-        List<RepairMixItem> mix = tools.getRepairMix(toolContext);
-        assertEquals(2, mix.size());
-        assertEquals("MLB-MICROWAVES", mix.get(0).domainId());
-        assertEquals(17, mix.get(0).volume());
-        assertEquals(68.0, mix.get(0).sharePct());
+        InsightGenerationContext.State state = InsightGenerationContext.State.from(prompt, evidence);
+        ToolContext toolContext = new ToolContext(Map.of(InsightGenerationContext.KEY, state));
 
         when(marketViewGateway.countCurrentProducts()).thenReturn(20L);
         when(marketViewGateway.countDistinctBrands()).thenReturn(8L);
@@ -77,11 +66,22 @@ class MarketInsightToolsTest {
                         "MLB-MICROWAVES", "2026-08", "Micro-ondas", 12L, 4L, 70.0, 90.0,
                         599.0, 400.0, 800.0, 6.0, 1.0, 4.0, 2L, 1L, 2L)
         ));
-        MarketSnapshot snapshot = tools.getMarketSnapshot(toolContext);
-        assertEquals(20L, snapshot.totalProducts());
-        assertEquals(8L, snapshot.brandsAnalyzed());
-        assertEquals("Electrolux", snapshot.topBrands().get(0).name());
-        assertEquals("Micro-ondas", snapshot.topCategories().get(0).name());
+
+        InsightGrounding grounding = tools.grounding(state);
+        assertEquals(2, grounding.coberturaMatch().nivel1Exato());
+        assertEquals(3, grounding.repairCatalog().size());
+        assertEquals("Electrolux", grounding.repairCatalog().get(0).brand());
+        assertEquals(12, grounding.repairCatalog().get(0).volume());
+        assertEquals(2, grounding.repairMix().size());
+        assertEquals("MLB-MICROWAVES", grounding.repairMix().get(0).domainId());
+        assertEquals(17, grounding.repairMix().get(0).volume());
+        assertEquals(68.0, grounding.repairMix().get(0).sharePct());
+        assertEquals(20L, grounding.marketSnapshot().totalProducts());
+        assertEquals(8L, grounding.marketSnapshot().brandsAnalyzed());
+        assertEquals("Electrolux", grounding.marketSnapshot().topBrands().get(0).name());
+        assertEquals("Micro-ondas", grounding.marketSnapshot().topCategories().get(0).name());
+        assertTrue(evidence.contains(12));
+        assertTrue(evidence.contains(20));
 
         when(marketViewGateway.findPriceMovements("2026-08")).thenReturn(List.of());
         when(marketViewGateway.findStockOpportunities("2026-08")).thenReturn(List.of());
@@ -100,7 +100,7 @@ class MarketInsightToolsTest {
     }
 
     @Test
-    @DisplayName("repair catalog tool caps at 25 rows by volume")
+    @DisplayName("repair catalog grounding caps at 25 rows by volume")
     void capsRepairCatalog() {
         List<RepairCatalogItem> items = new ArrayList<>();
         for (int i = 1; i <= 30; i++) {
@@ -109,19 +109,30 @@ class MarketInsightToolsTest {
         }
         InsightPromptContext prompt = new InsightPromptContext(
                 "2026-08", "2026-07", MatchCoverage.empty(), Set.of(), items);
-        ToolContext toolContext = toolContext(
+        InsightGenerationContext.State state = InsightGenerationContext.State.from(
                 prompt, new EvidenceIndex(new com.fasterxml.jackson.databind.ObjectMapper()));
 
-        List<RepairCatalogLine> catalog = tools.getRepairCatalog(toolContext);
+        List<RepairCatalogLine> catalog = tools.repairCatalog(state);
         assertEquals(25, catalog.size());
         assertEquals(30, catalog.get(0).volume());
         assertEquals(6, catalog.get(24).volume());
     }
 
-    private static ToolContext toolContext(InsightPromptContext prompt, EvidenceIndex evidence) {
-        return new ToolContext(Map.of(
-                InsightGenerationContext.KEY,
-                InsightGenerationContext.State.from(prompt, evidence)
-        ));
+    @Test
+    @DisplayName("registers only optional deepening tools")
+    void optionalToolsOnly() {
+        Set<String> names = Arrays.stream(MarketInsightTools.class.getDeclaredMethods())
+                .filter(method -> method.isAnnotationPresent(Tool.class))
+                .map(method -> method.getAnnotation(Tool.class).name())
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(
+                "list_price_movements",
+                "list_stock_opportunities",
+                "list_rising_products",
+                "list_brand_momentum",
+                "list_category_summary",
+                "list_price_dispersion",
+                "list_uncovered_categories"
+        ), names);
     }
 }

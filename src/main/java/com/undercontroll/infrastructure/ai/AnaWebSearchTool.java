@@ -1,6 +1,7 @@
 package com.undercontroll.infrastructure.ai;
 
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -23,8 +24,14 @@ public class AnaWebSearchTool {
                 .build();
     }
 
-    @Tool(description = "Busca na internet (manuais, recall, dica de eletrodoméstico). Não use para dados da oficina.")
-    public String searchWeb(String query) {
+    @Tool(name = "search_web", description = """
+            Busca na internet (manuais, recall, dica de eletrodoméstico).
+            Não use para dados da oficina (pedidos, estoque, avisos) — isso está no resumo ou nas outras ferramentas.
+            Só depois de olhar a oficina.
+            """)
+    public String searchWeb(
+            @ToolParam(description = "Consulta em português sobre o aparelho (manual, recall ou dica)") String query
+    ) {
         if (query == null || query.isBlank()) {
             return "Busca vazia.";
         }
