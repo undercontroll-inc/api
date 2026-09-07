@@ -41,10 +41,11 @@ class OpenAiAudioTranscriptionAdapterTest {
     void blankOutput() {
         when(transcriptionModel.call(any(AudioTranscriptionPrompt.class)))
                 .thenReturn(new AudioTranscriptionResponse(new AudioTranscription(" ")));
+        OpenAiAudioTranscriptionAdapter adapter = new OpenAiAudioTranscriptionAdapter(transcriptionModel);
+        ByteArrayResource audio = new ByteArrayResource("bytes".getBytes());
 
         assertThrows(TranscriptionUnavailableException.class, () ->
-                new OpenAiAudioTranscriptionAdapter(transcriptionModel)
-                        .transcribe(new ByteArrayResource("bytes".getBytes()), "audio/webm", "note.webm"));
+                adapter.transcribe(audio, "audio/webm", "note.webm"));
     }
 
     @Test
@@ -52,9 +53,10 @@ class OpenAiAudioTranscriptionAdapterTest {
     void wrapsErrors() {
         when(transcriptionModel.call(any(AudioTranscriptionPrompt.class)))
                 .thenThrow(new IllegalStateException("whisper down"));
+        OpenAiAudioTranscriptionAdapter adapter = new OpenAiAudioTranscriptionAdapter(transcriptionModel);
+        ByteArrayResource audio = new ByteArrayResource("bytes".getBytes());
 
         assertThrows(TranscriptionUnavailableException.class, () ->
-                new OpenAiAudioTranscriptionAdapter(transcriptionModel)
-                        .transcribe(new ByteArrayResource("bytes".getBytes()), "audio/webm", "note.webm"));
+                adapter.transcribe(audio, "audio/webm", "note.webm"));
     }
 }

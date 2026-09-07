@@ -17,7 +17,6 @@ import org.springframework.core.io.ByteArrayResource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +36,7 @@ class TranscribeAudioImplTest {
     void transcribes() {
         ByteArrayResource audio = audio("note.webm");
         when(audioTranscriptionGateway.getIfAvailable()).thenReturn(gateway);
-        when(gateway.transcribe(eq(audio), eq("audio/webm"), eq("note.webm")))
+        when(gateway.transcribe(audio, "audio/webm", "note.webm"))
                 .thenReturn("  Geladeira não gela  ");
 
         TranscribeAudioResponse response = useCase.execute(new TranscribeAudioPort.Input(
@@ -51,26 +50,31 @@ class TranscribeAudioImplTest {
     @DisplayName("returns 503 when no transcription gateway is configured")
     void unavailableWithoutGateway() {
         when(audioTranscriptionGateway.getIfAvailable()).thenReturn(null);
+        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+                audio("note.webm"), "audio/webm", "note.webm", 12
+        );
 
-        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(
-                new TranscribeAudioPort.Input(audio("note.webm"), "audio/webm", "note.webm", 12)
-        ));
+        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(input));
     }
 
     @Test
     @DisplayName("rejects an empty file")
     void rejectsEmptyFile() {
-        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(
-                new TranscribeAudioPort.Input(audio("note.webm"), "audio/webm", "note.webm", 0)
-        ));
+        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+                audio("note.webm"), "audio/webm", "note.webm", 0
+        );
+
+        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(input));
     }
 
     @Test
     @DisplayName("rejects an unsupported type")
     void rejectsUnsupportedType() {
-        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(
-                new TranscribeAudioPort.Input(audio("note.txt"), "text/plain", "note.txt", 12)
-        ));
+        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+                audio("note.txt"), "text/plain", "note.txt", 12
+        );
+
+        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(input));
     }
 
     @Test
@@ -92,10 +96,11 @@ class TranscribeAudioImplTest {
     void wrapsProviderFailure() {
         when(audioTranscriptionGateway.getIfAvailable()).thenReturn(gateway);
         when(gateway.transcribe(any(), any(), any())).thenThrow(new IllegalStateException("timeout"));
+        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+                audio("note.webm"), "audio/webm", "note.webm", 12
+        );
 
-        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(
-                new TranscribeAudioPort.Input(audio("note.webm"), "audio/webm", "note.webm", 12)
-        ));
+        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(input));
     }
 
     private static ByteArrayResource audio(String filename) {

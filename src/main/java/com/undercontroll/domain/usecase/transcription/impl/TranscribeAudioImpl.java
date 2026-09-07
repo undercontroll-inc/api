@@ -18,7 +18,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class TranscribeAudioImpl implements TranscribeAudioPort {
 
-    static final long MAX_BYTES = 10L * 1024 * 1024;
+    static final long MAX_BYTES = 8L * 1024 * 1024;
 
     private static final Set<String> ALLOWED_TYPES = Set.of(
             "audio/webm",
@@ -68,7 +68,7 @@ public class TranscribeAudioImpl implements TranscribeAudioPort {
             throw new InvalidTranscriptionException("Audio file is empty");
         }
         if (input.size() > MAX_BYTES) {
-            throw new InvalidTranscriptionException("Audio file exceeds 10MB");
+            throw new InvalidTranscriptionException("Audio file exceeds 8MB");
         }
         if (!allowed(input.contentType(), input.filename())) {
             throw new InvalidTranscriptionException("Unsupported audio type");

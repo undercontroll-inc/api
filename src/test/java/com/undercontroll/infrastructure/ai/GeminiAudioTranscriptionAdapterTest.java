@@ -42,10 +42,11 @@ class GeminiAudioTranscriptionAdapterTest {
     @SuppressWarnings("unchecked")
     void blankOutput() {
         when(chatClient.prompt().user(any(Consumer.class)).call().content()).thenReturn(" ");
+        GeminiAudioTranscriptionAdapter adapter = new GeminiAudioTranscriptionAdapter(chatClient);
+        ByteArrayResource audio = new ByteArrayResource("bytes".getBytes());
 
         assertThrows(TranscriptionUnavailableException.class, () ->
-                new GeminiAudioTranscriptionAdapter(chatClient)
-                        .transcribe(new ByteArrayResource("bytes".getBytes()), "audio/webm", "note.webm"));
+                adapter.transcribe(audio, "audio/webm", "note.webm"));
     }
 
     @Test

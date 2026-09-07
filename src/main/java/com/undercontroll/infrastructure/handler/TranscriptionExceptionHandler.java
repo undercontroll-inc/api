@@ -72,7 +72,7 @@ public class TranscriptionExceptionHandler extends GenericExceptionHandler {
     ) {
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
-                "Audio file exceeds 10MB",
+                "Audio file exceeds 8MB",
                 request.getRequestURI(),
                 InvalidTranscriptionException.CODE
         );

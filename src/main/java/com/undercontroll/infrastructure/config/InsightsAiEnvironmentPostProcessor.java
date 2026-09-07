@@ -18,6 +18,8 @@ public class InsightsAiEnvironmentPostProcessor implements EnvironmentPostProces
 
     static final String PROPERTY_SOURCE_NAME = "insightsAiChatModel";
 
+    private static final String OPENAI = "openai";
+
     private static final Log log = LogFactory.getLog(InsightsAiEnvironmentPostProcessor.class);
 
     @Override
@@ -35,13 +37,13 @@ public class InsightsAiEnvironmentPostProcessor implements EnvironmentPostProces
             provider = "none";
         }
         String chatModel = switch (provider.toLowerCase(Locale.ROOT).trim()) {
-            case "openai" -> "openai";
+            case OPENAI -> OPENAI;
             case "gemini", "google-genai", "google_genai" -> "google-genai";
             default -> "none";
         };
         Map<String, Object> map = new HashMap<>();
         map.put("spring.ai.model.chat", chatModel);
-        map.put("spring.ai.model.audio.transcription", "openai".equals(chatModel) ? "openai" : "none");
+        map.put("spring.ai.model.audio.transcription", OPENAI.equals(chatModel) ? OPENAI : "none");
         disableUnusedModels(map);
         environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, map));
         log.info("Insights provider='" + provider + "' -> spring.ai.model.chat=" + chatModel

@@ -9,7 +9,7 @@ authentication: {}
 authenticationType: null
 body: {}
 bodyType: multipart/form-data
-description: "multipart field audio (webm/mp3/m4a/wav/ogg, max 10MB). ADMINISTRATOR only."
+description: "multipart field audio (webm/mp3/m4a/wav/ogg, max 8MB). ADMINISTRATOR only."
 headers:
 - enabled: true
   name: Content-Type
