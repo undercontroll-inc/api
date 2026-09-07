@@ -9,6 +9,7 @@ public record UpdateOrderRequest(
         OrderStatus status,
         List<UpdateOrderItemDto> appliances,
         List<PartDto> parts,
-        String serviceDescription
+        String customerDescription,
+        String technicalDescription
 ) {
 }

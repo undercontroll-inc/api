@@ -50,8 +50,11 @@ public class UpdateOrderImpl implements UpdateOrderPort {
                     .orElseThrow(() -> new OrderNotFoundException("Could not found the order while updating."));
 
             applyStatus(order, orderId, request.status());
-            if (request.serviceDescription() != null) {
-                order.setDescription(request.serviceDescription());
+            if (request.customerDescription() != null) {
+                order.setCustomerDescription(request.customerDescription());
+            }
+            if (request.technicalDescription() != null) {
+                order.setTechnicalDescription(request.technicalDescription());
             }
             applyAppliances(order, orderId, request.appliances());
             applyParts(order, request.parts());
@@ -84,7 +87,6 @@ public class UpdateOrderImpl implements UpdateOrderPort {
                 updateOrderItemPort.execute(orderId, dto.id(), new UpdateOrderItemRequest(
                         null,
                         dto.laborValue(),
-                        dto.customerNote(),
                         dto.volt(),
                         dto.series(),
                         dto.type(),
@@ -99,7 +101,6 @@ public class UpdateOrderImpl implements UpdateOrderPort {
                         .model(dto.model())
                         .volt(dto.volt())
                         .series(dto.series())
-                        .observation(dto.customerNote())
                         .laborValue(dto.laborValue() != null ? dto.laborValue() : 0.0)
                         .build());
             }

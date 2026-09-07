@@ -3,6 +3,7 @@ package com.undercontroll.application.usecase;
 import com.undercontroll.application.dto.order.GetAllOrdersResponse;
 import com.undercontroll.application.dto.order.OrderEnrichedDto;
 import com.undercontroll.application.mapper.OrderDtoMapper;
+import com.undercontroll.domain.gateway.CurrentUserAdminPort;
 import com.undercontroll.domain.usecase.order.impl.GetOrdersImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.PaginatedResult;
@@ -32,6 +33,9 @@ class GetOrdersImplTest {
     @Mock
     private OrderDtoMapper orderMapper;
 
+    @Mock
+    private CurrentUserAdminPort currentUserAdminPort;
+
     @InjectMocks
     private GetOrdersImpl getOrdersImpl;
 
@@ -47,17 +51,22 @@ class GetOrdersImplTest {
                 .status(OrderStatus.PENDING)
                 .total(100.0)
                 .discount(10.0)
+                .customerDescription("Não gela")
+                .technicalDescription("Compressor queimado")
                 .orderItems(new ArrayList<>())
                 .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    private static OrderEnrichedDto dto(int id, OrderStatus status) {
+        return new OrderEnrichedDto(id, null, null, null, null, null, null, null, null, null, null, false, null, null, status, null);
     }
 
     @Test
     @DisplayName("Should return all orders successfully when no userId filter is given")
     void testGetOrders_ShouldReturnAllOrders() {
         when(orderGateway.findAllPaginated(DEFAULT_PAGE, DEFAULT_SIZE)).thenReturn(new PaginatedResult<>(List.of(order), 1L));
-        when(orderMapper.toEnrichedDto(order)).thenReturn(
-                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
+        when(orderMapper.toEnrichedDto(order, false)).thenReturn(dto(1, OrderStatus.PENDING));
 
         GetAllOrdersResponse output = getOrdersImpl.execute(null, DEFAULT_PAGE, DEFAULT_SIZE);
 
@@ -65,15 +74,16 @@ class GetOrdersImplTest {
         assertNotNull(output.data());
         assertEquals(1, output.data().size());
 
-        OrderEnrichedDto dto = output.data().get(0);
-        assertEquals(1, dto.id());
-        assertEquals(OrderStatus.PENDING, dto.status());
+        OrderEnrichedDto mapped = output.data().get(0);
+        assertEquals(1, mapped.id());
+        assertEquals(OrderStatus.PENDING, mapped.status());
         assertEquals(1L, output.totalElements());
         assertEquals(1, output.totalPages());
 
         verify(orderGateway, times(1)).findAllPaginated(DEFAULT_PAGE, DEFAULT_SIZE);
         verify(orderGateway, never()).findAll();
         verify(orderGateway, never()).findByUserId(any());
+        verify(orderMapper).toEnrichedDto(order, false);
     }
 
     @Test
@@ -115,12 +125,12 @@ class GetOrdersImplTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        OrderEnrichedDto dto1 = new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null);
-        OrderEnrichedDto dto2 = new OrderEnrichedDto(2, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.COMPLETED, null);
+        OrderEnrichedDto dto1 = dto(1, OrderStatus.PENDING);
+        OrderEnrichedDto dto2 = dto(2, OrderStatus.COMPLETED);
 
         when(orderGateway.findAllPaginated(DEFAULT_PAGE, DEFAULT_SIZE)).thenReturn(new PaginatedResult<>(List.of(order, order2), 2L));
-        when(orderMapper.toEnrichedDto(order)).thenReturn(dto1);
-        when(orderMapper.toEnrichedDto(order2)).thenReturn(dto2);
+        when(orderMapper.toEnrichedDto(order, false)).thenReturn(dto1);
+        when(orderMapper.toEnrichedDto(order2, false)).thenReturn(dto2);
 
         GetAllOrdersResponse output = getOrdersImpl.execute(null, DEFAULT_PAGE, DEFAULT_SIZE);
 
@@ -128,16 +138,27 @@ class GetOrdersImplTest {
         assertEquals(OrderStatus.PENDING, output.data().get(0).status());
         assertEquals(OrderStatus.COMPLETED, output.data().get(1).status());
 
-        verify(orderMapper, times(1)).toEnrichedDto(order);
-        verify(orderMapper, times(1)).toEnrichedDto(order2);
+        verify(orderMapper, times(1)).toEnrichedDto(order, false);
+        verify(orderMapper, times(1)).toEnrichedDto(order2, false);
+    }
+
+    @Test
+    @DisplayName("Administrator mapping includes the technical description flag")
+    void administratorMapsWithTechnicalDescription() {
+        when(currentUserAdminPort.isAdministrator()).thenReturn(true);
+        when(orderGateway.findAllPaginated(DEFAULT_PAGE, DEFAULT_SIZE)).thenReturn(new PaginatedResult<>(List.of(order), 1L));
+        when(orderMapper.toEnrichedDto(order, true)).thenReturn(dto(1, OrderStatus.PENDING));
+
+        getOrdersImpl.execute(null, DEFAULT_PAGE, DEFAULT_SIZE);
+
+        verify(orderMapper).toEnrichedDto(order, true);
     }
 
     @Test
     @DisplayName("Should return orders for the given userId without pagination")
     void testGetOrders_ShouldReturnUserOrders_WhenUserIdGiven() {
         when(orderGateway.findByUserId(1)).thenReturn(List.of(order));
-        when(orderMapper.toEnrichedDto(order)).thenReturn(
-                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
+        when(orderMapper.toEnrichedDto(order, false)).thenReturn(dto(1, OrderStatus.PENDING));
 
         GetAllOrdersResponse output = getOrdersImpl.execute(1, DEFAULT_PAGE, DEFAULT_SIZE);
 
@@ -148,6 +169,7 @@ class GetOrdersImplTest {
 
         verify(orderGateway, times(1)).findByUserId(1);
         verify(orderGateway, never()).findAllPaginated(any(), any());
+        verify(orderMapper).toEnrichedDto(order, false);
     }
 
     @Test

@@ -12,7 +12,9 @@ import org.springframework.security.core.userdetails.User;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SecurityContextCurrentUserIdTest {
 
@@ -58,5 +60,31 @@ class SecurityContextCurrentUserIdTest {
     @DisplayName("rejects a missing authentication")
     void rejectsMissingAuth() {
         assertThrows(InvalidAuthException.class, currentUserId::require);
+    }
+
+    @Test
+    @DisplayName("ROLE_ADMINISTRATOR is treated as administrator")
+    void administratorRoleIsAdministrator() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("42", null, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR")))
+        );
+
+        assertTrue(currentUserId.isAdministrator());
+    }
+
+    @Test
+    @DisplayName("ROLE_CUSTOMER is not treated as administrator")
+    void customerRoleIsNotAdministrator() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("7", null, List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")))
+        );
+
+        assertFalse(currentUserId.isAdministrator());
+    }
+
+    @Test
+    @DisplayName("missing authentication is not administrator")
+    void missingAuthIsNotAdministrator() {
+        assertFalse(currentUserId.isAdministrator());
     }
 }

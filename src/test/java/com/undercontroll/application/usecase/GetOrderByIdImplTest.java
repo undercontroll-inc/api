@@ -3,6 +3,7 @@ package com.undercontroll.application.usecase;
 import com.undercontroll.application.dto.order.GetOrderByIdResponse;
 import com.undercontroll.application.dto.order.OrderEnrichedDto;
 import com.undercontroll.application.mapper.OrderDtoMapper;
+import com.undercontroll.domain.gateway.CurrentUserAdminPort;
 import com.undercontroll.domain.usecase.order.impl.GetOrderByIdImpl;
 import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.enums.OrderStatus;
@@ -29,6 +30,9 @@ class GetOrderByIdImplTest {
     @Mock
     private OrderDtoMapper orderMapper;
 
+    @Mock
+    private CurrentUserAdminPort currentUserAdminPort;
+
     @InjectMocks
     private GetOrderByIdImpl getOrderByIdImpl;
 
@@ -41,7 +45,8 @@ class GetOrderByIdImplTest {
                 .status(OrderStatus.PENDING)
                 .total(100.0)
                 .discount(0.0)
-                .description("Service description")
+                .customerDescription("Não gela")
+                .technicalDescription("Compressor queimado")
                 .nf("NF123")
                 .returnGuarantee(true)
                 .build();
@@ -51,8 +56,8 @@ class GetOrderByIdImplTest {
     @DisplayName("Should return order when it exists")
     void testGetOrderById_ShouldReturnOrder_WhenExists() {
         when(orderGateway.findById(1)).thenReturn(Optional.of(order));
-        when(orderMapper.toEnrichedDto(order)).thenReturn(
-                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, null, null, OrderStatus.PENDING, null));
+        when(orderMapper.toEnrichedDto(order, false)).thenReturn(
+                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, "Não gela", null, OrderStatus.PENDING, null));
 
         Optional<GetOrderByIdResponse> output = getOrderByIdImpl.execute(1);
 
@@ -60,8 +65,26 @@ class GetOrderByIdImplTest {
         assertNotNull(output.get().data());
         assertEquals(1, output.get().data().id());
         assertEquals(OrderStatus.PENDING, output.get().data().status());
+        assertEquals("Não gela", output.get().data().customerDescription());
+        assertNull(output.get().data().technicalDescription());
 
         verify(orderGateway, times(1)).findById(1);
+        verify(orderMapper).toEnrichedDto(order, false);
+    }
+
+    @Test
+    @DisplayName("Administrator mapping includes the technical description flag")
+    void administratorMapsWithTechnicalDescription() {
+        when(currentUserAdminPort.isAdministrator()).thenReturn(true);
+        when(orderGateway.findById(1)).thenReturn(Optional.of(order));
+        when(orderMapper.toEnrichedDto(order, true)).thenReturn(
+                new OrderEnrichedDto(1, null, null, null, null, null, null, null, null, null, null, false, "Não gela", "Compressor queimado", OrderStatus.PENDING, null));
+
+        Optional<GetOrderByIdResponse> output = getOrderByIdImpl.execute(1);
+
+        assertTrue(output.isPresent());
+        assertEquals("Compressor queimado", output.get().data().technicalDescription());
+        verify(orderMapper).toEnrichedDto(order, true);
     }
 
     @Test

@@ -54,6 +54,8 @@ class AnaShopToolsTest {
                 Order.builder()
                         .id(9)
                         .status(OrderStatus.PENDING)
+                        .customerDescription("Não gela")
+                        .technicalDescription("Compressor queimado")
                         .user(User.builder().name("João").lastName("Silva").build())
                         .orderItems(items)
                         .demands(demands)
@@ -64,6 +66,8 @@ class AnaShopToolsTest {
 
         assertEquals(9, detail.order().id());
         assertEquals("João Silva", detail.order().customer());
+        assertEquals("Não gela", detail.order().customerDescription());
+        assertEquals("Compressor queimado", detail.order().technicalDescription());
         assertEquals(AnaShopTools.LIMIT, detail.items().size());
         assertEquals(AnaShopTools.LIMIT, detail.demands().size());
         verify(orderGateway, never()).findAll();

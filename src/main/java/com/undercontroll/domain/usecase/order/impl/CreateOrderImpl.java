@@ -16,6 +16,7 @@ import com.undercontroll.domain.enums.OrderStatus;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.UserGateway;
 import com.undercontroll.domain.gateway.StockManagementGateway;
+import com.undercontroll.domain.gateway.CurrentUserAdminPort;
 import com.undercontroll.infrastructure.service.MetricsService;
 import com.undercontroll.application.dto.order.PartDto;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class CreateOrderImpl implements CreateOrderPort {
     private final CreateDemandPort createDemandPort;
     private final MetricsService metricsService;
     private final OrderDtoMapper orderDtoMapper;
+    private final CurrentUserAdminPort currentUserAdminPort;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -76,8 +78,7 @@ public class CreateOrderImpl implements CreateOrderPort {
                     appliance.brand(),
                     appliance.model(),
                     appliance.type(),
-                    "",
-                    appliance.customerNote(),
+                    null,
                     appliance.voltage(),
                     appliance.serial(),
                     labor
@@ -108,7 +109,8 @@ public class CreateOrderImpl implements CreateOrderPort {
                 .nf(request.nf())
                 .fabricGuarantee(request.fabricGuarantee())
                 .received_at(receivedFormatted)
-                .description(request.serviceDescription())
+                .customerDescription(request.customerDescription())
+                .technicalDescription(currentUserAdminPort.isAdministrator() ? request.technicalDescription() : null)
                 .returnGuarantee(request.returnGuarantee())
                 .completedTime(completedFormatted)
                 .total(total)
@@ -135,7 +137,7 @@ public class CreateOrderImpl implements CreateOrderPort {
         log.info("Order {} created with {} demands", savedOrder.getId(), request.parts().size());
 
         Order finalOrder = orderGateway.findById(savedOrder.getId()).orElse(savedOrder);
-        return orderDtoMapper.toEnrichedDto(finalOrder);
+        return orderDtoMapper.toEnrichedDto(finalOrder, currentUserAdminPort.isAdministrator());
     }
 
     private LocalDate formatOrderDate(String dateStr) {

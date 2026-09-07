@@ -386,7 +386,7 @@ public final class ShopSuggestionComposer {
 
     private static String applianceOf(Order order) {
         if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
-            return clip(blankToNull(order.getDescription()), 28);
+            return clip(blankToNull(order.getCustomerDescription()), 28);
         }
         OrderItem item = order.getOrderItems().getFirst();
         String type = blankToNull(item.getType());

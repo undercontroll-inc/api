@@ -48,7 +48,6 @@ public class CreateOrderItemImpl implements CreateOrderItemPort {
                 .model(request.model())
                 .type(request.type())
                 .imageUrl(request.imageUrl())
-                .observation(request.observation())
                 .volt(request.volt())
                 .series(request.series())
                 .laborValue(request.laborValue())
