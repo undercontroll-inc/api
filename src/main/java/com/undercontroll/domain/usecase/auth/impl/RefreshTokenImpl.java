@@ -8,9 +8,11 @@ import com.undercontroll.infrastructure.service.RefreshTokenService;
 import com.undercontroll.infrastructure.service.RefreshTokenService.RefreshTokenData;
 import com.undercontroll.infrastructure.service.TokenServce;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenImpl implements RefreshTokenPort {
@@ -30,7 +32,7 @@ public class RefreshTokenImpl implements RefreshTokenPort {
         );
 
         String newAccessToken = tokenServce.generateToken(String.valueOf(data.userId()), userType);
-
+        log.info("Refresh token rotated userId={}", data.userId());
         return new RefreshTokenResponse(newAccessToken, newRefreshToken);
     }
 }

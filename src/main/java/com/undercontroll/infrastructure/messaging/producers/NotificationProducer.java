@@ -1,18 +1,19 @@
 package com.undercontroll.infrastructure.messaging.producers;
 
-import com.undercontroll.infrastructure.service.NotificationService;
 import com.undercontroll.infrastructure.events.AnnouncementCreatedEvent;
 import com.undercontroll.infrastructure.events.UserCreatedEvent;
+import com.undercontroll.infrastructure.service.NotificationService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
-
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationProducer implements NotificationService {
@@ -28,26 +29,32 @@ public class NotificationProducer implements NotificationService {
     @Value("${spring.rabbitmq.routing-key.user-created}")
     private String userCreatedRoutingKey;
 
-
     @Async
     @Override
     public void handleAnnouncementCreated(AnnouncementCreatedEvent event) {
+        Integer announcementId = event.announcement().getId();
         var data = Map.of(
-                "id", event.announcement().getId(),
+                "id", announcementId,
                 "title", event.announcement().getTitle(),
                 "content", event.announcement().getContent(),
                 "type", event.announcement().getType().name(),
                 "publishedAt", event.announcement().getPublishedAt().toString(),
                 "token", event.token() != null ? event.token() : ""
         );
-        
+
         var payload = Map.of(
                 "service", "main-service",
                 "type", "ANNOUNCEMENT_CREATED",
                 "data", data,
-                "timestamp", java.time.LocalDateTime.now().toString()
+                "timestamp", LocalDateTime.now().toString()
         );
-        rabbitTemplate.convertAndSend(notificationExchange, announcementRoutingKey, payload);
+        try {
+            rabbitTemplate.convertAndSend(notificationExchange, announcementRoutingKey, payload);
+            log.info("Published notification type=ANNOUNCEMENT_CREATED announcementId={}", announcementId);
+        } catch (RuntimeException ex) {
+            log.error("Failed to publish notification type=ANNOUNCEMENT_CREATED announcementId={}", announcementId, ex);
+            throw ex;
+        }
     }
 
     @Async
@@ -68,6 +75,12 @@ public class NotificationProducer implements NotificationService {
                 "timestamp", LocalDateTime.now().toString()
         );
 
-        rabbitTemplate.convertAndSend(notificationExchange, userCreatedRoutingKey, payload);
+        try {
+            rabbitTemplate.convertAndSend(notificationExchange, userCreatedRoutingKey, payload);
+            log.info("Published notification type=USER_CREATED");
+        } catch (RuntimeException ex) {
+            log.error("Failed to publish notification type=USER_CREATED", ex);
+            throw ex;
+        }
     }
 }

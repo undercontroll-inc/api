@@ -1,43 +1,106 @@
 package com.undercontroll.infrastructure.ai;
 
+import com.google.genai.Client;
+import com.google.genai.Models;
+import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.Part;
+import com.google.genai.types.ThinkingConfig;
+import com.google.genai.types.ThinkingLevel;
 import com.undercontroll.domain.exception.TranscriptionUnavailableException;
 import com.undercontroll.domain.gateway.AudioTranscriptionGateway;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.content.Media;
+import com.undercontroll.infrastructure.logging.LogTiming;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.util.MimeType;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.util.Locale;
 
+@Slf4j
 public class GeminiAudioTranscriptionAdapter implements AudioTranscriptionGateway {
 
     static final String USER_PROMPT =
             "Transcreva fielmente o áudio em português do Brasil. Responda só com o texto falado, sem aspas nem comentários.";
 
-    private final ChatClient transcriptionChatClient;
+    private final Models models;
+    private final String model;
 
-    public GeminiAudioTranscriptionAdapter(ChatClient transcriptionChatClient) {
-        this.transcriptionChatClient = transcriptionChatClient;
+    public GeminiAudioTranscriptionAdapter(Client client, String model) {
+        this(client.models, model);
+    }
+
+    GeminiAudioTranscriptionAdapter(Models models, String model) {
+        this.models = models;
+        this.model = model;
     }
 
     @Override
     public String transcribe(Resource audio, String contentType, String filename) {
+        long started = System.nanoTime();
         try {
             MimeType mimeType = mimeType(contentType, filename);
-            String content = transcriptionChatClient.prompt()
-                    .user(user -> user.text(USER_PROMPT).media(new Media(mimeType, audio)))
-                    .call()
-                    .content();
-            if (!StringUtils.hasText(content)) {
+            byte[] bytes = audio.getContentAsByteArray();
+            log.info(
+                    "Gemini transcription started model={} mime={} byteSize={}",
+                    model,
+                    mimeType,
+                    bytes.length
+            );
+            Content content = dedicatedTranscribeModel()
+                    ? Content.fromParts(Part.fromBytes(bytes, mimeType.toString()))
+                    : Content.fromParts(
+                            Part.fromText(USER_PROMPT),
+                            Part.fromBytes(bytes, mimeType.toString()));
+            GenerateContentResponse response = models.generateContent(model, content, config());
+            String text = response == null ? null : response.text();
+            if (!StringUtils.hasText(text)) {
+                log.warn(
+                        "Gemini transcription returned empty text model={} mime={} byteSize={} durationMs={}",
+                        model,
+                        mimeType,
+                        bytes.length,
+                        LogTiming.millisSince(started)
+                );
                 throw new TranscriptionUnavailableException();
             }
-            return content.trim();
+            log.info(
+                    "Gemini transcription finished model={} mime={} byteSize={} chars={} durationMs={}",
+                    model,
+                    mimeType,
+                    bytes.length,
+                    text.trim().length(),
+                    LogTiming.millisSince(started)
+            );
+            return text.trim();
         } catch (TranscriptionUnavailableException ex) {
             throw ex;
-        } catch (RuntimeException ex) {
+        } catch (IOException | RuntimeException ex) {
+            log.warn(
+                    "Gemini transcription failed model={} durationMs={} cause={}",
+                    model,
+                    LogTiming.millisSince(started),
+                    ex.toString()
+            );
             throw new TranscriptionUnavailableException(ex);
         }
+    }
+
+    private GenerateContentConfig config() {
+        GenerateContentConfig.Builder builder = GenerateContentConfig.builder();
+        if (!dedicatedTranscribeModel()) {
+            builder.thinkingConfig(ThinkingConfig.builder()
+                    .thinkingLevel(new ThinkingLevel("MINIMAL"))
+                    .includeThoughts(false)
+                    .build());
+        }
+        return builder.build();
+    }
+
+    private boolean dedicatedTranscribeModel() {
+        return model != null && model.toLowerCase(Locale.ROOT).contains("transcribe");
     }
 
     static MimeType mimeType(String contentType, String filename) {

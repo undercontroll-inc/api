@@ -14,7 +14,7 @@ public class InsightsProperties {
     private static final String PROVIDER_OPENAI = "openai";
 
     private String provider = PROVIDER_NONE;
-    private String promptVersion = "5";
+    private String promptVersion = "6";
     private String cron = "0 0 4 1 * *";
     private String openaiModel = "gpt-4.1-mini";
     private String geminiModel = "gemini-2.5-flash";

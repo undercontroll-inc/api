@@ -1,37 +1,41 @@
 package com.undercontroll.infrastructure.ai;
 
+import com.google.genai.Models;
+import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
 import com.undercontroll.domain.exception.TranscriptionUnavailableException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.util.MimeType;
-
-import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GeminiAudioTranscriptionAdapterTest {
 
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
-    private ChatClient chatClient;
+    @Mock
+    private Models models;
+
+    @Mock
+    private GenerateContentResponse response;
 
     @Test
     @DisplayName("returns Gemini text")
-    @SuppressWarnings("unchecked")
     void transcribes() {
-        when(chatClient.prompt().user(any(Consumer.class)).call().content())
-                .thenReturn("  Compressor ruindo ");
+        when(models.generateContent(eq("gemini-3.5-flash-lite"), any(Content.class), any(GenerateContentConfig.class)))
+                .thenReturn(response);
+        when(response.text()).thenReturn("  Compressor ruindo ");
 
-        String text = new GeminiAudioTranscriptionAdapter(chatClient)
+        String text = new GeminiAudioTranscriptionAdapter(models, "gemini-3.5-flash-lite")
                 .transcribe(new ByteArrayResource("bytes".getBytes()), "audio/webm", "note.webm");
 
         assertEquals("Compressor ruindo", text);
@@ -39,10 +43,11 @@ class GeminiAudioTranscriptionAdapterTest {
 
     @Test
     @DisplayName("treats blank Gemini output as unavailable")
-    @SuppressWarnings("unchecked")
     void blankOutput() {
-        when(chatClient.prompt().user(any(Consumer.class)).call().content()).thenReturn(" ");
-        GeminiAudioTranscriptionAdapter adapter = new GeminiAudioTranscriptionAdapter(chatClient);
+        when(models.generateContent(eq("gemini-3.5-flash-lite"), any(Content.class), any(GenerateContentConfig.class)))
+                .thenReturn(response);
+        when(response.text()).thenReturn(" ");
+        GeminiAudioTranscriptionAdapter adapter = new GeminiAudioTranscriptionAdapter(models, "gemini-3.5-flash-lite");
         ByteArrayResource audio = new ByteArrayResource("bytes".getBytes());
 
         assertThrows(TranscriptionUnavailableException.class, () ->

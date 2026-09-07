@@ -5,9 +5,11 @@ import com.undercontroll.domain.exception.InvalidUserException;
 import com.undercontroll.domain.exception.UserNotFoundException;
 import com.undercontroll.domain.gateway.UserGateway;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeleteUserImpl implements DeleteUserPort {
@@ -28,5 +30,6 @@ public class DeleteUserImpl implements DeleteUserPort {
         }
 
         userGateway.deleteById(userId);
+        log.info("User deleted userId={}", userId);
     }
 }

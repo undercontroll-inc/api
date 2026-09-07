@@ -8,7 +8,7 @@ import java.util.Locale;
 
 public final class AiChatOptions {
 
-    static final int INSIGHTS_MAX_OUTPUT_TOKENS = 8192;
+    static final int INSIGHTS_MAX_OUTPUT_TOKENS = 4096;
     static final String DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
     private AiChatOptions() {
@@ -27,11 +27,7 @@ public final class AiChatOptions {
     }
 
     public static ChatOptions insights(String provider, String geminiModel) {
-        return of(provider, geminiModel, 0.2, INSIGHTS_MAX_OUTPUT_TOKENS, false);
-    }
-
-    public static ChatOptions transcription(String provider, String geminiModel) {
-        return of(provider, geminiModel, 0.0, 2048, true);
+        return of(provider, geminiModel, 0.2, INSIGHTS_MAX_OUTPUT_TOKENS, true);
     }
 
     private static ChatOptions of(

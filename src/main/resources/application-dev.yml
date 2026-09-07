@@ -27,7 +27,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
   # H2 usava create-drop (banco em memória). Descomente se voltar ao H2:
   # jpa:
   #   hibernate:

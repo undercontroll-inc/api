@@ -1,5 +1,6 @@
 package com.undercontroll.infrastructure.config;
 
+import com.undercontroll.infrastructure.logging.MdcTaskDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
@@ -20,6 +21,7 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(8);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("async-email-");
+        executor.setTaskDecorator(new MdcTaskDecorator());
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(60);
         executor.initialize();

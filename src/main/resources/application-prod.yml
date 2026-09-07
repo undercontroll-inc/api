@@ -55,6 +55,9 @@ aws:
     read-expiration-minutes: ${S3_READ_EXPIRATION_MINUTES:1440}
 
 logging:
+  structured:
+    format:
+      console: ecs
   level:
     root: WARN
     com.undercontroll: INFO

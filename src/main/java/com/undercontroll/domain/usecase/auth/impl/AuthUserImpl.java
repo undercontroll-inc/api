@@ -13,11 +13,13 @@ import com.undercontroll.infrastructure.service.MetricsService;
 import com.undercontroll.infrastructure.service.RefreshTokenService;
 import com.undercontroll.infrastructure.service.TokenServce;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthUserImpl implements AuthUserPort {
@@ -45,6 +47,7 @@ public class AuthUserImpl implements AuthUserPort {
         String accessToken = tokenServce.generateToken(String.valueOf(user.getId()), user.getUserType());
         String refreshToken = refreshTokenService.createRefreshToken(user.getId(), user.getEmail(), user.getUserType());
         metricsService.incrementLoginSuccess();
+        log.info("Login succeeded userId={} provider={}", user.getId(), request.provider());
         return new AuthUserResponse(accessToken, refreshToken, userDtoMapper.toDto(user));
     }
 
@@ -61,6 +64,7 @@ public class AuthUserImpl implements AuthUserPort {
 
     private AuthUserResponse fail() {
         metricsService.incrementLoginFailed();
+        log.warn("Login failed");
         throw new InvalidAuthException("Email or password is invalid");
     }
 }

@@ -20,7 +20,8 @@ public class ChatExceptionHandler extends GenericExceptionHandler {
                 HttpStatus.SERVICE_UNAVAILABLE,
                 ex.getMessage(),
                 request.getRequestURI(),
-                AnaUnavailableException.CODE
+                AnaUnavailableException.CODE,
+                ex
         );
     }
 }

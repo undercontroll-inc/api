@@ -7,12 +7,14 @@ import com.undercontroll.domain.model.insight.InsightMonthLabel;
 import com.undercontroll.domain.model.insight.InsightPromptContext;
 import com.undercontroll.domain.model.insight.InsightsPayload;
 import com.undercontroll.infrastructure.config.InsightsProperties;
+import com.undercontroll.infrastructure.logging.LogTiming;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.core.io.Resource;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
+@Slf4j
 public class SpringAiInsightsLlmAdapter implements InsightsLlmGateway {
 
     private final ChatClient insightsChatClient;
@@ -40,42 +42,43 @@ public class SpringAiInsightsLlmAdapter implements InsightsLlmGateway {
 
     @Override
     public InsightsPayload generate(InsightPromptContext context) {
-        EvidenceIndex evidence = new EvidenceIndex(objectMapper);
-        InsightGenerationContext.State state = InsightGenerationContext.State.from(context, evidence);
-        InsightsPayload payload = invokeWithRetry(context, state);
-        insightPayloadValidator.validate(payload, context, evidence);
-        return payload;
-    }
-
-    private InsightsPayload invokeWithRetry(InsightPromptContext context, InsightGenerationContext.State state) {
+        long started = System.nanoTime();
+        String bucketKey = context.bucketKey();
+        log.info(
+                "Generating insights bucketKey={} comparison={} provider={} model={}",
+                bucketKey,
+                context.comparisonBucketKey(),
+                insightsProperties.resolvedProvider(),
+                insightsProperties.activeModel()
+        );
         try {
-            return invokeModel(context, state);
-        } catch (RuntimeException first) {
-            try {
-                return invokeModel(context, state);
-            } catch (RuntimeException ignored) {
-                throw first;
+            EvidenceIndex evidence = new EvidenceIndex(objectMapper);
+            InsightGenerationContext.State state = InsightGenerationContext.State.from(context, evidence);
+            InsightsPayload payload = insightsChatClient.prompt()
+                    .user(user -> user.text(userPrompt, StandardCharsets.UTF_8)
+                            .param("mesAtual", InsightMonthLabel.of(context.bucketKey()))
+                            .param("mesComparacao", InsightMonthLabel.of(context.comparisonBucketKey()))
+                            .param("bucketAtual", context.bucketKey())
+                            .param("bucketComparacao", context.comparisonBucketKey() == null ? "null" : context.comparisonBucketKey())
+                            .param("maxInsights", insightsProperties.getMaxInsights())
+                            .param("grounding", groundingJson(state)))
+                    .call()
+                    .entity(InsightsPayload.class);
+            if (payload == null) {
+                throw new IllegalStateException("LLM returned an empty insights payload");
             }
+            insightPayloadValidator.validate(payload, context, evidence);
+            log.info("Generated insights bucketKey={} durationMs={}", bucketKey, LogTiming.millisSince(started));
+            return payload;
+        } catch (RuntimeException ex) {
+            log.warn(
+                    "Insight generation failed bucketKey={} durationMs={} cause={}",
+                    bucketKey,
+                    LogTiming.millisSince(started),
+                    ex.toString()
+            );
+            throw ex;
         }
-    }
-
-    private InsightsPayload invokeModel(InsightPromptContext context, InsightGenerationContext.State state) {
-        String comparisonKey = context.comparisonBucketKey();
-        InsightsPayload payload = insightsChatClient.prompt()
-                .toolContext(Map.of(InsightGenerationContext.KEY, state))
-                .user(user -> user.text(userPrompt, StandardCharsets.UTF_8)
-                        .param("mesAtual", InsightMonthLabel.of(context.bucketKey()))
-                        .param("mesComparacao", InsightMonthLabel.of(comparisonKey))
-                        .param("bucketAtual", context.bucketKey())
-                        .param("bucketComparacao", comparisonKey == null ? "null" : comparisonKey)
-                        .param("maxInsights", insightsProperties.getMaxInsights())
-                        .param("grounding", groundingJson(state)))
-                .call()
-                .entity(InsightsPayload.class);
-        if (payload == null) {
-            throw new IllegalStateException("LLM returned an empty insights payload");
-        }
-        return payload;
     }
 
     private String groundingJson(InsightGenerationContext.State state) {

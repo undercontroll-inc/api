@@ -11,8 +11,10 @@ import com.undercontroll.domain.exception.OrderNotFoundException;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.OrderItemGateway;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CreateOrderItemImpl implements CreateOrderItemPort {
@@ -25,6 +27,7 @@ public class CreateOrderItemImpl implements CreateOrderItemPort {
     public OrderItemDto execute(CreateOrderItemRequest request) {
         validateCreateOrderItemRequest(request);
         OrderItem savedItem = orderItemGateway.save(toDomain(request));
+        log.info("Order item created id={}", savedItem.getId());
         return orderItemDtoMapper.toDto(savedItem);
     }
 
@@ -38,7 +41,7 @@ public class CreateOrderItemImpl implements CreateOrderItemPort {
         OrderItem savedItem = orderItemGateway.save(toDomain(request));
         order.addOrderItem(savedItem);
         orderGateway.save(order);
-
+        log.info("Order item created orderId={} itemId={}", orderId, savedItem.getId());
         return orderItemDtoMapper.toDto(savedItem);
     }
 

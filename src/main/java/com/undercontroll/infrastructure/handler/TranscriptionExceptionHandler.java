@@ -26,7 +26,8 @@ public class TranscriptionExceptionHandler extends GenericExceptionHandler {
                 HttpStatus.SERVICE_UNAVAILABLE,
                 ex.getMessage(),
                 request.getRequestURI(),
-                TranscriptionUnavailableException.CODE
+                TranscriptionUnavailableException.CODE,
+                ex
         );
     }
 

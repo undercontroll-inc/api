@@ -41,9 +41,11 @@ class InsightsUserPromptTemplateTest {
         assertTrue(rendered.contains("mês de julho de 2026"));
         assertTrue(rendered.contains("periodo.bucket_atual = 2026-08"));
         assertTrue(rendered.contains("7"));
-        assertTrue(rendered.contains("CONTEXTO_OBRIGATORIO"));
+        assertTrue(rendered.contains("Não chame tools"));
         assertTrue(rendered.contains("\"nivel_1_exato\":2"));
         assertFalse(rendered.contains("get_repair_catalog"));
+        assertFalse(rendered.contains("list_price_movements"));
+        assertFalse(rendered.contains("Não chame tool para"));
         assertFalse(rendered.contains("<mesAtual>"));
         assertFalse(rendered.contains("<bucketAtual>"));
         assertFalse(rendered.contains("<grounding>"));

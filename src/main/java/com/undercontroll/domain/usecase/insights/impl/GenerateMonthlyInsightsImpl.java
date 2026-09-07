@@ -18,6 +18,7 @@ import com.undercontroll.domain.model.market.RepairCatalogItem;
 import com.undercontroll.domain.usecase.insights.GenerateMonthlyInsightsPort;
 import com.undercontroll.domain.usecase.insights.InsightGenerationResult;
 import com.undercontroll.infrastructure.config.InsightsProperties;
+import com.undercontroll.infrastructure.logging.LogTiming;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -28,7 +29,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Service
@@ -85,18 +88,42 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
         );
 
         Exception lastError = null;
+        long started = System.nanoTime();
         for (int attempt = 1; attempt <= 2; attempt++) {
+            long attemptStarted = System.nanoTime();
             try {
                 InsightsPayload payload = llm.generate(context);
                 persistSuccess(existing.orElse(null), bucketKey, comparison, payload);
-                log.info("Generated monthly insights for bucket {}", bucketKey);
+                log.info(
+                        "Generated monthly insights bucketKey={} attempt={} durationMs={}",
+                        bucketKey,
+                        attempt,
+                        LogTiming.millisSince(attemptStarted)
+                );
                 return InsightGenerationResult.success(bucketKey);
             } catch (Exception ex) {
                 lastError = ex;
-                log.warn("Insight generation attempt {} failed for bucket {}: {}", attempt, bucketKey, ex.getMessage());
+                boolean timeout = isLlmTimeout(ex);
+                log.warn(
+                        "Insight generation attempt {} failed bucketKey={} timeout={} durationMs={}: {}",
+                        attempt,
+                        bucketKey,
+                        timeout,
+                        LogTiming.millisSince(attemptStarted),
+                        ex.getMessage()
+                );
+                if (timeout) {
+                    break;
+                }
             }
         }
         persistFailure(existing.orElse(null), bucketKey, comparison, lastError);
+        log.warn(
+                "Insight generation failed bucketKey={} durationMs={} cause={}",
+                bucketKey,
+                LogTiming.millisSince(started),
+                lastError == null ? UNKNOWN_ERROR : lastError.getMessage()
+        );
         return InsightGenerationResult.failed(
                 bucketKey,
                 lastError == null ? UNKNOWN_ERROR : lastError.getMessage()
@@ -138,6 +165,24 @@ public class GenerateMonthlyInsightsImpl implements GenerateMonthlyInsightsPort 
         insight.setModel(insightsProperties.activeModel());
         insight.setPromptVersion(insightsProperties.getPromptVersion());
         return insight;
+    }
+
+    static boolean isLlmTimeout(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current instanceof TimeoutException) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase(Locale.ROOT);
+                if (lower.contains("timeout") || lower.contains("timed out") || lower.contains("deadline")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private static String truncate(String message) {

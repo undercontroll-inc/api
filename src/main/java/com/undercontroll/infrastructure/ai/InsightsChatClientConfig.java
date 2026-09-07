@@ -24,14 +24,12 @@ public class InsightsChatClientConfig {
     @Bean(name = "insightsChatClient")
     ChatClient insightsChatClient(
             ChatModel chatModel,
-            MarketInsightTools marketInsightTools,
             @Value("classpath:prompts/insights-system-prompt.txt") Resource systemPrompt,
             @Value("${spring.ai.model.chat:none}") String modelName,
             @Value("${spring.ai.google.genai.chat.options.model:gemini-2.5-flash}") String geminiModel
     ) {
         return ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt, StandardCharsets.UTF_8)
-                .defaultTools(marketInsightTools)
                 .defaultOptions(AiChatOptions.insights(modelName, geminiModel))
                 .defaultTemplateRenderer(StTemplateRenderer.builder()
                         .startDelimiterToken('<')

@@ -1,6 +1,7 @@
 package com.undercontroll.infrastructure.storage;
 
 import com.undercontroll.application.dto.announcement.GenerateUploadUrlResponse;
+import com.undercontroll.infrastructure.logging.LogTiming;
 import com.undercontroll.infrastructure.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class S3StorageAdapter implements StorageService {
 
     @Override
     public void putObject(String bucket, String key, byte[] data, Optional<String> contentType) {
+        long started = System.nanoTime();
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucket)
@@ -33,15 +35,16 @@ public class S3StorageAdapter implements StorageService {
                     .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(data));
-            log.info("Object {} created in bucket {}", key, bucket);
+            log.info("Object {} created in bucket {} durationMs={}", key, bucket, LogTiming.millisSince(started));
 
         } catch (S3Exception e) {
-            log.error("Error while putting object", e);
+            log.error("Error while putting object key={} bucket={} durationMs={}", key, bucket, LogTiming.millisSince(started), e);
         }
     }
 
     @Override
     public GenerateUploadUrlResponse generatePresignedUploadUrl(String bucket, String key, Integer expirationMinutes) {
+        long started = System.nanoTime();
         try (S3Presigner presigner = buildPresigner()) {
             PutObjectPresignRequest presignedRequest = PutObjectPresignRequest.builder()
                     .signatureDuration(Duration.ofMinutes(expirationMinutes))
@@ -51,8 +54,13 @@ public class S3StorageAdapter implements StorageService {
             var presignedPutRequest = presigner.presignPutObject(presignedRequest);
             String presignedUrl = presignedPutRequest.url().toString();
 
-            log.info("Generated presigned URL for key {} in bucket {} with {} minutes expiration",
-                    key, bucket, expirationMinutes);
+            log.info(
+                    "Generated presigned upload URL key={} bucket={} expirationMinutes={} durationMs={}",
+                    key,
+                    bucket,
+                    expirationMinutes,
+                    LogTiming.millisSince(started)
+            );
 
             return new GenerateUploadUrlResponse(
                     presignedUrl,
@@ -61,13 +69,20 @@ public class S3StorageAdapter implements StorageService {
             );
 
         } catch (S3Exception e) {
-            log.error("Error generating presigned upload URL", e);
+            log.error(
+                    "Error generating presigned upload URL key={} bucket={} durationMs={}",
+                    key,
+                    bucket,
+                    LogTiming.millisSince(started),
+                    e
+            );
             throw new RuntimeException("Failed to generate presigned upload URL: " + e.getMessage(), e);
         }
     }
 
     @Override
     public String generateReadPresignedUrl(String bucket, String key, long expirationMinutes) {
+        long started = System.nanoTime();
         try (S3Presigner presigner = buildPresigner()) {
             GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
                     .signatureDuration(Duration.ofMinutes(expirationMinutes))
@@ -77,10 +92,22 @@ public class S3StorageAdapter implements StorageService {
             final var result = presigner.presignGetObject(getObjectPresignRequest);
 
             final var url = result.url();
-
+            log.info(
+                    "Generated presigned read URL key={} bucket={} expirationMinutes={} durationMs={}",
+                    key,
+                    bucket,
+                    expirationMinutes,
+                    LogTiming.millisSince(started)
+            );
             return url == null ? null : url.toString();
         } catch (S3Exception e) {
-            log.error("Error while generating presigned read URL", e);
+            log.error(
+                    "Error while generating presigned read URL key={} bucket={} durationMs={}",
+                    key,
+                    bucket,
+                    LogTiming.millisSince(started),
+                    e
+            );
 
             throw new RuntimeException("Failed to generate presigned read URL: " + e.getMessage(), e);
         }

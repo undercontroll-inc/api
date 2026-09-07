@@ -23,10 +23,14 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -164,9 +168,40 @@ class GenerateMonthlyInsightsImplTest {
 
         generateMonthlyInsights.execute(false);
 
+        verify(llmGateway, times(2)).generate(any());
         ArgumentCaptor<MarketMonthlyInsight> captor = ArgumentCaptor.forClass(MarketMonthlyInsight.class);
         verify(marketInsightGateway).save(captor.capture());
         assertEquals(InsightGenerationStatus.FAILED, captor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("does not retry the LLM after a timeout")
+    void doesNotRetryTimeout() {
+        when(marketViewGateway.findCurrentBucketKey()).thenReturn(Optional.of("2026-08"));
+        when(marketInsightGateway.findByBucketKey("2026-08")).thenReturn(Optional.empty());
+        when(insightsLlmGateway.getIfAvailable()).thenReturn(llmGateway);
+        when(marketViewGateway.findPreviousBucketKey("2026-08")).thenReturn(Optional.empty());
+        when(marketViewGateway.findCategorySummary("2026-08")).thenReturn(List.of());
+        when(orderGateway.getRepairCatalog(any())).thenReturn(List.of());
+        when(marketViewGateway.findAllCurrentProducts()).thenReturn(List.of());
+        when(llmGateway.generate(any())).thenThrow(new IllegalStateException(
+                "Failed to generate content", new TimeoutException("timeout")));
+
+        generateMonthlyInsights.execute(false);
+
+        verify(llmGateway, times(1)).generate(any());
+        ArgumentCaptor<MarketMonthlyInsight> captor = ArgumentCaptor.forClass(MarketMonthlyInsight.class);
+        verify(marketInsightGateway).save(captor.capture());
+        assertEquals(InsightGenerationStatus.FAILED, captor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("detects Gemini timeout messages in the cause chain")
+    void detectsTimeouts() {
+        assertTrue(GenerateMonthlyInsightsImpl.isLlmTimeout(new TimeoutException("x")));
+        assertTrue(GenerateMonthlyInsightsImpl.isLlmTimeout(
+                new IllegalStateException("Failed to generate content", new RuntimeException("deadline exceeded"))));
+        assertFalse(GenerateMonthlyInsightsImpl.isLlmTimeout(new IllegalStateException("model error")));
     }
 
     private void stubSuccessfulLlm(String bucketKey) {

@@ -5,12 +5,16 @@ import com.undercontroll.domain.exception.InvalidTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
 import java.io.IOException;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JsonAccessDeniedHandler implements AccessDeniedHandler {
 
@@ -22,6 +26,9 @@ public class JsonAccessDeniedHandler implements AccessDeniedHandler {
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
     ) throws IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication == null ? null : authentication.getPrincipal();
+        log.warn("Forbidden request path={} principal={}", request.getRequestURI(), principal);
         SecurityErrorWriter.write(
                 objectMapper,
                 request,
