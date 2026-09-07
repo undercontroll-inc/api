@@ -9,8 +9,10 @@ import com.undercontroll.domain.exception.OrderItemNotFoundException;
 import com.undercontroll.domain.gateway.OrderGateway;
 import com.undercontroll.domain.gateway.OrderItemGateway;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UpdateOrderItemImpl implements UpdateOrderItemPort {
@@ -60,6 +62,7 @@ public class UpdateOrderItemImpl implements UpdateOrderItemPort {
         }
 
         orderItemGateway.save(orderFound);
+        log.info("Order item updated orderId={} itemId={}", orderId, orderItemId);
     }
 
     private void requireItemBelongsToOrder(Integer orderId, Integer orderItemId) {

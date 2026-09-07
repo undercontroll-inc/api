@@ -35,23 +35,23 @@ class AiChatOptionsTest {
     }
 
     @Test
-    @DisplayName("insights does not set a thinking level")
-    void insightsLeavesThinkingUnset() {
-        ChatOptions options = AiChatOptions.insights("google-genai", "gemini-2.5-flash");
-        GoogleGenAiChatOptions gemini = assertInstanceOf(GoogleGenAiChatOptions.class, options);
-        assertNull(gemini.getThinkingLevel());
+    @DisplayName("insights uses fast thinking on Gemini 3")
+    void insightsUsesFastThinkingOnGemini3() {
+        GoogleGenAiChatOptions gemini = assertInstanceOf(
+                GoogleGenAiChatOptions.class,
+                AiChatOptions.insights("google-genai", "gemini-3.6-flash")
+        );
+        assertEquals(GoogleGenAiThinkingLevel.LOW, gemini.getThinkingLevel());
+        assertEquals(4096, gemini.getMaxOutputTokens());
         assertNull(gemini.getThinkingBudget());
     }
 
     @Test
-    @DisplayName("transcription uses fast thinking and a low temperature")
-    void transcriptionUsesFastThinking() {
-        GoogleGenAiChatOptions options = assertInstanceOf(
-                GoogleGenAiChatOptions.class,
-                AiChatOptions.transcription("google-genai", "gemini-2.5-flash")
-        );
-        assertEquals(0.0, options.getTemperature());
-        assertEquals(2048, options.getMaxOutputTokens());
-        assertEquals(0, options.getThinkingBudget());
+    @DisplayName("insights disables thinking budget on Gemini 2.5")
+    void insightsDisablesThinkingOnGemini25() {
+        ChatOptions options = AiChatOptions.insights("google-genai", "gemini-2.5-flash");
+        GoogleGenAiChatOptions gemini = assertInstanceOf(GoogleGenAiChatOptions.class, options);
+        assertEquals(0, gemini.getThinkingBudget());
+        assertNull(gemini.getThinkingLevel());
     }
 }

@@ -53,7 +53,7 @@ spring:
         api-key: ${GEMINI_API_KEY:${GOOGLE_API_KEY:}}
         chat:
           options:
-            model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
+            model: ${GEMINI_CHAT_MODEL:gemini-3.8-flash}
   autoconfigure:
     exclude:
       - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
@@ -106,9 +106,9 @@ management:
       export:
         enabled: true
 
+logging:
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%thread] %-5level [%X{correlationId:-}] [%X{userId:-}] %logger{36} - %msg%n"
 
 springdoc:
   api-docs:
@@ -134,12 +134,14 @@ rate-limit:
 undercontroll:
   insights:
     provider: ${INSIGHTS_PROVIDER:none}
-    prompt-version: "5"
+    prompt-version: "6"
     cron: "0 0 4 1 * *"
     openai-model: ${OPENAI_CHAT_MODEL:gpt-4.1-mini}
-    gemini-model: ${GEMINI_CHAT_MODEL:gemini-2.5-flash}
+    gemini-model: ${GEMINI_CHAT_MODEL:gemini-3.8-flash}
     max-insights: 7
     repair-catalog-days: 90
+  transcription:
+    gemini-model: ${GEMINI_TRANSCRIBE_MODEL:gemini-3.5-flash-lite}
   ana:
     suggestion-count: 4
     suggestion-ttl-hours: 12

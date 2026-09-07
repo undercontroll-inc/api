@@ -3,6 +3,7 @@ package com.undercontroll.infrastructure.ai;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.infrastructure.config.AnaProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Repository("anaChatMemoryRepository")
 public class RedisChatMemoryRepository implements ChatMemoryRepository {
 
@@ -64,6 +66,7 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
             }
             return messages;
         } catch (Exception ex) {
+            log.warn("Chat memory deserialize failed conversationId={}", conversationId, ex);
             return List.of();
         }
     }
@@ -81,6 +84,7 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
             String redisKey = key(conversationId);
             redis.opsForValue().set(redisKey, json, Duration.ofHours(anaProperties.getMemoryTtlHours()));
         } catch (Exception ex) {
+            log.warn("Chat memory save failed conversationId={}", conversationId, ex);
             throw new IllegalStateException("Failed to persist chat memory", ex);
         }
     }

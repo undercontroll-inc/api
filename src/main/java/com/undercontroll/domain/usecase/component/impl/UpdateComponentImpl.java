@@ -10,9 +10,11 @@ import com.undercontroll.domain.exception.InvalidUpdateComponentException;
 import com.undercontroll.domain.gateway.ComponentGateway;
 import com.undercontroll.infrastructure.service.MetricsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UpdateComponentImpl implements UpdateComponentPort {
@@ -55,7 +57,7 @@ public class UpdateComponentImpl implements UpdateComponentPort {
 
         ComponentPart savedComponent = componentGateway.save(component);
         metricsService.incrementComponentUpdated();
-
+        log.info("Component updated id={}", savedComponent.getId());
         return componentPartDtoMapper.toDto(savedComponent);
     }
 

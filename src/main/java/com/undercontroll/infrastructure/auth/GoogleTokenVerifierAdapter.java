@@ -32,20 +32,20 @@ public class GoogleTokenVerifierAdapter implements GoogleAuthService {
             }
 
             if (!email.equalsIgnoreCase(expectedEmail)) {
-                log.warn("Email mismatch. Expected: {}, Got: {}", expectedEmail, email);
+                log.warn("Google token email mismatch");
                 return false;
             }
 
             if (!emailVerified) {
-                log.warn("Email is not verified for user: {}", email);
+                log.warn("Google token email is not verified");
                 return false;
             }
 
-            log.info("Token verified successfully for user: {}", email);
+            log.debug("Google token verified");
             return true;
 
         } catch (FirebaseAuthException e) {
-            log.error("Failed to verify Firebase token: {}", e.getMessage());
+            log.warn("Failed to verify Firebase token: {}", e.getMessage());
             return false;
         } catch (Exception e) {
             log.error("Unexpected error during token verification", e);

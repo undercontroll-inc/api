@@ -15,11 +15,13 @@ import com.undercontroll.domain.exception.InvalidUserException;
 import com.undercontroll.domain.gateway.UserGateway;
 import com.undercontroll.infrastructure.service.MetricsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CreateUserImpl implements CreateUserPort {
@@ -91,7 +93,7 @@ public class CreateUserImpl implements CreateUserPort {
             }
 
             metricsService.incrementAccountCreated();
-
+            log.info("User created userId={} type={}", createdUser.getId(), createdUser.getUserType());
             return userDtoMapper.toCreateUserResponse(createdUser);
         } catch (InvalidUserException e) {
             metricsService.incrementAccountCreationFailed();

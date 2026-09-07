@@ -7,7 +7,9 @@ import com.undercontroll.domain.exception.InvalidTranscriptionException;
 import com.undercontroll.domain.exception.TranscriptionUnavailableException;
 import com.undercontroll.domain.gateway.AudioTranscriptionGateway;
 import com.undercontroll.domain.usecase.transcription.TranscribeAudioPort;
+import com.undercontroll.infrastructure.logging.LogTiming;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.util.Locale;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TranscribeAudioImpl implements TranscribeAudioPort {
@@ -45,8 +48,11 @@ public class TranscribeAudioImpl implements TranscribeAudioPort {
     @Override
     public TranscribeAudioResponse execute(TranscribeAudioRequest request) {
         validate(request);
+        long started = System.nanoTime();
+        log.info("Transcription requested mime={} byteSize={}", request.contentType(), request.size());
         AudioTranscriptionGateway gateway = audioTranscriptionGateway.getIfAvailable();
         if (gateway == null) {
+            log.warn("Transcription gateway is not available");
             throw new TranscriptionUnavailableException();
         }
         try {
@@ -54,7 +60,13 @@ public class TranscribeAudioImpl implements TranscribeAudioPort {
             if (!StringUtils.hasText(text)) {
                 throw new TranscriptionUnavailableException();
             }
-            return transcriptionDtoMapper.toResponse(text.trim());
+            String trimmed = text.trim();
+            log.info(
+                    "Transcription finished chars={} durationMs={}",
+                    trimmed.length(),
+                    LogTiming.millisSince(started)
+            );
+            return transcriptionDtoMapper.toResponse(trimmed);
         } catch (TranscriptionUnavailableException | InvalidTranscriptionException ex) {
             throw ex;
         } catch (RuntimeException ex) {

@@ -389,7 +389,7 @@ public class MarketViewGatewayImpl implements MarketViewGateway {
         try {
             return query.get();
         } catch (DataAccessException ex) {
-            log.debug("Market view unavailable: {}", ex.getMessage());
+            log.warn("Market view unavailable: {}", ex.getMessage());
             return fallback;
         }
     }

@@ -6,6 +6,7 @@ import com.undercontroll.infrastructure.service.RefreshTokenService;
 import com.undercontroll.infrastructure.persistence.entity.RefreshTokenJpaEntity;
 import com.undercontroll.infrastructure.persistence.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RefreshTokenAdapter implements RefreshTokenService {
@@ -49,13 +51,18 @@ public class RefreshTokenAdapter implements RefreshTokenService {
     @Transactional
     public RefreshTokenData consumeRefreshToken(String token) {
         RefreshTokenJpaEntity entity = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
+                .orElseThrow(() -> {
+                    log.warn("Refresh token not found");
+                    return new InvalidTokenException("Refresh token not found");
+                });
 
         if (entity.getExpiresAt().isBefore(Instant.now())) {
+            log.warn("Refresh token expired userId={}", entity.getUserId());
             throw new InvalidTokenException("Refresh token has expired");
         }
 
         if (entity.isRevoked()) {
+            log.warn("Refresh token reused userId={}", entity.getUserId());
             refreshTokenRepository.revokeAllByUserId(entity.getUserId());
             throw new InvalidTokenException(
                     "Refresh token has been reused",
@@ -65,6 +72,7 @@ public class RefreshTokenAdapter implements RefreshTokenService {
 
         int updated = refreshTokenRepository.revokeIfActive(token);
         if (updated == 0) {
+            log.warn("Refresh token reused userId={}", entity.getUserId());
             refreshTokenRepository.revokeAllByUserId(entity.getUserId());
             throw new InvalidTokenException(
                     "Refresh token has been reused",

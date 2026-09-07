@@ -5,12 +5,14 @@ import com.undercontroll.domain.exception.InvalidTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
 import java.io.IOException;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
@@ -31,6 +33,7 @@ public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
             code = InvalidTokenException.UNAUTHENTICATED;
             message = "Authentication is required";
         }
+        log.debug("Unauthorized request path={} code={}", request.getRequestURI(), code);
         SecurityErrorWriter.write(
                 objectMapper,
                 request,

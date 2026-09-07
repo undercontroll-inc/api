@@ -3,13 +3,11 @@ package com.undercontroll.infrastructure.handler;
 import com.undercontroll.domain.exception.*;
 import com.undercontroll.application.dto.common.ExceptionHandlerResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@Slf4j
 @RestControllerAdvice
 public class OrderExceptionHandler extends GenericExceptionHandler {
 
@@ -80,10 +78,8 @@ public class OrderExceptionHandler extends GenericExceptionHandler {
     public ResponseEntity<ExceptionHandlerResponse> handlePdfGenerationException(
             PdfGenerationException ex, HttpServletRequest request
     ) {
-        log.error("PDF generation error", ex);
-
         return this.buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI(), PdfGenerationException.CODE
+                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI(), PdfGenerationException.CODE, ex
         );
     }
 
@@ -91,10 +87,8 @@ public class OrderExceptionHandler extends GenericExceptionHandler {
     public ResponseEntity<ExceptionHandlerResponse> handleTemplateLoadException(
             TemplateLoadException ex, HttpServletRequest request
     ) {
-        log.error("Template load error", ex);
-
         return this.buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI(), TemplateLoadException.CODE
+                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI(), TemplateLoadException.CODE, ex
         );
     }
 
@@ -102,10 +96,8 @@ public class OrderExceptionHandler extends GenericExceptionHandler {
     public ResponseEntity<ExceptionHandlerResponse> handleTempFileException(
             TempFileException ex, HttpServletRequest request
     ) {
-        log.error("Temporary file error", ex);
-
         return this.buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI(), TempFileException.CODE
+                HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI(), TempFileException.CODE, ex
         );
     }
 

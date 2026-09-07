@@ -1,15 +1,19 @@
 package com.undercontroll.infrastructure.ai;
 
+import com.undercontroll.infrastructure.logging.LogTiming;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class AnaWebSearchTool {
 
     private final RestClient restClient;
@@ -35,6 +39,8 @@ public class AnaWebSearchTool {
         if (query == null || query.isBlank()) {
             return "Busca vazia.";
         }
+        long started = System.nanoTime();
+        int queryChars = query.length();
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> body = restClient.get()
@@ -47,10 +53,29 @@ public class AnaWebSearchTool {
                     .retrieve()
                     .body(Map.class);
             if (body == null) {
+                log.warn(
+                        "Web search returned empty body queryChars={} durationMs={}",
+                        queryChars,
+                        LogTiming.millisSince(started)
+                );
                 return "Nenhum resultado.";
             }
             return format(body);
+        } catch (RestClientResponseException ex) {
+            log.warn(
+                    "Web search failed queryChars={} status={} durationMs={}",
+                    queryChars,
+                    ex.getStatusCode().value(),
+                    LogTiming.millisSince(started)
+            );
+            return "Busca indisponível no momento.";
         } catch (RuntimeException ex) {
+            log.warn(
+                    "Web search failed queryChars={} durationMs={} cause={}",
+                    queryChars,
+                    LogTiming.millisSince(started),
+                    ex.getClass().getSimpleName()
+            );
             return "Busca indisponível no momento.";
         }
     }

@@ -11,11 +11,13 @@ import com.undercontroll.infrastructure.service.TokenServce;
 import com.undercontroll.domain.exception.InvalidTokenException;
 import com.undercontroll.domain.exception.TokenGenerationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtTokenAdapter implements TokenServce {
@@ -38,6 +40,7 @@ public class JwtTokenAdapter implements TokenServce {
                     .withExpiresAt(Instant.now().plusSeconds(accessTokenExpirationMinutes * 60))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
+            log.error("JWT generation failed");
             throw new TokenGenerationException("Error while generating token " + exception.getMessage());
         }
     }
@@ -56,8 +59,10 @@ public class JwtTokenAdapter implements TokenServce {
                     .build()
                     .verify(token);
         } catch (TokenExpiredException e) {
+            log.debug("Access token expired");
             throw new InvalidTokenException("Access token has expired", InvalidTokenException.TOKEN_EXPIRED);
         } catch (JWTVerificationException e) {
+            log.debug("Access token invalid");
             throw new InvalidTokenException("Invalid token");
         }
     }

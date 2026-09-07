@@ -1,7 +1,7 @@
 Gere os insights do <mesAtual> (comparação: <mesComparacao>).
-O JSON abaixo é o contexto obrigatório (cobertura, catálogo de consertos, mix e snapshot).
-Copie cobertura_match desse JSON — não recalcule e não chame tool para esses blocos.
-Use as tools só para aprofundar o tipo de insight (preço, estoque, alta, marca, categoria não atendida, dispersão).
+O JSON abaixo é o contexto obrigatório (cobertura, catálogo de consertos, mix, snapshot e aprofundamento).
+Copie cobertura_match desse JSON — não recalcule.
+Não chame tools. Escreva só a partir desse JSON.
 Gere no máximo <maxInsights> insights, um por tipo, cruzando mercado com o catálogo de consertos.
 Cada insight deve citar um aparelho ou marca do catálogo, ou dizer que a assistência ainda não atende essa categoria.
 JSON interno: periodo.bucket_atual = <bucketAtual>; periodo.bucket_comparacao = <bucketComparacao>.

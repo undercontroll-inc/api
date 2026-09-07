@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.undercontroll.domain.gateway.AnaSuggestionStore;
 import com.undercontroll.infrastructure.config.AnaProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RedisAnaSuggestionStore implements AnaSuggestionStore {
@@ -36,6 +38,7 @@ public class RedisAnaSuggestionStore implements AnaSuggestionStore {
             }
             return Optional.of(List.copyOf(suggestions));
         } catch (Exception ex) {
+            log.warn("Chat suggestions deserialize failed userId={}", userId, ex);
             return Optional.empty();
         }
     }
@@ -50,6 +53,7 @@ public class RedisAnaSuggestionStore implements AnaSuggestionStore {
                     Duration.ofHours(anaProperties.getSuggestionTtlHours())
             );
         } catch (Exception ex) {
+            log.warn("Chat suggestions save failed userId={}", userId, ex);
             throw new IllegalStateException("Failed to persist chat suggestions", ex);
         }
     }

@@ -10,6 +10,7 @@ import com.undercontroll.domain.model.Order;
 import com.undercontroll.domain.model.OrderItem;
 import com.undercontroll.domain.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AnaShopTools {
@@ -40,6 +42,7 @@ public class AnaShopTools {
                     .map(AnaShopTools::toOrderDetail)
                     .orElse(null);
         } catch (RuntimeException ex) {
+            log.warn("Ana shop tool failed tool=get_order orderId={}", orderId, ex);
             return null;
         }
     }
@@ -53,15 +56,20 @@ public class AnaShopTools {
             @ToolParam(required = false, description = "Nome da peça; vazio se for buscar por categoria ou listar estoque baixo") String name,
             @ToolParam(required = false, description = "Categoria da peça; vazio se o nome já foi informado") String category
     ) {
-        List<ComponentPart> parts;
-        if (name != null && !name.isBlank()) {
-            parts = componentGateway.searchByName(name, LIMIT);
-        } else if (category != null && !category.isBlank()) {
-            parts = componentGateway.searchByCategory(category, LIMIT);
-        } else {
-            parts = componentGateway.findLowestStock(LIMIT);
+        try {
+            List<ComponentPart> parts;
+            if (name != null && !name.isBlank()) {
+                parts = componentGateway.searchByName(name, LIMIT);
+            } else if (category != null && !category.isBlank()) {
+                parts = componentGateway.searchByCategory(category, LIMIT);
+            } else {
+                parts = componentGateway.findLowestStock(LIMIT);
+            }
+            return parts.stream().limit(LIMIT).map(AnaShopTools::toPartLine).toList();
+        } catch (RuntimeException ex) {
+            log.warn("Ana shop tool failed tool=search_components", ex);
+            return List.of();
         }
-        return parts.stream().limit(LIMIT).map(AnaShopTools::toPartLine).toList();
     }
 
     @Tool(name = "get_last_announcement", description = """
@@ -69,9 +77,14 @@ public class AnaShopTools {
             O resumo só tem o título. Use se pedirem o que o aviso diz.
             """)
     public AnnouncementLine getLastAnnouncement() {
-        return announcementGateway.findLastAnnouncement()
-                .map(AnaShopTools::toAnnouncementLine)
-                .orElse(null);
+        try {
+            return announcementGateway.findLastAnnouncement()
+                    .map(AnaShopTools::toAnnouncementLine)
+                    .orElse(null);
+        } catch (RuntimeException ex) {
+            log.warn("Ana shop tool failed tool=get_last_announcement", ex);
+            return null;
+        }
     }
 
     private static OrderLine toOrderLine(Order order) {

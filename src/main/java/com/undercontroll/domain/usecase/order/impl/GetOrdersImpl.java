@@ -29,7 +29,7 @@ public class GetOrdersImpl implements GetOrdersPort {
     public GetAllOrdersResponse execute(Integer userId, Integer page, Integer size) {
         boolean includeTechnical = currentUserAdminPort.isAdministrator();
         if (userId != null) {
-            log.info("Fetching orders for userId: {}", userId);
+            log.debug("Fetching orders for userId: {}", userId);
 
             List<OrderEnrichedDto> orders = orderGateway.findByUserId(userId).stream()
                     .map(order -> orderMapper.toEnrichedDto(order, includeTechnical))
@@ -38,7 +38,7 @@ public class GetOrdersImpl implements GetOrdersPort {
             return new GetAllOrdersResponse(orders, orders.size(), 1, 0, orders.size());
         }
 
-        log.info("Fetching all orders");
+        log.debug("Fetching all orders");
 
         PaginatedResult<Order> result = orderGateway.findAllPaginated(page, size);
 

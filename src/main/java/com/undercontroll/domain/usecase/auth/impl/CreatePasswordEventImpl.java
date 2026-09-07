@@ -8,12 +8,14 @@ import com.undercontroll.domain.enums.PasswordEventType;
 import com.undercontroll.domain.exception.InvalidPasswordResetException;
 import com.undercontroll.domain.gateway.PasswordEventGateway;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CreatePasswordEventImpl implements CreatePasswordEventPort {
@@ -55,6 +57,8 @@ public class CreatePasswordEventImpl implements CreatePasswordEventPort {
                 .userPhone(request.userPhone())
                 .build();
 
-        return passwordEventGateway.save(passwordEvent);
+        PasswordEvent saved = passwordEventGateway.save(passwordEvent);
+        log.info("Password event created type={}", saved.getType());
+        return saved;
     }
 }
