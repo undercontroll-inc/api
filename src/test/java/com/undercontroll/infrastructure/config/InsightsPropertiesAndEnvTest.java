@@ -40,12 +40,14 @@ class InsightsPropertiesAndEnvTest {
         env.setProperty("undercontroll.insights.provider", "gemini");
         processor.postProcessEnvironment(env, new SpringApplication());
         assertEquals("google-genai", env.getProperty("spring.ai.model.chat"));
+        assertEquals("none", env.getProperty("spring.ai.model.audio.transcription"));
         assertUnusedOpenAiModelsAreOff(env);
 
         MockEnvironment openai = new MockEnvironment();
         openai.setProperty("INSIGHTS_PROVIDER", "openai");
         processor.postProcessEnvironment(openai, new SpringApplication());
         assertEquals("openai", openai.getProperty("spring.ai.model.chat"));
+        assertEquals("openai", openai.getProperty("spring.ai.model.audio.transcription"));
         assertUnusedOpenAiModelsAreOff(openai);
 
         MockEnvironment envOverridesYamlDefault = new MockEnvironment();
@@ -57,7 +59,6 @@ class InsightsPropertiesAndEnvTest {
 
     private static void assertUnusedOpenAiModelsAreOff(MockEnvironment env) {
         assertEquals("none", env.getProperty("spring.ai.model.audio.speech"));
-        assertEquals("none", env.getProperty("spring.ai.model.audio.transcription"));
         assertEquals("none", env.getProperty("spring.ai.model.embedding"));
         assertEquals("none", env.getProperty("spring.ai.model.embedding.text"));
         assertEquals("none", env.getProperty("spring.ai.model.image"));

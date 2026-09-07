@@ -42,4 +42,16 @@ class AiChatOptionsTest {
         assertNull(gemini.getThinkingLevel());
         assertNull(gemini.getThinkingBudget());
     }
+
+    @Test
+    @DisplayName("transcription uses fast thinking and a low temperature")
+    void transcriptionUsesFastThinking() {
+        GoogleGenAiChatOptions options = assertInstanceOf(
+                GoogleGenAiChatOptions.class,
+                AiChatOptions.transcription("google-genai", "gemini-2.5-flash")
+        );
+        assertEquals(0.0, options.getTemperature());
+        assertEquals(2048, options.getMaxOutputTokens());
+        assertEquals(0, options.getThinkingBudget());
+    }
 }

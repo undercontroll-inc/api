@@ -1,0 +1,15 @@
+meta {
+  name: Transcribe audio
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/v1/api/transcriptions
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  audio: @file(note.webm)
+}

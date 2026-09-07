@@ -30,6 +30,10 @@ public final class AiChatOptions {
         return of(provider, geminiModel, 0.2, INSIGHTS_MAX_OUTPUT_TOKENS, false);
     }
 
+    public static ChatOptions transcription(String provider, String geminiModel) {
+        return of(provider, geminiModel, 0.0, 2048, true);
+    }
+
     private static ChatOptions of(
             String provider,
             String geminiModel,
