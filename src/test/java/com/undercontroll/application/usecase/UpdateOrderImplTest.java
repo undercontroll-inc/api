@@ -44,7 +44,8 @@ class UpdateOrderImplTest {
                 .status(OrderStatus.PENDING)
                 .total(100.0)
                 .discount(0.0)
-                .description("Original description")
+                .customerDescription("Original customer")
+                .technicalDescription("Original technical")
                 .build();
     }
 
@@ -55,13 +56,50 @@ class UpdateOrderImplTest {
         when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
 
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.IN_ANALYSIS, List.of(), List.of(), "Updated description"
+                OrderStatus.IN_ANALYSIS, List.of(), List.of(), "Updated customer", "Updated technical"
         );
 
         updateOrderImpl.execute(1, request);
 
         verify(orderGateway, times(1)).findById(1);
         verify(orderGateway, times(1)).save(any(Order.class));
+        assertEquals("Updated customer", existingOrder.getCustomerDescription());
+        assertEquals("Updated technical", existingOrder.getTechnicalDescription());
+    }
+
+    @Test
+    @DisplayName("Should apply customer and technical descriptions when both are sent")
+    void shouldApplyCustomerAndTechnicalDescriptions() {
+        when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
+        when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
+
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                null, null, null, "Cliente: não gela", "Compressor queimado"
+        );
+
+        updateOrderImpl.execute(1, request);
+
+        assertEquals(OrderStatus.PENDING, existingOrder.getStatus());
+        assertEquals("Cliente: não gela", existingOrder.getCustomerDescription());
+        assertEquals("Compressor queimado", existingOrder.getTechnicalDescription());
+        verify(orderGateway).save(existingOrder);
+    }
+
+    @Test
+    @DisplayName("Should keep existing descriptions when request fields are null")
+    void shouldKeepExistingDescriptionsWhenRequestFieldsAreNull() {
+        when(orderGateway.findById(1)).thenReturn(Optional.of(existingOrder));
+        when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
+
+        UpdateOrderRequest request = new UpdateOrderRequest(
+                OrderStatus.IN_ANALYSIS, List.of(), List.of(), null, null
+        );
+
+        updateOrderImpl.execute(1, request);
+
+        assertEquals("Original customer", existingOrder.getCustomerDescription());
+        assertEquals("Original technical", existingOrder.getTechnicalDescription());
+        assertEquals(OrderStatus.IN_ANALYSIS, existingOrder.getStatus());
     }
 
     @Test
@@ -72,7 +110,7 @@ class UpdateOrderImplTest {
         doNothing().when(metricsService).incrementOrderCompleted();
 
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.COMPLETED, List.of(), List.of(), null
+                OrderStatus.COMPLETED, List.of(), List.of(), null, null
         );
 
         updateOrderImpl.execute(1, request);
@@ -87,7 +125,7 @@ class UpdateOrderImplTest {
         doNothing().when(metricsService).incrementOrderUpdateFailed();
 
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.COMPLETED, List.of(), List.of(), null
+                OrderStatus.COMPLETED, List.of(), List.of(), null, null
         );
 
         assertThrows(OrderNotFoundException.class, () -> updateOrderImpl.execute(999, request));
@@ -101,7 +139,7 @@ class UpdateOrderImplTest {
     @DisplayName("Should throw InvalidUpdateOrderException when orderId is null")
     void testUpdateOrder_ShouldThrowException_WhenOrderIdIsNull() {
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.COMPLETED, List.of(), List.of(), null
+                OrderStatus.COMPLETED, List.of(), List.of(), null, null
         );
 
         assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(null, request));
@@ -113,7 +151,7 @@ class UpdateOrderImplTest {
     @DisplayName("Should throw InvalidUpdateOrderException when orderId is zero or negative")
     void testUpdateOrder_ShouldThrowException_WhenOrderIdIsInvalid() {
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.COMPLETED, List.of(), List.of(), null
+                OrderStatus.COMPLETED, List.of(), List.of(), null, null
         );
 
         assertThrows(InvalidUpdateOrderException.class, () -> updateOrderImpl.execute(0, request));
@@ -128,12 +166,14 @@ class UpdateOrderImplTest {
         when(orderGateway.save(any(Order.class))).thenReturn(existingOrder);
 
         UpdateOrderRequest request = new UpdateOrderRequest(
-                null, List.of(), List.of(), "New description"
+                null, List.of(), List.of(), "New customer description", null
         );
 
         updateOrderImpl.execute(1, request);
 
         assertEquals(OrderStatus.PENDING, existingOrder.getStatus());
+        assertEquals("New customer description", existingOrder.getCustomerDescription());
+        assertEquals("Original technical", existingOrder.getTechnicalDescription());
         verify(metricsService, never()).incrementOrderCompleted();
         verify(orderGateway, times(1)).save(existingOrder);
     }

@@ -46,7 +46,8 @@ public class OrderJpaEntity {
 
     private boolean fabricGuarantee;
     private boolean returnGuarantee;
-    private String description;
+    private String customerDescription;
+    private String technicalDescription;
     private String nf;
     private Date date;
     private String store;

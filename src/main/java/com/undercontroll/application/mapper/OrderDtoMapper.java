@@ -13,7 +13,7 @@ public class OrderDtoMapper {
     private final OrderItemDtoMapper orderItemDtoMapper;
     private final ComponentPartDtoMapper componentDtoMapper;
 
-    public OrderEnrichedDto toEnrichedDto(Order o) {
+    public OrderEnrichedDto toEnrichedDto(Order o, boolean includeTechnical) {
         return new OrderEnrichedDto(
                 o.getId(),
                 this.userDtoMapper.toDto(o.getUser()),
@@ -27,8 +27,8 @@ public class OrderDtoMapper {
                 null,
                 o.getNf(),
                 o.isReturnGuarantee(),
-                o.getDescription(),
-                null,
+                o.getCustomerDescription(),
+                includeTechnical ? o.getTechnicalDescription() : null,
                 o.getStatus(),
                 o.getUpdatedAt() != null ? o.getUpdatedAt().toString() : null
         );

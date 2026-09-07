@@ -15,7 +15,6 @@ public class OrderItem {
 
     private String imageUrl;
 
-    private String observation;
     private String volt;
     private String series;
     private String type;

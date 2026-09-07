@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -71,13 +72,13 @@ class OrderControllerTest {
     void administratorShouldCreateOrderSuccessfully() throws Exception {
         CreateOrderRequest request = new CreateOrderRequest(
                 1, List.of(), List.of(), 0.0, "20/11/2025", "25/11/2025",
-                "Service description", "Notes", "PENDING", false, true, "NF123"
+                "Não gela", "Compressor queimado", "PENDING", false, true, "NF123"
         );
 
         OrderEnrichedDto response = new OrderEnrichedDto(
                 1, null, List.of(), List.of(), 0.0, 0.0, 0.0, 0.0,
-                "20/11/2025", "25/11/2025", "NF123", false, "Service description",
-                "Notes", OrderStatus.PENDING, null
+                "20/11/2025", "25/11/2025", "NF123", false, "Não gela",
+                "Compressor queimado", OrderStatus.PENDING, null
         );
 
         when(createOrderPort.execute(any(CreateOrderRequest.class))).thenReturn(response);
@@ -96,13 +97,13 @@ class OrderControllerTest {
     void customerShouldCreateOrderSuccessfully() throws Exception {
         CreateOrderRequest request = new CreateOrderRequest(
                 1, List.of(), List.of(), 0.0, "20/11/2025", "25/11/2025",
-                "Service description", "Notes", "PENDING", false, true, "NF123"
+                "Não gela", "Compressor queimado", "PENDING", false, true, "NF123"
         );
 
         OrderEnrichedDto response = new OrderEnrichedDto(
                 1, null, List.of(), List.of(), 0.0, 0.0, 0.0, 0.0,
-                "20/11/2025", "25/11/2025", "NF123", false, "Service description",
-                "Notes", OrderStatus.PENDING, null
+                "20/11/2025", "25/11/2025", "NF123", false, "Não gela",
+                "Compressor queimado", OrderStatus.PENDING, null
         );
 
         when(createOrderPort.execute(any(CreateOrderRequest.class))).thenReturn(response);
@@ -120,7 +121,7 @@ class OrderControllerTest {
     @DisplayName("PATCH /v1/api/orders/{orderId} - ADMINISTRATOR should update order and return 200")
     void administratorShouldUpdateOrderSuccessfully() throws Exception {
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.COMPLETED, List.of(), List.of(), "Updated description"
+                OrderStatus.COMPLETED, List.of(), List.of(), "Reparo em analise", "Aguardando peca"
         );
 
         mockMvc.perform(patch("/v1/api/orders/1")
@@ -136,7 +137,7 @@ class OrderControllerTest {
     @DisplayName("PATCH /v1/api/orders/{orderId} - CUSTOMER should be forbidden and return 403")
     void customerShouldBeForbiddenToUpdateOrder() throws Exception {
         UpdateOrderRequest request = new UpdateOrderRequest(
-                OrderStatus.COMPLETED, List.of(), List.of(), "Updated description"
+                OrderStatus.COMPLETED, List.of(), List.of(), "Reparo em analise", "Aguardando peca"
         );
 
         mockMvc.perform(patch("/v1/api/orders/1")
@@ -157,8 +158,8 @@ class OrderControllerTest {
 
         OrderEnrichedDto order = new OrderEnrichedDto(
                 1, userDto, List.of(), List.of(), 100.0, 50.0, 10.0, 140.0,
-                "20/11/2025", "25/11/2025", "NF123", true, "Description",
-                null, OrderStatus.PENDING, "20/11/2025"
+                "20/11/2025", "25/11/2025", "NF123", true, "Não gela",
+                "Compressor queimado", OrderStatus.PENDING, "20/11/2025"
         );
 
         when(getOrdersPort.execute(isNull(), anyInt(), anyInt()))
@@ -171,6 +172,8 @@ class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1))
                 .andExpect(jsonPath("$.data[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.data[0].customerDescription").value("Não gela"))
+                .andExpect(jsonPath("$.data[0].technicalDescription").value("Compressor queimado"))
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1));
 
@@ -196,7 +199,7 @@ class OrderControllerTest {
 
         OrderEnrichedDto enrichedDto = new OrderEnrichedDto(
                 1, userDto, List.of(), List.of(), 100.0, 50.0, 10.0, 140.0,
-                "20/11/2025", "25/11/2025", "NF123", true, "Description",
+                "20/11/2025", "25/11/2025", "NF123", true, "Não gela",
                 null, OrderStatus.PENDING, "20/11/2025"
         );
 
@@ -208,7 +211,9 @@ class OrderControllerTest {
                         .with(user("customer@example.com").roles("CUSTOMER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
-                .andExpect(jsonPath("$.data.status").value("PENDING"));
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.customerDescription").value("Não gela"))
+                .andExpect(jsonPath("$.data.technicalDescription").value(nullValue()));
 
         verify(getOrderByIdPort, times(1)).execute(1);
     }
@@ -242,7 +247,7 @@ class OrderControllerTest {
 
         OrderEnrichedDto order = new OrderEnrichedDto(
                 1, userDto, List.of(), List.of(), 100.0, 50.0, 10.0, 140.0,
-                "20/11/2025", "25/11/2025", "NF123", true, "Description",
+                "20/11/2025", "25/11/2025", "NF123", true, "Não gela",
                 null, OrderStatus.PENDING, "20/11/2025"
         );
 
@@ -279,7 +284,7 @@ class OrderControllerTest {
 
         OrderEnrichedDto order = new OrderEnrichedDto(
                 1, userDto, List.of(), List.of(), 100.0, 50.0, 10.0, 140.0,
-                "20/11/2025", "25/11/2025", "NF123", true, "Description",
+                "20/11/2025", "25/11/2025", "NF123", true, "Não gela",
                 null, OrderStatus.PENDING, "20/11/2025"
         );
 

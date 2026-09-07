@@ -274,7 +274,7 @@ public class DataInitializer {
                 .discount(0.0)
                 .fabricGuarantee(true)
                 .returnGuarantee(true)
-                .description("Reparo em " + itemType)
+                .customerDescription("Reparo em " + itemType)
                 .nf("NF-" + (int)(Math.random() * 9000 + 1000))
                 .date(new Date())
                 .store("Loja Centro")
@@ -284,7 +284,6 @@ public class DataInitializer {
 
         OrderItem item = OrderItem.builder()
                 .imageUrl("https://i.pravatar.cc/150?img=" + (int)(Math.random() * 70 + 1))
-                .observation("Reparo solicitado pelo cliente")
                 .volt(volt)
                 .series("SN" + (int)(Math.random() * 90000 + 10000))
                 .type(itemType)

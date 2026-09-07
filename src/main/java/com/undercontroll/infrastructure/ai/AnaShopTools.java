@@ -90,7 +90,8 @@ public class AnaShopTools {
                 order.getId(),
                 order.getStatus() == null ? null : order.getStatus().name(),
                 customer,
-                order.getDescription(),
+                order.getCustomerDescription(),
+                order.getTechnicalDescription(),
                 items
         );
     }
@@ -112,7 +113,6 @@ public class AnaShopTools {
                 item.getBrand(),
                 item.getModel(),
                 item.getType(),
-                item.getObservation(),
                 item.getLaborValue()
         );
     }
@@ -150,13 +150,20 @@ public class AnaShopTools {
         );
     }
 
-    public record OrderLine(Integer id, String status, String customer, String description, int itemCount) {
+    public record OrderLine(
+            Integer id,
+            String status,
+            String customer,
+            String customerDescription,
+            String technicalDescription,
+            int itemCount
+    ) {
     }
 
     public record OrderDetail(OrderLine order, List<ItemLine> items, List<DemandLine> demands, Double total, String store) {
     }
 
-    public record ItemLine(Integer id, String brand, String model, String type, String observation, Double laborValue) {
+    public record ItemLine(Integer id, String brand, String model, String type, Double laborValue) {
     }
 
     public record PartLine(

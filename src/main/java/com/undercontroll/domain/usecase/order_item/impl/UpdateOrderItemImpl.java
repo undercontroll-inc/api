@@ -37,9 +37,6 @@ public class UpdateOrderItemImpl implements UpdateOrderItemPort {
         if (request.imageUrl() != null) {
             orderFound.setImageUrl(request.imageUrl());
         }
-        if (request.observation() != null) {
-            orderFound.setObservation(request.observation());
-        }
         if (request.volt() != null) {
             orderFound.setVolt(request.volt());
         }

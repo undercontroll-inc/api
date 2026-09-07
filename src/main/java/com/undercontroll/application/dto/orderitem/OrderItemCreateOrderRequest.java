@@ -6,7 +6,6 @@ public record OrderItemCreateOrderRequest(
         String model,
         String voltage,
         String serial,
-        String customerNote,
         Double laborValue
 ) {
 }

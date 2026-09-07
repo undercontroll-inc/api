@@ -20,8 +20,8 @@ public record OrderEnrichedDto(
         String deadline,
         String nf,
         boolean haveReturnGuarantee,
-        String serviceDescription,
-        String notes,
+        String customerDescription,
+        String technicalDescription,
         OrderStatus status,
         String updatedAt
 ) {

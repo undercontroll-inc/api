@@ -19,8 +19,7 @@ body:
           "model": "DF80",
           "volt": "220V",
           "series": "SN12345",
-          "laborValue": 90.0,
-          "customerNote": "Atualizado"
+          "laborValue": 90.0
         }
       ],
       "parts": [
@@ -29,7 +28,8 @@ body:
           "quantity": 1
         }
       ],
-      "serviceDescription": "Reparo em analise"
+      "customerDescription": "Reparo em analise",
+      "technicalDescription": "Aguardando peca"
     }
 bodyType: application/json
 description: ""

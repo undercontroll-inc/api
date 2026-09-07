@@ -8,7 +8,6 @@ public record OrderItemDto(
         String model,
         String type,
         String brand,
-        String observation,
         String volt,
         String series,
         Double laborValue,
