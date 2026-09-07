@@ -2,7 +2,7 @@ package com.undercontroll.application.controller.impl;
 
 import com.undercontroll.application.controller.TranscriptionApi;
 import com.undercontroll.application.dto.transcription.TranscribeAudioResponse;
-import com.undercontroll.domain.exception.InvalidTranscriptionException;
+import com.undercontroll.application.mapper.TranscriptionDtoMapper;
 import com.undercontroll.domain.usecase.transcription.TranscribeAudioPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class TranscriptionController implements TranscriptionApi {
 
     private final TranscribeAudioPort transcribeAudioPort;
+    private final TranscriptionDtoMapper transcriptionDtoMapper;
 
     @Override
     public ResponseEntity<TranscribeAudioResponse> transcribe(MultipartFile audio) {
-        if (audio == null) {
-            throw new InvalidTranscriptionException("Audio file is required");
-        }
-        return ResponseEntity.ok(transcribeAudioPort.execute(new TranscribeAudioPort.Input(
-                audio.getResource(),
-                audio.getContentType(),
-                audio.getOriginalFilename(),
-                audio.getSize()
-        )));
+        return ResponseEntity.ok(transcribeAudioPort.execute(transcriptionDtoMapper.toRequest(audio)));
     }
 }

@@ -2,6 +2,7 @@ package com.undercontroll.infrastructure.web.controller;
 
 import com.undercontroll.application.controller.impl.TranscriptionController;
 import com.undercontroll.application.dto.transcription.TranscribeAudioResponse;
+import com.undercontroll.application.mapper.TranscriptionDtoMapper;
 import com.undercontroll.domain.exception.InvalidTranscriptionException;
 import com.undercontroll.domain.exception.TranscriptionUnavailableException;
 import com.undercontroll.domain.usecase.transcription.TranscribeAudioPort;
@@ -29,7 +30,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import({SecurityConfig.class, RateLimitProperties.class, TranscriptionExceptionHandler.class})
+@Import({
+        SecurityConfig.class,
+        RateLimitProperties.class,
+        TranscriptionExceptionHandler.class,
+        TranscriptionDtoMapper.class
+})
 @AutoConfigureMockMvc
 @WebMvcTest(TranscriptionController.class)
 class TranscriptionControllerTest {

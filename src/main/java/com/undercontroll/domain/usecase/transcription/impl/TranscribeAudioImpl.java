@@ -1,6 +1,8 @@
 package com.undercontroll.domain.usecase.transcription.impl;
 
+import com.undercontroll.application.dto.transcription.TranscribeAudioRequest;
 import com.undercontroll.application.dto.transcription.TranscribeAudioResponse;
+import com.undercontroll.application.mapper.TranscriptionDtoMapper;
 import com.undercontroll.domain.exception.InvalidTranscriptionException;
 import com.undercontroll.domain.exception.TranscriptionUnavailableException;
 import com.undercontroll.domain.gateway.AudioTranscriptionGateway;
@@ -38,20 +40,21 @@ public class TranscribeAudioImpl implements TranscribeAudioPort {
     );
 
     private final ObjectProvider<AudioTranscriptionGateway> audioTranscriptionGateway;
+    private final TranscriptionDtoMapper transcriptionDtoMapper;
 
     @Override
-    public TranscribeAudioResponse execute(Input input) {
-        validate(input);
+    public TranscribeAudioResponse execute(TranscribeAudioRequest request) {
+        validate(request);
         AudioTranscriptionGateway gateway = audioTranscriptionGateway.getIfAvailable();
         if (gateway == null) {
             throw new TranscriptionUnavailableException();
         }
         try {
-            String text = gateway.transcribe(input.audio(), input.contentType(), input.filename());
+            String text = gateway.transcribe(request.audio(), request.contentType(), request.filename());
             if (!StringUtils.hasText(text)) {
                 throw new TranscriptionUnavailableException();
             }
-            return new TranscribeAudioResponse(text.trim());
+            return transcriptionDtoMapper.toResponse(text.trim());
         } catch (TranscriptionUnavailableException | InvalidTranscriptionException ex) {
             throw ex;
         } catch (RuntimeException ex) {
@@ -59,18 +62,18 @@ public class TranscribeAudioImpl implements TranscribeAudioPort {
         }
     }
 
-    private static void validate(Input input) {
-        Resource audio = input == null ? null : input.audio();
+    private static void validate(TranscribeAudioRequest request) {
+        Resource audio = request == null ? null : request.audio();
         if (audio == null) {
             throw new InvalidTranscriptionException("Audio file is required");
         }
-        if (input.size() <= 0) {
+        if (request.size() <= 0) {
             throw new InvalidTranscriptionException("Audio file is empty");
         }
-        if (input.size() > MAX_BYTES) {
+        if (request.size() > MAX_BYTES) {
             throw new InvalidTranscriptionException("Audio file exceeds 8MB");
         }
-        if (!allowed(input.contentType(), input.filename())) {
+        if (!allowed(request.contentType(), request.filename())) {
             throw new InvalidTranscriptionException("Unsupported audio type");
         }
     }

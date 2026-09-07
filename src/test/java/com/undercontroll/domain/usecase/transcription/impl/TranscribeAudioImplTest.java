@@ -1,15 +1,17 @@
 package com.undercontroll.domain.usecase.transcription.impl;
 
+import com.undercontroll.application.dto.transcription.TranscribeAudioRequest;
 import com.undercontroll.application.dto.transcription.TranscribeAudioResponse;
+import com.undercontroll.application.mapper.TranscriptionDtoMapper;
 import com.undercontroll.domain.exception.InvalidTranscriptionException;
 import com.undercontroll.domain.exception.TranscriptionUnavailableException;
 import com.undercontroll.domain.gateway.AudioTranscriptionGateway;
-import com.undercontroll.domain.usecase.transcription.TranscribeAudioPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.ByteArrayResource;
@@ -28,6 +30,9 @@ class TranscribeAudioImplTest {
     @Mock
     private AudioTranscriptionGateway gateway;
 
+    @Spy
+    private TranscriptionDtoMapper transcriptionDtoMapper = new TranscriptionDtoMapper();
+
     @InjectMocks
     private TranscribeAudioImpl useCase;
 
@@ -39,7 +44,7 @@ class TranscribeAudioImplTest {
         when(gateway.transcribe(audio, "audio/webm", "note.webm"))
                 .thenReturn("  Geladeira não gela  ");
 
-        TranscribeAudioResponse response = useCase.execute(new TranscribeAudioPort.Input(
+        TranscribeAudioResponse response = useCase.execute(new TranscribeAudioRequest(
                 audio, "audio/webm", "note.webm", 12
         ));
 
@@ -50,31 +55,31 @@ class TranscribeAudioImplTest {
     @DisplayName("returns 503 when no transcription gateway is configured")
     void unavailableWithoutGateway() {
         when(audioTranscriptionGateway.getIfAvailable()).thenReturn(null);
-        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+        TranscribeAudioRequest request = new TranscribeAudioRequest(
                 audio("note.webm"), "audio/webm", "note.webm", 12
         );
 
-        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(input));
+        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(request));
     }
 
     @Test
     @DisplayName("rejects an empty file")
     void rejectsEmptyFile() {
-        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+        TranscribeAudioRequest request = new TranscribeAudioRequest(
                 audio("note.webm"), "audio/webm", "note.webm", 0
         );
 
-        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(input));
+        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(request));
     }
 
     @Test
     @DisplayName("rejects an unsupported type")
     void rejectsUnsupportedType() {
-        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+        TranscribeAudioRequest request = new TranscribeAudioRequest(
                 audio("note.txt"), "text/plain", "note.txt", 12
         );
 
-        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(input));
+        assertThrows(InvalidTranscriptionException.class, () -> useCase.execute(request));
     }
 
     @Test
@@ -84,7 +89,7 @@ class TranscribeAudioImplTest {
         when(audioTranscriptionGateway.getIfAvailable()).thenReturn(gateway);
         when(gateway.transcribe(any(), any(), any())).thenReturn("ok");
 
-        TranscribeAudioResponse response = useCase.execute(new TranscribeAudioPort.Input(
+        TranscribeAudioResponse response = useCase.execute(new TranscribeAudioRequest(
                 audio, "application/octet-stream", "note.m4a", 12
         ));
 
@@ -96,11 +101,11 @@ class TranscribeAudioImplTest {
     void wrapsProviderFailure() {
         when(audioTranscriptionGateway.getIfAvailable()).thenReturn(gateway);
         when(gateway.transcribe(any(), any(), any())).thenThrow(new IllegalStateException("timeout"));
-        TranscribeAudioPort.Input input = new TranscribeAudioPort.Input(
+        TranscribeAudioRequest request = new TranscribeAudioRequest(
                 audio("note.webm"), "audio/webm", "note.webm", 12
         );
 
-        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(input));
+        assertThrows(TranscriptionUnavailableException.class, () -> useCase.execute(request));
     }
 
     private static ByteArrayResource audio(String filename) {
