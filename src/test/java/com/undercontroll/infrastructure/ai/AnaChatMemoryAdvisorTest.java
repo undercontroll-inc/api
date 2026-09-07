@@ -84,6 +84,6 @@ class AnaChatMemoryAdvisorTest {
 
         AnaChatMemoryAdvisor advisor = new AnaChatMemoryAdvisor(chatMemory);
         assertThrows(IllegalStateException.class, () -> advisor.adviseCall(request, chain));
-        verify(chatMemory, never()).add(any(), any());
+        verify(chatMemory, never()).add(any(), any(Message.class));
     }
 }
